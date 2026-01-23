@@ -1,0 +1,447 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum AcademicYearStatus {
+  OPEN
+  CLOSED
+}
+
+enum FlowStatus {
+  OPEN
+  SETTLED
+}
+
+enum DiscountType {
+  PERCENT
+  AMOUNT
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+  BANK
+  CHEQUE
+}
+
+enum StockEventType {
+  PURCHASE // Dealer → You
+  ISSUE // You → Customer
+  SALES_RETURN // Customer → You
+  DEALER_RETURN // You → Dealer
+  ADJUSTMENT
+}
+
+enum DocumentType {
+  PROVISIONAL_INVOICE
+  PAYMENT
+  PURCHASE
+}
+
+model CompanyInfo {
+  id String @id @default(uuid())
+
+  name  String
+  phone String
+  email String?
+  gst   String?
+
+  town     String?
+  district String?
+  state    String?
+  pincode  String?
+
+  bankName  String?
+  accountNo String?
+  ifsc      String?
+  upi       String?
+
+  logoUrl   String?
+  qrCodeUrl String?
+
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+}
+
+model User {
+  id String @id @default(uuid())
+
+  name     String
+  phone    String  @unique
+  email    String?
+  password String
+
+  role UserRole
+
+  createdAt           DateTime             @default(now())
+  modifiedAt          DateTime             @updatedAt
+  provisionalInvoices ProvisionalInvoice[]
+  payments            Payment[]
+
+  @@index([id])
+  @@index([phone])
+  @@index([role])
+}
+
+// ================= ACADEMIC YEAR =================
+
+model AcademicYear {
+  id        String             @id @default(uuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    AcademicYearStatus @default(OPEN)
+
+  flows        FlowGroup[]
+  stockLedgers StockLedger[]
+  payments     Payment[]
+  expenses     Expense[]
+
+  documentSequences DocumentSequence[]
+
+  createdAt DateTime  @default(now())
+  closedAt  DateTime?
+}
+
+// ================= CUSTOMER =================
+
+model Customer {
+  id String @id @default(uuid())
+
+  name          String
+  phone         String
+  email         String?
+  contactPerson String?
+
+  street   String?
+  town     String?
+  district String?
+  state    String?
+  pincode  String?
+
+  gst    String?
+  board  String?
+  medium String?
+
+  active        Boolean   @default(true)
+  deactivatedAt DateTime?
+
+  flows FlowGroup[]
+
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  @@index([phone])
+  @@index([email])
+  @@index([gst])
+  @@index([active])
+  @@index([district, state])
+}
+
+// ================= DEALER =================
+
+model Dealer {
+  id String @id @default(uuid())
+
+  name  String
+  phone String
+  email String?
+
+  street   String?
+  town     String?
+  district String?
+  state    String?
+  pincode  String?
+
+  gst String?
+
+  bankName  String?
+  accountNo String?
+  ifsc      String?
+
+  active        Boolean   @default(true)
+  deactivatedAt DateTime?
+
+  textbooks Textbook[]
+  flows     FlowGroup[]
+
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  @@index([phone])
+  @@index([email])
+  @@index([gst])
+  @@index([active])
+  @@index([district, state])
+}
+
+// ================= TEXTBOOK =================
+
+model Textbook {
+  id String @id @default(uuid())
+
+  title String
+
+  dealerId String
+  dealer   Dealer @relation(fields: [dealerId], references: [id])
+
+  class       String
+  subject     String?
+  medium      String?
+  editionYear Int?
+
+  mrp          Decimal  @db.Decimal(10, 2)
+  sellingPrice Decimal? @db.Decimal(10, 2)
+
+  isStockItem Boolean @default(true)
+
+  active        Boolean   @default(true)
+  deactivatedAt DateTime?
+
+  provisionalItems    ProvisionalInvoiceItem[]
+  salesReturnItems    SalesReturnItem[]
+  purchaseReturnItems PurchaseReturnItem[]
+  stockLedgers        StockLedger[]
+
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  @@index([dealerId])
+  @@index([title])
+  @@index([active])
+}
+
+// ================= FLOW GROUP =================
+// ONE complete settlement cycle
+
+model FlowGroup {
+  id String @id @default(uuid())
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  dealerId String?
+  dealer   Dealer? @relation(fields: [dealerId], references: [id])
+
+  description String?
+  status      FlowStatus @default(OPEN)
+
+  provisionalInvoices ProvisionalInvoice[]
+  salesReturns        SalesReturn[]
+  purchaseReturns     PurchaseReturn[]
+  payments            Payment[]
+
+  createdAt DateTime @default(now())
+
+  @@index([academicYearId])
+  @@index([customerId])
+  @@index([dealerId])
+}
+
+// ================= PROVISIONAL INVOICE =================
+// Delivery (customer) OR Receive stock (dealer)
+
+model ProvisionalInvoice {
+  id        String   @id @default(uuid())
+  invoiceNo String
+  date      DateTime
+
+  flowGroupId String
+  flowGroup   FlowGroup @relation(fields: [flowGroupId], references: [id])
+
+  items ProvisionalInvoiceItem[]
+
+  totalQuantity Int
+  grossAmount   Decimal @db.Decimal(12, 2)
+  totalDiscount Decimal @db.Decimal(12, 2)
+  netAmount     Decimal @db.Decimal(12, 2)
+
+  notes String?
+
+  billedByUserId String
+  billedByUser   User   @relation(fields: [billedByUserId], references: [id])
+
+  createdAt    DateTime      @default(now())
+  salesReturns SalesReturn[]
+
+  @@index([flowGroupId])
+}
+
+// ================= PROVISIONAL INVOICE ITEM =================
+
+model ProvisionalInvoiceItem {
+  id String @id @default(uuid())
+
+  invoiceId String
+  invoice   ProvisionalInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  textbookId String
+  textbook   Textbook @relation(fields: [textbookId], references: [id])
+
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+
+  grossAmount Decimal @db.Decimal(12, 2)
+  netAmount   Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+  @@index([textbookId])
+}
+
+// ================= SALES RETURN (CUSTOMER) =================
+
+model SalesReturn {
+  id String @id @default(uuid())
+
+  flowGroupId String
+  flowGroup   FlowGroup @relation(fields: [flowGroupId], references: [id])
+
+  provisionalInvoiceId String
+  provisionalInvoice   ProvisionalInvoice @relation(fields: [provisionalInvoiceId], references: [id])
+
+  date DateTime
+
+  items SalesReturnItem[]
+}
+
+// ================= SALES RETURN ITEM =================
+
+model SalesReturnItem {
+  id String @id @default(uuid())
+
+  salesReturnId String
+  salesReturn   SalesReturn @relation(fields: [salesReturnId], references: [id])
+
+  textbookId String
+  textbook   Textbook @relation(fields: [textbookId], references: [id])
+
+  qtyReturned Int
+}
+
+// ================= PURCHASE RETURN (DEALER) =================
+
+model PurchaseReturn {
+  id String @id @default(uuid())
+
+  flowGroupId String
+  flowGroup   FlowGroup @relation(fields: [flowGroupId], references: [id])
+
+  date DateTime
+
+  items PurchaseReturnItem[]
+}
+
+// ================= PURCHASE RETURN ITEM =================
+
+model PurchaseReturnItem {
+  id String @id @default(uuid())
+
+  purchaseReturnId String
+  purchaseReturn   PurchaseReturn @relation(fields: [purchaseReturnId], references: [id])
+
+  textbookId String
+  textbook   Textbook @relation(fields: [textbookId], references: [id])
+
+  qtyReturned Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+}
+
+// ================= PAYMENT =================
+// Partial / Multiple payments
+
+model Payment {
+  id String @id @default(uuid())
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  flowGroupId String
+  flowGroup   FlowGroup @relation(fields: [flowGroupId], references: [id])
+
+  receiptNo String
+
+  amount Decimal     @db.Decimal(12, 2) // + received, - paid
+  mode   PaymentMode
+  note   String?
+
+  recordedByUserId String
+  recordedByUser   User   @relation(fields: [recordedByUserId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([academicYearId])
+  @@index([flowGroupId])
+}
+
+// ================= STOCK LEDGER =================
+// SINGLE SOURCE OF TRUTH FOR INVENTORY
+
+model StockLedger {
+  id String @id @default(uuid())
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  textbookId String
+  textbook   Textbook @relation(fields: [textbookId], references: [id])
+
+  qtyChange   Int
+  eventType   StockEventType
+  referenceId String
+
+  createdAt DateTime @default(now())
+
+  @@index([academicYearId])
+  @@index([textbookId])
+}
+
+// ================= EXPENSE =================
+
+model Expense {
+  id String @id @default(uuid())
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  category String
+  amount   Decimal     @db.Decimal(12, 2)
+  mode     PaymentMode
+  date     DateTime
+  notes    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([academicYearId])
+}
+
+model DocumentSequence {
+  id String @id @default(uuid())
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  type       DocumentType
+  lastNumber Int
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([academicYearId, type])
+}
