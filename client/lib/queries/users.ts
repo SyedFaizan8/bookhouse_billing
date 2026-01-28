@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { User } from "@/lib/types/user"
-import { API_BASE_URL } from "../constants"
 import api from "../utils/axios"
 
 export type UserPayload = {

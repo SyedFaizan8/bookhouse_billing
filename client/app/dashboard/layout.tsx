@@ -8,13 +8,17 @@ import { useEffect } from "react"
 export default function DashboardLayout({ children }: {
     children: React.ReactNode
 }) {
-
-    const router = useRouter()
-    const { data, isLoading } = useAuthUser()
+    const router = useRouter();
+    const { data: user, isLoading } = useAuthUser();
 
     useEffect(() => {
-        if (!data && !isLoading) router.push('/login')
-    }, [data, isLoading])
+        if (!isLoading && !user) {
+            router.replace("/login");
+        }
+    }, [user, isLoading, router]);
+
+    if (isLoading) return null;
+    if (!user) return null;
 
     return <SideBar>{children}</SideBar>
 }

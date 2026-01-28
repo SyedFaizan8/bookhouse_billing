@@ -3,7 +3,8 @@
 import { useParams, usePathname } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
-import { useCustomerProfile } from "@/lib/queries/customers";
+import { useSchoolProfile } from "@/lib/queries/schools";
+import PageLoader from "@/components/loaders/PageLoader";
 
 export default function DealerLayout({
     children,
@@ -12,14 +13,15 @@ export default function DealerLayout({
 }) {
     const { id } = useParams<{ id: string }>();
     const pathname = usePathname();
-    const { data, isLoading } = useCustomerProfile(id);
+    const { data, isLoading } = useSchoolProfile(id);
 
-    if (isLoading || !data) return null;
+    if (isLoading || !data) return <PageLoader />;
 
     const nav = [
         { label: "Overview", href: `/dashboard/schools/${id}` },
-        { label: "Issued", href: `/dashboard/schools/${id}/issued` },
-        { label: "Returns", href: `/dashboard/schools/${id}/returns` },
+        { label: "Estimations", href: `/dashboard/schools/${id}/estimations` },
+        { label: "Invoices", href: `/dashboard/schools/${id}/invoices` },
+        { label: "Credit Note", href: `/dashboard/schools/${id}/credit` },
         { label: "Payments", href: `/dashboard/schools/${id}/payments` },
         { label: "Statement", href: `/dashboard/schools/${id}/statement` },
         { label: "Edit Profile", href: `/dashboard/schools/${id}/edit` },
@@ -38,77 +40,65 @@ export default function DealerLayout({
             />
 
             {/* PROFILE HEADER */}
-            <div className="rounded-2xl bg-white ring-1 ring-black/5 overflow-hidden">
+            <div className="space-y-4">
 
-                {/* HEADER TOP */}
-                <div className="px-4 py-4 sm:px-6 sm:py-5">
-                    <h1 className="text-base sm:text-xl font-semibold truncate">
-                        {data.name}
-                    </h1>
-                    <p className="text-xs sm:text-sm text-slate-500">
-                        School profile
-                    </p>
-                </div>
+                {/* PROFILE CARD */}
+                <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-white ring-1 ring-black/5 overflow-hidden">
 
-                {/* MOBILE TABS */}
-                <div className="border-t bg-slate-50 sm:hidden">
-                    <div className="flex overflow-x-auto gap-2 px-3 py-2 scrollbar-hide">
-                        {nav.map((item) => {
-                            const active = pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`
-                                        shrink-0
-                                        rounded-full
-                                        px-4 py-1.5
-                                        text-sm font-medium
-                                        transition
-                                        ${active
-                                            ? "bg-indigo-600 text-white"
-                                            : "bg-white text-slate-600"
-                                        }
-                                    `}
-                                >
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
+                    {/* HEADER */}
+                    <div className="flex items-center gap-4 px-5 py-5 sm:px-6">
+
+                        {/* TITLE */}
+                        <div className="min-w-0">
+                            <h1 className="text-base sm:text-lg font-semibold truncate">
+                                {data.name}
+                            </h1>
+                            <p className="text-xs sm:text-sm text-slate-500">
+                                School profile
+                            </p>
+                        </div>
                     </div>
-                </div>
 
-                {/* DESKTOP TABS */}
-                <div className="hidden sm:block border-t">
-                    <div className="flex flex-wrap gap-2 px-6 py-3">
-                        {nav.map((item) => {
-                            const active = pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`
+                    {/* TAB NAV */}
+                    <div className="border-t bg-white/70 backdrop-blur">
+
+                        {/* MOBILE + DESKTOP UNIFIED */}
+                        <div className="flex gap-2 px-3 py-2 overflow-x-auto scrollbar-hide">
+
+                            {nav.map((item) => {
+                                const active = pathname === item.href;
+
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`
+                                            shrink-0
+                                            flex items-center gap-2
                                             rounded-full
-                                            px-4 py-1.5
-                                            text-sm font-medium
-                                            transition
+                                            px-4 py-2
+                                            text-sm
+                                            font-medium
+                                            transition-all
+                                            whitespace-nowrap
                                             ${active
-                                            ? "bg-indigo-50 text-indigo-700"
-                                            : "text-slate-600 hover:bg-slate-100"
-                                        }
-                                    `}
-                                >
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
+                                                ? "bg-indigo-600 text-white shadow-sm"
+                                                : "text-slate-600 hover:bg-slate-100"}
+                                            `}
+                                    >
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* PAGE CONTENT */}
-            <div className="rounded-2xl bg-white p-4 sm:p-6 ring-1 ring-black/5">
-                {children}
+                {/* PAGE CONTENT */}
+                <div className="rounded-2xl bg-white p-4 sm:p-6 ring-1 ring-black/5 shadow-sm">
+                    {children}
+                </div>
+
             </div>
         </div>
     );

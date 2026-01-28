@@ -2,11 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
-import StatementPdf from "@/components/pdf/CustomerStatementPDF";
-import { useCustomerStatement } from "@/lib/queries/settlement";
 import PdfViewerLoader from "@/components/loaders/PdfViewerLoader";
 import EmptyState from "@/components/EmptyState";
 import { FileText } from "lucide-react";
+import { useSchoolStatement } from "@/lib/queries/schools";
+import SchoolStatementPdf from "@/components/pdf/SchoolStatementPDF";
+import { useSettingsInfo } from "@/lib/queries/settings";
 
 const PDFViewer = dynamic(
     () => import("@react-pdf/renderer").then((m) => m.PDFViewer),
@@ -21,10 +22,11 @@ const PDFDownloadLink = dynamic(
 export default function CustomerStatementPage() {
     const { id } = useParams<{ id: string }>();
 
-    const { data, isLoading } = useCustomerStatement(id);
+    const { data, isLoading } = useSchoolStatement(id);
+    const { data: settings, isLoading: settingsLoading } = useSettingsInfo()
 
-    if (isLoading) return <PdfViewerLoader />;
-    if (!data) return null;
+    if (isLoading || settingsLoading) return <PdfViewerLoader />;
+    if (!data || !settings) return null;
 
     if (!data.rows.length) return (
         <EmptyState
@@ -32,8 +34,7 @@ export default function CustomerStatementPage() {
             title="No Statement found"
             description="Add Invoices or payments."
             actionLabel="Add Invoice"
-            actionHref={`/dashboard/schools/${id}/issued`
-            }
+            actionHref={`/dashboard/schools/${id}/invoices`}
         />
     )
 
@@ -42,7 +43,7 @@ export default function CustomerStatementPage() {
 
             <div className="flex justify-end">
                 <PDFDownloadLink
-                    document={<StatementPdf data={data} />}
+                    document={<SchoolStatementPdf data={data} settings={settings} />}
                     fileName="customer-statement.pdf"
                     className="bg-indigo-600 text-white px-4 py-2 rounded"
                 >
@@ -52,7 +53,7 @@ export default function CustomerStatementPage() {
 
             <div className="h-[90vh] border bg-white rounded">
                 <PDFViewer width="100%" height="100%">
-                    <StatementPdf data={data} />
+                    <SchoolStatementPdf data={data} settings={settings} />
                 </PDFViewer>
             </div>
         </div>

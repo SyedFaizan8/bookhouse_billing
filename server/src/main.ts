@@ -1,6 +1,6 @@
 import app from "./app.js";
 import { env } from "./env.js";
-import { prisma } from "./lib/prisma.js";
+import { prisma } from "./prisma.js";
 
 app.listen(env.PORT, () => {
   console.log(`🚀 Server running on ${env.PORT}`);

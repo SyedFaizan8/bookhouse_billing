@@ -2,9 +2,12 @@
 
 import dynamic from "next/dynamic";
 import InvoicePdf from "@/components/invoices/InvoicePdf";
-import { useParams } from "next/navigation";
-import { useInvoicePdf } from "@/lib/queries/invoice";
+import { useParams, useRouter } from "next/navigation";
 import PdfViewerLoader from "@/components/loaders/PdfViewerLoader";
+import { useInvoicePdf } from "@/lib/queries/schools";
+import { ArrowLeft } from "lucide-react";
+import WhatsAppButton from "@/components/WhatsappButton";
+import { useSettingsInfo } from "@/lib/queries/settings";
 
 const PDFViewer = dynamic(
     () => import("@react-pdf/renderer").then((m) => m.PDFViewer),
@@ -19,17 +22,32 @@ const PDFDownloadLink = dynamic(
 export default function InvoicePdfView() {
     const { id } = useParams<{ id: string }>()
 
-    const { data, isLoading } = useInvoicePdf(id);
+    const router = useRouter()
 
-    if (isLoading) return <PdfViewerLoader />;
-    if (!data) return null;
+    const { data, isLoading } = useInvoicePdf(id);
+    const { data: settings, isLoading: settingsLoading } = useSettingsInfo()
+
+    if (isLoading || settingsLoading) return <PdfViewerLoader />;
+    if (!data || !settings) return null;
 
     return (
         <div className="min-h-screen space-y-4">
-            <div className="flex justify-end">
+
+
+            <div className="flex justify-between">
+                <WhatsAppButton />
+
+                {/* BACK */}
+                <button
+                    onClick={() => router.back()}
+                    className="inline-flex items-center gap-2 border px-3 py-1.5 text-sm rounded hover:bg-slate-100"
+                >
+                    <ArrowLeft size={16} /> Back
+                </button>
+
                 <PDFDownloadLink
-                    document={<InvoicePdf data={data} />}
-                    fileName={`${data.invoiceNo}.pdf`}
+                    document={<InvoicePdf data={data} settings={settings} />}
+                    fileName={`${data.documentNo}.pdf`}
                     className="bg-indigo-600 text-white px-4 py-2 rounded"
                 >
                     {({ loading }) =>
@@ -40,7 +58,7 @@ export default function InvoicePdfView() {
 
             <div className="h-[90vh] border rounded bg-white">
                 <PDFViewer width="100%" height="100%">
-                    <InvoicePdf data={data} />
+                    <InvoicePdf data={data} settings={settings} />
                 </PDFViewer>
             </div>
         </div>

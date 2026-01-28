@@ -3,13 +3,13 @@
 import { useParams } from "next/navigation"
 import CustomerForm from "@/components/CustomerForm"
 import FormLoader from "@/components/loaders/FormLoader"
-import { useCustomerEdit } from "@/lib/queries/customers"
 import { School } from "lucide-react"
 import EmptyState from "@/components/EmptyState"
+import { useSchoolEdit } from "@/lib/queries/schools"
 
 export default function EditCustomerPage() {
     const { id } = useParams<{ id: string }>()
-    const { data, isLoading } = useCustomerEdit(id)
+    const { data, isLoading } = useSchoolEdit(id)
 
     if (isLoading) return <FormLoader />
 

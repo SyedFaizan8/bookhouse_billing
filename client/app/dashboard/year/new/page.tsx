@@ -9,6 +9,9 @@ import { toast } from "sonner"
 
 import Breadcrumbs from "@/components/Breadcrumbs"
 import { useCreateAcademicYear } from "@/lib/queries/academicYear"
+import { useRouter } from "next/navigation"
+import { handleApiError } from "@/lib/utils/getApiError"
+import Spinner from "@/components/Spinner"
 
 const schema = z
     .object({
@@ -30,6 +33,7 @@ export default function CreateAcademicYearPage() {
         resolver: zodResolver(schema),
     })
 
+    const router = useRouter()
     const mutation = useCreateAcademicYear()
 
     // Auto-suggest March → Feb
@@ -43,9 +47,11 @@ export default function CreateAcademicYearPage() {
 
     const onSubmit = (data: FormData) => {
         mutation.mutate(data, {
-            onSuccess: () => toast.success("Academic year created and activated"),
-            onError: (e: any) =>
-                toast.error(e.response?.data?.message || "Failed to create academic year"),
+            onSuccess: () => {
+                toast.success("Academic year created and activated")
+                router.replace('/dashboard/year')
+            },
+            onError: (e) => toast.error(handleApiError(e).message)
         })
     }
 
@@ -129,7 +135,9 @@ export default function CreateAcademicYearPage() {
                             disabled={mutation.isPending}
                             className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                         >
-                            {mutation.isPending ? "Creating..." : "Create Academic Year"}
+                            {mutation.isPending ? <span className="flex items-center justify-center gap-2">
+                                <Spinner size={18} /> Creating...
+                            </span> : "Create Academic Year"}
                         </button>
                     </div>
                 </form>

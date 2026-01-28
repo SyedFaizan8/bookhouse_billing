@@ -15,6 +15,10 @@ export const companyInfoSchema = z.object({
     bankName: z.string().optional().nullable(),
     accountNo: z.string().optional().nullable(),
     ifsc: z.string().optional().nullable(),
+    upi: z.string().optional().nullable(),
+
+    phoneSecondary: z.string().optional().nullable(),
+    phoneTertiary: z.string().optional().nullable(),
 
     logoUrl: z.string().optional().nullable(),
     qrCodeUrl: z.string().optional().nullable()

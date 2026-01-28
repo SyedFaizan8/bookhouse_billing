@@ -1,102 +1,79 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 import { MoreVertical } from "lucide-react"
 
-type Props = {
-    open: boolean
-    onOpen: () => void
-    onClose: () => void
-    onEdit?: () => void
-    onDeactivate?: () => void
-    dType?: "Deactivate" | "Close"
+type Action = {
+    label: string
+    onClick: () => void
+    variant?: "default" | "danger" | "warning"
 }
 
-export default function RowActions({
-    open,
-    onOpen,
-    onClose,
-    onEdit,
-    onDeactivate,
-    dType = "Deactivate"
-}: Props) {
-    const buttonRef = useRef<HTMLButtonElement>(null)
-    const menuRef = useRef<HTMLDivElement>(null)
-    const [pos, setPos] = useState({ top: 0, left: 0 })
+type Props = {
+    actions: Action[]
+}
 
-    // Calculate position relative to viewport
-    useEffect(() => {
-        if (open && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect()
-            setPos({
-                top: rect.bottom + 6,
-                left: rect.right - 140, // menu width
-            })
-        }
-    }, [open])
-
-    // Close on outside click
-    useEffect(() => {
-        function handleClick(e: MouseEvent) {
-            if (
-                menuRef.current &&
-                !menuRef.current.contains(e.target as Node) &&
-                !buttonRef.current?.contains(e.target as Node)
-            ) {
-                onClose()
-            }
-        }
-
-        if (open) {
-            document.addEventListener("mousedown", handleClick)
-        }
-
-        return () => document.removeEventListener("mousedown", handleClick)
-    }, [open, onClose])
+export default function RowActions({ actions }: Props) {
+    if (!actions.length) return null
 
     return (
-        <>
-            {/* Trigger */}
-            <button
-                ref={buttonRef}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    open ? onClose() : onOpen()
-                }}
-                className="rounded-md p-2 hover:bg-slate-200"
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    className="
+                        rounded-md p-2
+                        border border-slate-200
+                        hover:bg-slate-100
+                        active:bg-slate-200
+                        transition
+                    "
+                >
+                    <MoreVertical size={16} />
+                </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+                align="end"
+                sideOffset={6}
+                className="
+                    w-48
+                    rounded-lg
+                    border border-slate-200
+                    bg-white
+                    shadow-xl
+                    p-1
+                    "
             >
-                <MoreVertical size={16} />
-            </button>
-
-            {/* Menu via Portal */}
-            {open &&
-                createPortal(
-                    <div
-                        ref={menuRef}
-                        className="fixed z-[9999] w-32 rounded-md bg-white shadow-lg ring-1 ring-black/5"
-                        style={{ top: pos.top, left: pos.left }}
+                {actions.map((action, idx) => (
+                    <DropdownMenuItem
+                        key={idx}
+                        onClick={action.onClick}
+                        className={`
+                            flex items-center
+                            rounded-md
+                            px-3 py-2.5
+                            text-sm
+                            cursor-pointer
+                            transition
+                            focus:outline-none
+                            ${action.variant === "danger"
+                                ? "text-rose-600 hover:bg-rose-50 focus:bg-rose-50"
+                                : action.variant === "warning"
+                                    ? "text-orange-600 hover:bg-orange-50 focus:bg-orange-50"
+                                    : "hover:bg-slate-100 focus:bg-slate-100"
+                            }
+                        `}
                     >
-                        {onEdit && (
-                            <button
-                                onClick={onEdit}
-                                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-100"
-                            >
-                                Edit
-                            </button>
-                        )}
-
-                        {onDeactivate && (
-                            <button
-                                onClick={onDeactivate}
-                                className="block w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
-                            >
-                                {dType}
-                            </button>
-                        )}
-                    </div>,
-                    document.body
-                )}
-        </>
+                        {action.label}
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }

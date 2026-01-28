@@ -1,73 +1,186 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateDealerPayment } from "@/lib/queries/dealers";
+import { useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Plus, IndianRupee, Search } from "lucide-react";
 
-const Schema = z.object({
-    date: z.string(),
-    amount: z.number().positive(),
-    mode: z.enum(["CASH", "UPI", "BANK"]),
-    note: z.string().optional(),
-});
+import ResponsiveTable, { Column } from "@/components/ResponsiveTable";
+import TableLoader from "@/components/loaders/TableLoader";
+import EmptyState from "@/components/EmptyState";
+import Pagination from "@/components/Pagination";
 
-type Form = z.infer<typeof Schema>;
+import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { PaymentRow } from "@/lib/types/payments";
+import { useCompanyPayments } from "@/lib/queries/company";
 
-export default function DealerPaymentsPage() {
+const PAGE_SIZE = 10;
+
+export default function PaymentsPage() {
     const { id } = useParams<{ id: string }>();
-    const mutation = useCreateDealerPayment(id);
+    const router = useRouter();
 
-    const form = useForm<Form>({
-        resolver: zodResolver(Schema),
-        defaultValues: {
-            date: new Date().toISOString().substring(0, 10),
-            amount: 0,
-            mode: "CASH",
-        },
+    const [search, setSearch] = useState("");
+
+    const { data = [], isLoading } = useCompanyPayments(id);
+
+    /* ======================================================
+       SEARCH FILTER
+    ====================================================== */
+
+    const filtered = useMemo(() => {
+        if (!search) return data;
+
+        return data.filter((p) =>
+            p.receiptNo
+                .toLowerCase()
+                .includes(search.toLowerCase())
+        );
+    }, [data, search]);
+
+    /* ======================================================
+       PAGINATION
+    ====================================================== */
+
+    const {
+        page,
+        setPage,
+        totalPages,
+        pageData,
+    } = useClientPagination({
+        data: filtered,
+        pageSize: PAGE_SIZE,
     });
 
+    /* ======================================================
+       TABLE COLUMNS
+    ====================================================== */
+
+    const columns: Column<PaymentRow>[] = [
+        {
+            key: "receiptNo",
+            header: "Receipt No",
+            render: (p) => (
+                <div>
+                    <div className="font-medium text-indigo-700">
+                        {p.receiptNo}
+                    </div>
+
+                    {/* mobile */}
+                    <div className="text-xs text-slate-500 md:hidden">
+                        {new Date(p.date).toLocaleDateString("en-IN")}
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: "date",
+            header: "Date",
+            className: "hidden md:table-cell",
+            render: (p) =>
+                new Date(p.date).toLocaleDateString("en-IN"),
+        },
+        {
+            key: "mode",
+            header: "Mode",
+            className: "hidden sm:table-cell",
+            render: (p) => p.mode,
+        },
+        {
+            key: "amount",
+            header: "Amount",
+            className:
+                "text-right font-semibold text-green-600",
+            render: (p) =>
+                `₹${p.amount.toLocaleString("en-IN")}`,
+        },
+    ];
+
+    /* ======================================================
+       STATES
+    ====================================================== */
+
+    if (isLoading) return <TableLoader />;
+
+    if (!data.length) {
+        return (
+            <EmptyState
+                icon={IndianRupee}
+                title="No payments recorded"
+                description="No payments have been recorded for this school yet."
+                actionLabel="Add Payment"
+                actionHref={`/dashboard/companies/${id}/payments/new`}
+            />
+        );
+    }
+
+    /* ======================================================
+       UI
+    ====================================================== */
+
     return (
-        <div className="space-y-6 max-w-lg">
-            <h2 className="text-lg font-semibold">Company Payment</h2>
+        <div className="space-y-6">
 
-            <input
-                type="date"
-                {...form.register("date")}
-                className="border rounded px-3 py-2 w-full"
+            <h1 className="text-xl font-semibold">
+                Payments
+            </h1>
+
+            {/* SEARCH + ADD */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+
+                {/* SEARCH */}
+                <div className="relative max-w-sm w-full">
+                    <Search
+                        className="absolute left-3 top-2.5 text-slate-400"
+                        size={18}
+                    />
+                    <input
+                        className="w-full pl-10 pr-3 py-2 border rounded-md"
+                        placeholder="Search receipt number"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+
+                {/* ADD PAYMENT */}
+                <button
+                    onClick={() =>
+                        router.push(`/dashboard/companies/${id}/payments/new`)
+                    }
+                    className="
+                        bg-indigo-600 hover:bg-indigo-700
+                        text-white px-4 py-2 rounded-md
+                        flex items-center gap-2
+                        whitespace-nowrap
+                    "
+                >
+                    <Plus size={18} />
+                    Add Payment
+                </button>
+            </div>
+
+            {/* TABLE */}
+            <ResponsiveTable
+                data={pageData}
+                columns={columns}
+                getRowId={(r) => r.id}
+                onRowClick={(r) =>
+                    router.push(`/dashboard/companies/${id}/payments/${r.id}`)
+                }
             />
 
-            <input
-                type="number"
-                min={1}
-                {...form.register("amount", { valueAsNumber: true })}
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Amount"
+            {/* PAGINATION */}
+            <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
             />
 
-            <select
-                {...form.register("mode")}
-                className="border rounded px-3 py-2 w-full"
-            >
-                <option value="CASH">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="BANK">Bank</option>
-            </select>
-
-            <textarea
-                {...form.register("note")}
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Note (optional)"
-            />
-
-            <button
-                disabled={mutation.isPending}
-                onClick={form.handleSubmit((d) => mutation.mutate(d))}
-                className="bg-indigo-700 text-white px-6 py-3 rounded disabled:opacity-60"
-            >
-                {mutation.isPending ? "Saving..." : "Save Payment"}
-            </button>
+            {/* FOOTER */}
+            <div className="text-xs text-slate-500">
+                Showing {(page - 1) * PAGE_SIZE + 1}–
+                {Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
+                {filtered.length} payments
+            </div>
         </div>
     );
 }

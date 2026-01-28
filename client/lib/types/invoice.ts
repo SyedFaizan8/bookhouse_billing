@@ -1,46 +1,78 @@
 export type InvoicePdfData = {
-    invoiceNo: string;
+    documentNo: string;
     date: string;
 
-    company: {
-        name: string;
-        phone?: string;
-        email?: string;
-        gst?: string;
-        address: string;
-        bankName?: string;
-        accountNo?: string;
-        ifsc?: string;
-        upi?: string;
-        logoUrl?: string;
-        qrCodeUrl?: string
+    school: {
+        name: string
+        phone: string
+        email?: string
+        contactPerson?: string
+
+        street?: string
+        town?: string
+        district?: string
+        state?: string
+        pincode?: string
+
+        gst?: string
     };
 
-    customer: {
-        name: string;
-        address: string;
-        phone?: string;
-        gst?: string;
-    };
-
-    items: {
-        title: string;
-        qty: number;
-        rate: number;
-        discountPercent: number;
-    }[];
+    items: Item[];
 
     totals: {
-        qty: number;
-        gross: number;
-        discount: number;
-        final: number;
+        totalQuantity: number;
+        grossAmount: number;
+        totalDiscount: number;
+        netAmount: number;
     };
 
     billedBy: string;
+    kind: DocumentKind
 };
 
-export type InvoiceNumber = {
-    invoiceNo: string;
-    nextNumber: number
+
+export type CompanyInvoicePdfData = {
+    documentNo: string;
+    date: string;
+
+    company: {
+        name: string
+        phone: string
+        email?: string
+
+        street?: string
+        town?: string
+        district?: string
+        state?: string
+        pincode?: string
+
+        gst?: string
+    };
+
+    items: Item[];
+
+    totals: {
+        totalQuantity: number;
+        grossAmount: number;
+        totalDiscount: number;
+        netAmount: number;
+    };
+
+    billedBy: string;
+    kind: DocumentKind
+};
+
+
+export type Item = {
+    description: string;
+    class: string;
+    company: string;
+    quantity: number;
+    rate: number;
+    discountPercent: number;
+    discountAmount: number,
+    grossAmount: number,
+    netAmount: number
 }
+
+export type DocumentKind = ["INVOICE", "ESTIMATION", "CREDIT_NOTE"]

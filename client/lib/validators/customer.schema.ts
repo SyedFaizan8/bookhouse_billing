@@ -32,15 +32,9 @@ export const customerFormSchema = z.object({
 
     state: optionalField(z.string().trim().max(100)),
 
-    pincode: optionalField(
-        z.string().regex(/^\d{6}$/, "Pincode must be 6 digits")
-    ),
+    pincode: optionalField(z.string().trim().max(100)),
 
-    gst: optionalField(
-        z.string().regex(
-            /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
-        )
-    ),
+    gst: optionalField(z.string().trim().max(100)),
 
     board: optionalField(z.string().max(50)),
 

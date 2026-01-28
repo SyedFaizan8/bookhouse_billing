@@ -1,72 +1,65 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { LibraryBig, Plus, Search } from "lucide-react"
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus, Search } from "lucide-react";
 
-import Breadcrumbs from "@/components/Breadcrumbs"
-import ResponsiveTable, { Column } from "@/components/ResponsiveTable"
-import TableLoader from "@/components/loaders/TableLoader"
-import EmptyState from "@/components/EmptyState"
-import Pagination from "@/components/Pagination"
+import Breadcrumbs from "@/components/Breadcrumbs";
+import ResponsiveTable, { Column } from "@/components/ResponsiveTable";
+import Pagination from "@/components/Pagination";
 
-import { Company } from "@/lib/types/dealer"
-import { useDealersInfinite } from "@/lib/queries/dealers"
-import { useSorting } from "@/lib/hooks/useSorting"
-import { useClientPagination } from "@/lib/hooks/useClientPagination"
-import { sortData } from "@/lib/utils/sortData"
+import { useSorting } from "@/lib/hooks/useSorting";
+import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+import { sortData } from "@/lib/utils/sortData";
+import { Company } from "@/lib/types/company";
+import { useCompanyInfinite } from "@/lib/queries/company";
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 10;
 
-export default function DealersPage() {
-    const router = useRouter()
+export default function CustomersPage() {
+    const router = useRouter();
 
-    const [search, setSearch] = useState("")
-    const [menuOpen, setMenuOpen] = useState<string | null>(null)
+    const searchRef = useRef<HTMLInputElement>(null);
+
+    const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search);
+
+    useEffect(() => {
+        searchRef.current?.focus();
+        setPage(1)
+    }, [debouncedSearch]);
+
 
     const { sortBy, order, toggleSort } =
-        useSorting<"name" | "addedOn" | "amountDue">("addedOn")
+        useSorting<"name" | "addedOn">("addedOn");
 
     const {
         data,
         isLoading,
         hasNextPage,
         fetchNextPage,
-        isFetchingNextPage,
-    } = useDealersInfinite(sortBy, order)
+    } = useCompanyInfinite(sortBy, order, debouncedSearch);
 
+
+    // flatten server pages
     const allRows: Company[] = useMemo(() => {
-        const rows =
-            data?.pages.flatMap((p) => p.items ?? []) ?? []
-
-        return rows.length <= 500
-            ? sortData(rows, sortBy, order)
-            : rows
-    }, [data, sortBy, order])
-
-    const filtered: Company[] = useMemo(() => {
-        if (!search) return allRows
-        const q = search.toLowerCase()
-
-        return allRows.filter(
-            (d) =>
-                d.name.toLowerCase().includes(q) ||
-                d.phone.includes(search)
-        )
-    }, [allRows, search])
+        const raw = data?.pages.flatMap((p) => p.items) ?? [];
+        return raw.length <= 500 ? sortData(raw, sortBy, order) : raw;
+    }, [data, sortBy, order]);
 
     const {
         page,
         setPage,
         totalPages,
         pageData,
-    } = useClientPagination({
-        data: filtered,
+    } = useClientPagination<Company>({
+        data: allRows,
         pageSize: PAGE_SIZE,
         fetchNext: fetchNextPage,
         hasNextPage,
-    })
+    });
 
     const sortHeader = (label: string, key: typeof sortBy) => (
         <button
@@ -76,28 +69,26 @@ export default function DealersPage() {
             {label}
             {sortBy === key && (order === "asc" ? "↑" : "↓")}
         </button>
-    )
+    );
 
     const columns: Column<Company>[] = [
         {
-            key: "name",
-            header: sortHeader("Company Name", "name"),
-            render: (d) => (
+            key: "#",
+            header: "#",
+            render: (_, index) => (
                 <div>
-                    <div className="flex items-center gap-2">
-                        <span className={`font-medium ${!d.active ? "line-through text-slate-400" : ""}`}>
-                            {d.name}
-                        </span>
-
-                        {!d.active && (
-                            <span className="text-xs bg-slate-200 px-2 py-0.5 rounded">
-                                Inactive
-                            </span>
-                        )}
-                    </div>
-
+                    <div className="font-medium text-xs text-left">{(page - 1) * PAGE_SIZE + index! + 1}</div>
+                </div>
+            ),
+        },
+        {
+            key: "name",
+            header: sortHeader("Name", "name"),
+            render: (c) => (
+                <div>
+                    <div className="font-medium">{c.name}</div>
                     <div className="text-xs text-slate-500 md:hidden">
-                        {d.phone}
+                        {c.phone}
                     </div>
                 </div>
             ),
@@ -106,48 +97,35 @@ export default function DealersPage() {
             key: "phone",
             header: "Phone",
             className: "hidden md:table-cell",
-            render: (d) => d.phone,
-        },
-        {
-            key: "amountDue",
-            header: sortHeader("Amount Due", "amountDue"),
-            className: "hidden md:table-cell text-rose-600 font-medium",
-            render: (d) => `₹${d.amountDue.toLocaleString()}`,
+            render: (c) => c.phone,
         },
         {
             key: "addedOn",
             header: sortHeader("Added On", "addedOn"),
             className: "hidden lg:table-cell text-slate-500",
-            render: (d) =>
-                new Date(d.addedOn).toLocaleDateString("en-IN"),
+            render: (c) =>
+                new Date(c.addedOn).toLocaleDateString("en-IN"),
         },
-    ]
-
-    if (isLoading) return <TableLoader />
-
-    if (!allRows.length) {
-        return (
-            <EmptyState
-                icon={LibraryBig}
-                title="No companies found"
-                description="Add publishers or book suppliers."
-                actionLabel="Add Company"
-                actionHref="/dashboard/companies/new"
-            />
-        )
-    }
+    ];
 
     return (
         <div className="space-y-6">
-            <Breadcrumbs items={[
-                { label: "Dashboard", href: "/dashboard" },
-                { label: "Companies" },
-            ]} />
+            <Breadcrumbs
+                items={[
+                    { label: "Dashboard", href: "/dashboard" },
+                    { label: "Company" },
+                ]}
+            />
 
-            <div className="flex justify-between gap-4">
+            {/* SEARCH */}
+            <div className="flex flex-col md:flex-row md:justify-between gap-4">
                 <div className="relative max-w-sm w-full">
-                    <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                    <Search
+                        className="absolute left-3 top-2.5 text-slate-400"
+                        size={18}
+                    />
                     <input
+                        ref={searchRef}
                         className="w-full pl-10 pr-3 py-2 border rounded-md"
                         placeholder="Search by name or phone"
                         value={search}
@@ -164,25 +142,21 @@ export default function DealersPage() {
                 </Link>
             </div>
 
-            <ResponsiveTable
+            <ResponsiveTable<Company>
                 data={pageData}
                 columns={columns}
                 getRowId={(row) => row.id}
                 onRowClick={(row) => {
-                    if (menuOpen) return
-                    router.push(`/dashboard/companies/${row.id}`)
+                    router.push(`/dashboard/companies/${row.id}`);
                 }}
             />
 
-            <div className="sticky bottom-0">
-                <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    hasNextPage={hasNextPage}
-                    isFetchingNext={isFetchingNextPage}
-                    onPageChange={(p) => setPage(p)}
-                />
-            </div>
+            <Pagination
+                page={page}
+                totalPages={totalPages}
+                hasNextPage={hasNextPage}
+                onPageChange={setPage}
+            />
         </div>
-    )
+    );
 }

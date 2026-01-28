@@ -1,121 +1,3 @@
-// import {
-//     Document,
-//     Page,
-//     Text,
-//     View,
-//     StyleSheet,
-//     Font,
-// } from "@react-pdf/renderer";
-// import { ReceiptPdfData } from "@/lib/types/payments";
-
-// Font.register({
-//     family: "Inter",
-//     fonts: [
-//         { src: "/fonts/Inter_18pt-Regular.ttf" },
-//         { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
-//     ],
-// });
-
-// const styles = StyleSheet.create({
-//     page: {
-//         padding: 40,
-//         fontSize: 11,
-//         fontFamily: "Inter",
-//     },
-
-//     header: {
-//         textAlign: "center",
-//         marginBottom: 20,
-//     },
-
-//     title: {
-//         fontSize: 18,
-//         fontWeight: 700,
-//     },
-
-//     box: {
-//         border: "1px solid #e5e7eb",
-//         padding: 12,
-//         borderRadius: 6,
-//         marginBottom: 12,
-//     },
-
-//     row: {
-//         flexDirection: "row",
-//         justifyContent: "space-between",
-//         marginBottom: 6,
-//     },
-
-//     amount: {
-//         fontSize: 18,
-//         fontWeight: 700,
-//         textAlign: "center",
-//         marginVertical: 20,
-//     },
-
-//     footer: {
-//         marginTop: 30,
-//         textAlign: "center",
-//         fontSize: 9,
-//         color: "#64748b",
-//     },
-// });
-
-// export default function ReceiptPdf({ data }: { data: ReceiptPdfData }) {
-//     return (
-//         <Document>
-//             <Page size="A4" style={styles.page}>
-//                 {/* HEADER */}
-//                 <View style={styles.header}>
-//                     <Text style={styles.title}>{data.company.name.toUpperCase()}</Text>
-//                     <Text>{data.company.address}</Text>
-//                     {data.company.phone && <Text>{data.company.phone}</Text>}
-//                 </View>
-
-//                 <View style={styles.box}>
-//                     <View style={styles.row}>
-//                         <Text>Receipt No</Text>
-//                         <Text>{data.receiptNo}</Text>
-//                     </View>
-//                     <View style={styles.row}>
-//                         <Text>Date</Text>
-//                         <Text>
-//                             {new Date(data.date).toLocaleDateString("en-IN")}
-//                         </Text>
-//                     </View>
-//                 </View>
-
-//                 <View style={styles.box}>
-//                     <Text>Received From:</Text>
-//                     <Text>{data.customer.name}</Text>
-//                     {data.customer.phone && (
-//                         <Text>{data.customer.phone}</Text>
-//                     )}
-//                 </View>
-
-//                 <Text style={styles.amount}>
-//                     Amount Received: ₹{data.amount}
-//                 </Text>
-
-//                 <View style={styles.box}>
-//                     <Text>Payment Mode: {data.mode}</Text>
-//                     {data.referenceNo && (
-//                         <Text>Reference No: {data.referenceNo}</Text>
-//                     )}
-//                 </View>
-
-//                 <View style={{ marginTop: 40, textAlign: "right" }}>
-//                     <Text>Authorized Signature</Text>
-//                 </View>
-
-//                 <Text style={styles.footer}>
-//                     This is a computer-generated receipt
-//                 </Text>
-//             </Page>
-//         </Document>
-//     );
-// }
-
 import {
     Document,
     Page,
@@ -126,6 +8,8 @@ import {
     Font,
 } from "@react-pdf/renderer";
 import { ReceiptPdfData } from "@/lib/types/payments";
+import { SettingsInfoResponse } from "@/lib/queries/settings";
+import { API_BASE_URL } from "@/lib/constants";
 
 /* ================= FONT ================= */
 
@@ -146,6 +30,22 @@ const styles = StyleSheet.create({
         fontFamily: "Inter",
         color: "#0f172a",
     },
+
+
+    bold: {
+        fontWeight: 700,
+    },
+
+    text: {
+        fontSize: 10,
+        color: "#0f172a",
+    },
+
+    muted: {
+        fontSize: 9,
+        color: "#475569",
+    },
+
 
     rowBetween: {
         flexDirection: "row",
@@ -197,6 +97,8 @@ const styles = StyleSheet.create({
 
     sectionTitle: {
         fontWeight: 700,
+        fontSize: 10,
+        textDecoration: "underline",
         marginBottom: 4,
     },
 
@@ -239,8 +141,10 @@ const styles = StyleSheet.create({
 
 export default function ReceiptPdf({
     data,
+    settings,
 }: {
     data: ReceiptPdfData;
+    settings: SettingsInfoResponse
 }) {
     return (
         <Document>
@@ -260,20 +164,56 @@ export default function ReceiptPdf({
 
                 {/* HEADER */}
                 <View style={styles.header}>
-                    <Image src="/logo.png" style={styles.logo} />
+                    {settings?.logoUrl && (
+                        <Image
+                            src={API_BASE_URL + settings.logoUrl}
+                            style={styles.logo}
+                        />
+                    )}
 
                     <Text style={styles.title}>
-                        {data.company.name.toUpperCase()}
+                        {settings?.name?.toUpperCase()}
                     </Text>
 
+                    {/* Address */}
+                    {(settings?.street ||
+                        settings?.town ||
+                        settings?.district ||
+                        settings?.state ||
+                        settings?.pincode) && (
+                            <Text style={styles.companyInfo}>
+                                {[
+                                    settings.street,
+                                    settings.town,
+                                    settings.district,
+                                    settings.state,
+                                    settings.pincode,
+                                ]
+                                    .filter(Boolean)
+                                    .join(", ")}
+                            </Text>
+                        )}
+
+                    {/* Contact */}
                     <Text style={styles.companyInfo}>
-                        {data.company.address}{"\n"}
-                        {data.company.phone}
-                        {data.company.email &&
-                            ` • ${data.company.email}`}{"\n"}
-                        {data.company.gst &&
-                            `GST: ${data.company.gst}`}
+                        Phone: {settings?.phone}
+                        {settings?.phoneSecondary && `, ${settings.phoneSecondary}`}
+                        {settings?.phoneTertiary && `, ${settings.phoneTertiary}`}
                     </Text>
+
+                    {/* Email */}
+                    {settings?.email && (
+                        <Text style={styles.companyInfo}>
+                            Email: {settings.email}
+                        </Text>
+                    )}
+
+                    {/* GST */}
+                    {settings?.gst && (
+                        <Text style={styles.companyInfo}>
+                            GSTIN: {settings.gst}
+                        </Text>
+                    )}
                 </View>
 
                 {/* BADGE */}
@@ -291,10 +231,10 @@ export default function ReceiptPdf({
                         <Text>{data.mode}</Text>
                     </View>
 
-                    {data.referenceNo && (
+                    {data.note && (
                         <View style={styles.row}>
                             <Text>Reference No</Text>
-                            <Text>{data.referenceNo}</Text>
+                            <Text>{data.note}</Text>
                         </View>
                     )}
                 </View>
@@ -305,14 +245,36 @@ export default function ReceiptPdf({
                         Received From
                     </Text>
 
-                    <Text>{data.customer.name}</Text>
+                    <Text>{data.school.name}</Text>
 
-                    {data.customer.phone && (
-                        <Text>Phone: {data.customer.phone}</Text>
+                    {(data.school.street ||
+                        data.school.town ||
+                        data.school.district ||
+                        data.school.state ||
+                        data.school.pincode) && (
+                            <Text>
+                                {[
+                                    data.school.street,
+                                    data.school.town,
+                                    data.school.district,
+                                    data.school.state,
+                                    data.school.pincode,
+                                ]
+                                    .filter(Boolean)
+                                    .join(", ")}
+                            </Text>
+                        )}
+
+                    <Text>Phone: {data.school.phone}</Text>
+
+                    {data.school.email && (
+                        <Text>
+                            Email: {data.school.email}
+                        </Text>
                     )}
 
-                    {data.customer.gst && (
-                        <Text>GSTIN: {data.customer.gst}</Text>
+                    {data.school.gst && (
+                        <Text>GSTIN: {data.school.gst}</Text>
                     )}
                 </View>
 
@@ -326,7 +288,7 @@ export default function ReceiptPdf({
 
                 {/* SIGNATURE */}
                 <View style={styles.footerRight}>
-                    <Text>For {data.company.name}</Text>
+                    <Text>For {settings.name}</Text>
 
                     <Text
                         style={{

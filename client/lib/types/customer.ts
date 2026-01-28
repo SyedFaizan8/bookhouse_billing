@@ -2,11 +2,10 @@ export type School = {
     id: string
     name: string
     phone: string
-    amountDue: number
     addedOn: string
 }
 
-export type CustomerEditResponse = {
+export type SchoolEditResponse = {
     id: string
     name: string
     phone: string
@@ -24,7 +23,7 @@ export type CustomerEditResponse = {
 }
 
 // customer2
-export type CustomerProfile = {
+export type SchoolProfile = {
     id: string,
     name: string,
     phone: string,
@@ -46,34 +45,9 @@ export type CustomerProfile = {
 
 export type InvoiceRow = {
     id: string;
-    invoiceNo: string;
+    documentNo: string;
     date: string;
     totalQty: number;
     amount: number;
     createdAt: string;
-};
-
-export type StatementRow = {
-    date: string;
-    type: "Invoice" | "Payment" | "Sales Return";
-    ref: string;
-    debit: number;
-    credit: number;
-    balance: number;
-};
-
-export type CustomerStatement = {
-    rows: StatementRow[];
-    company: {
-        name: string;
-        address: string;
-        phone?: string;
-        gst?: string;
-    };
-    customer: {
-        name: string;
-        phone?: string;
-        gst?: string;
-        address?: string;
-    };
 };

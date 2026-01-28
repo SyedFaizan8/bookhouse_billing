@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../prisma.js";
 import { env } from "../env.js";
 
 export async function createInitialAdmin() {

@@ -6,15 +6,17 @@ import { toast } from "sonner"
 import { useEffect, useState } from "react"
 
 import {
-    companyInfoSchema,
-    CompanyInfoForm,
+    settingsInfoSchema,
+    SettingsInfoForm,
 } from "@/lib/validators/companyInfo.schema"
 
 import { CompanySettings } from "@/lib/types/company"
 import { API_BASE_URL } from "@/lib/constants"
-import { useUpdateCompanyInfo } from "@/lib/queries/company"
+import { useUpdateSettingsInfo } from "@/lib/queries/settings"
+import { handleApiError } from "@/lib/utils/getApiError"
+import Spinner from "./Spinner"
 
-function sanitizeDefaults(data: CompanySettings): CompanyInfoForm {
+function sanitizeDefaults(data: CompanySettings): SettingsInfoForm {
     return {
         ...data,
         email: data.email ?? undefined,
@@ -27,6 +29,8 @@ function sanitizeDefaults(data: CompanySettings): CompanyInfoForm {
         accountNo: data.accountNo ?? undefined,
         ifsc: data.ifsc ?? undefined,
         upi: data.upi ?? undefined,
+        phoneSecondary: data?.phoneSecondary ?? undefined,
+        phoneTertiary: data?.phoneTertiary ?? undefined,
         logoUrl: data.logoUrl ?? undefined,
         qrCodeUrl: data.qrCodeUrl ?? undefined,
     }
@@ -37,14 +41,14 @@ export default function SettingsForm({
 }: {
     defaultValues: CompanySettings
 }) {
-    const updateCompany = useUpdateCompanyInfo()
+    const updateCompany = useUpdateSettingsInfo()
 
-    const form = useForm<CompanyInfoForm>({
-        resolver: zodResolver(companyInfoSchema),
+    const form = useForm<SettingsInfoForm>({
+        resolver: zodResolver(settingsInfoSchema),
         defaultValues: sanitizeDefaults(defaultValues),
     })
 
-    const { register, handleSubmit, reset, formState } = form
+    const { register, handleSubmit, reset, formState, setError } = form
 
     useEffect(() => {
         reset(sanitizeDefaults(defaultValues))
@@ -67,7 +71,7 @@ export default function SettingsForm({
             : null
     )
 
-    const onSubmit = (data: CompanyInfoForm) => {
+    const onSubmit = (data: SettingsInfoForm) => {
         const formData = new FormData()
 
         Object.entries(data).forEach(([k, v]) => {
@@ -81,8 +85,7 @@ export default function SettingsForm({
 
         updateCompany.mutate(formData, {
             onSuccess: () => toast.success("Company settings updated"),
-            onError: (e: any) =>
-                toast.error(e.message ?? "Update failed"),
+            onError: (e) => toast.error(handleApiError(e, { setError }).message),
         })
     }
 
@@ -138,7 +141,7 @@ export default function SettingsForm({
                 "
             >
                 <Input label="Company Name" required {...register("name")} />
-                <Input label="Phone" required {...register("phone")} />
+                <Input label="Primary Phone" required {...register("phone")} />
                 <Input label="Email" {...register("email")} />
 
                 <Input label="GST" {...register("gst")} />
@@ -152,7 +155,11 @@ export default function SettingsForm({
                 <Input label="Account No" {...register("accountNo")} />
                 <Input label="IFSC" {...register("ifsc")} />
 
+
                 <Input label="UPI" {...register("upi")} />
+
+                <Input label="Secondary Phone" {...register("phoneSecondary")} />
+                <Input label="Aditional Phone" {...register("phoneTertiary")} />
             </div>
 
             {/* ================= ACTION ================= */}
@@ -172,7 +179,9 @@ export default function SettingsForm({
                         disabled:bg-indigo-400
                     "
                 >
-                    {updateCompany.isPending ? "Saving..." : "Save Settings"}
+                    {updateCompany.isPending ? <span className="flex items-center justify-center gap-2">
+                        <Spinner size={18} /> Saving...
+                    </span> : "Save Settings"}
                 </button>
             </div>
         </form>
@@ -245,7 +254,7 @@ function ImageUpload({
                     <div className="text-center space-y-2 px-4">
                         <div className="text-indigo-600 text-2xl">📤</div>
                         <p className="text-sm font-medium text-slate-700">
-                            Upload image
+                            upload {label.toLowerCase()}
                         </p>
                         <p className="text-xs text-slate-500">
                             PNG, JPG up to 2MB

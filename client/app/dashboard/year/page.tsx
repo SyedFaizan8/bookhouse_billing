@@ -2,81 +2,104 @@
 
 import { useMemo, useState } from "react"
 import { Plus, Calendar } from "lucide-react"
+import Link from "next/link"
+import { toast } from "sonner"
 
 import Breadcrumbs from "@/components/Breadcrumbs"
 import ResponsiveTable, { Column } from "@/components/ResponsiveTable"
 import EmptyState from "@/components/EmptyState"
 import RowActions from "@/components/RowActions"
-import DeleteConfirmModal from "@/components/DeleteConfirmModal"
+import TableLoader from "@/components/loaders/TableLoader"
 
 import { AcademicYear } from "@/lib/types/academicYear"
 import {
     useAcademicYears,
     useCloseAcademicYear,
+    useOpenAcademicYear,
 } from "@/lib/queries/academicYear"
-import Link from "next/link"
-import TableLoader from "@/components/loaders/TableLoader"
 import { useAuthUser } from "@/lib/queries/auth"
+import { handleApiError } from "@/lib/utils/getApiError"
+
+import { AcademicYearCloseDialog } from "@/components/alertBox/AcademicYearCloseDialog"
+import { AcademicYearOpenDialog } from "@/components/alertBox/AcademicYearOpenDialog"
 
 export default function AcademicYearsPage() {
     const { data, isLoading } = useAcademicYears()
+    const { data: user, isLoading: authLoading } = useAuthUser()
+
     const closeMutation = useCloseAcademicYear()
-    const { data: user } = useAuthUser()
+    const openMutation = useOpenAcademicYear()
 
-    const [menuOpen, setMenuOpen] = useState<string | null>(null)
     const [closeTarget, setCloseTarget] = useState<AcademicYear | null>(null)
+    const [openTarget, setOpenTarget] = useState<AcademicYear | null>(null)
 
+    const isAdmin = user?.role === "ADMIN"
     const rows = useMemo(() => data ?? [], [data])
 
-    const columns: Column<AcademicYear>[] = [
-        {
-            key: "name",
-            header: "Academic Year",
-            render: (y) => (
-                <div>
-                    <div className="font-medium">{y.name}</div>
-                    <div className="text-xs text-slate-500">
-                        {new Date(y.startDate).toLocaleDateString()} →{" "}
-                        {new Date(y.endDate).toLocaleDateString()}
+    const columns: Column<AcademicYear>[] = useMemo(() => {
+        const base: Column<AcademicYear>[] = [
+            {
+                key: "name",
+                header: "Academic Year",
+                render: (y) => (
+                    <div>
+                        <div className="font-medium">{y.name}</div>
+                        <div className="text-xs text-slate-500">
+                            {new Date(y.startDate).toLocaleDateString()} →{" "}
+                            {new Date(y.endDate).toLocaleDateString()}
+                        </div>
                     </div>
-                </div>
-            ),
-        },
-        {
-            key: "status",
-            header: "Status",
-            render: (y) => (
-                <span
-                    className={
-                        y.status === "OPEN"
-                            ? "text-green-600 font-medium"
-                            : "text-slate-500"
-                    }
-                >
-                    {y.status}
-                </span>
-            ),
-        },
-        {
-            key: "actions",
-            header: "",
-            render: (y) => (user?.role === 'ADMIN' &&
-                <RowActions
-                    open={menuOpen === y.id}
-                    onOpen={() => setMenuOpen(y.id)}
-                    onClose={() => setMenuOpen(null)}
-                    onDeactivate={
-                        y.status === "OPEN"
-                            ? () => setCloseTarget(y)
-                            : undefined
-                    }
-                    dType="Close"
-                />
-            ),
-        }
-    ]
+                ),
+            },
+            {
+                key: "status",
+                header: "Status",
+                render: (y) => (
+                    <span
+                        className={
+                            y.status === "OPEN"
+                                ? "text-green-600 font-medium"
+                                : "text-slate-500"
+                        }
+                    >
+                        {y.status}
+                    </span>
+                ),
+            },
+        ]
 
-    if (isLoading) return <TableLoader />
+        if (isAdmin) {
+            base.push({
+                key: "actions",
+                header: "",
+                render: (y) => (
+                    <RowActions
+                        actions={
+                            y.status === "OPEN"
+                                ? [
+                                    {
+                                        label: "Close",
+                                        onClick: () => setCloseTarget(y),
+                                        variant: "danger",
+                                    },
+                                ]
+                                : [
+                                    {
+                                        label: "Open",
+                                        onClick: () => setOpenTarget(y),
+                                        variant: "warning",
+                                    },
+                                ]
+                        }
+                    />
+                ),
+            })
+        }
+
+        return base
+    }, [isAdmin])
+
+    if (isLoading || authLoading) return <TableLoader />
 
     if (!rows.length) {
         return (
@@ -84,28 +107,32 @@ export default function AcademicYearsPage() {
                 icon={Calendar}
                 title="No academic year"
                 description="Create an academic year to start billing"
-                actionLabel="Create Academic Year"
-                actionHref="/dashboard/year/new"
+                actionLabel={isAdmin ? "Create Academic Year" : undefined}
+                actionHref={isAdmin ? "/dashboard/year/new" : undefined}
             />
         )
     }
 
     return (
         <div className="space-y-6">
-            <Breadcrumbs items={[
-                { label: "Dashboard", href: "/dashboard" },
-                { label: "Academic Years" },
-            ]} />
+            <Breadcrumbs
+                items={[
+                    { label: "Dashboard", href: "/dashboard" },
+                    { label: "Academic Years" },
+                ]}
+            />
 
-            <div className="flex justify-end">
-                <Link
-                    href="/dashboard/year/new"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md inline-flex items-center gap-2"
-                >
-                    <Plus size={18} />
-                    New Academic Year
-                </Link>
-            </div>
+            {isAdmin && (
+                <div className="flex justify-end">
+                    <Link
+                        href="/dashboard/year/new"
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-md inline-flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        New Academic Year
+                    </Link>
+                </div>
+            )}
 
             <ResponsiveTable
                 data={rows}
@@ -113,17 +140,39 @@ export default function AcademicYearsPage() {
                 getRowId={(r) => r.id}
             />
 
-            <DeleteConfirmModal
+            {/* CLOSE */}
+            <AcademicYearCloseDialog
                 open={!!closeTarget}
-                setMenu={setMenuOpen}
-                title="Close academic year?"
-                description={`Closing ${closeTarget?.name} will lock all billing data.`}
-                confirmLabel="Close Year"
+                year={closeTarget}
                 loading={closeMutation.isPending}
                 onCancel={() => setCloseTarget(null)}
                 onConfirm={() => {
-                    closeMutation.mutate(closeTarget!.id)
-                    setCloseTarget(null)
+                    closeMutation.mutate(closeTarget!.id, {
+                        onSuccess: () => {
+                            toast.success("Academic year closed successfully")
+                            setCloseTarget(null)
+                        },
+                        onError: (e) =>
+                            toast.error(handleApiError(e).message),
+                    })
+                }}
+            />
+
+            {/* OPEN */}
+            <AcademicYearOpenDialog
+                open={!!openTarget}
+                year={openTarget}
+                loading={openMutation.isPending}
+                onCancel={() => setOpenTarget(null)}
+                onConfirm={() => {
+                    openMutation.mutate(openTarget!.id, {
+                        onSuccess: () => {
+                            toast.success("Academic year opened successfully")
+                            setOpenTarget(null)
+                        },
+                        onError: (e) =>
+                            toast.error(handleApiError(e).message),
+                    })
                 }}
             />
         </div>

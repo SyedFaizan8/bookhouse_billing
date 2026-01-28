@@ -4,6 +4,9 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { useUpdateUser, useCreateUser } from "@/lib/queries/users"
 import { UserFormValues } from "@/lib/validators/user.schema"
+import { handleApiError } from "@/lib/utils/getApiError"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
 
 export default function UserForm({
     defaultValues,
@@ -19,6 +22,7 @@ export default function UserForm({
         handleSubmit,
         formState: { isSubmitting, errors },
         reset,
+        setError
     } = useForm<UserFormValues>({ defaultValues })
 
     const createMutation = useCreateUser()
@@ -30,20 +34,22 @@ export default function UserForm({
         updateMutation.isPending
 
     const onSubmit = async (data: UserFormValues) => {
-        try {
-
-            if (mode === "create") {
-                await createMutation.mutateAsync(data)
-                toast.success("User created successfully")
-                reset()
-            } else {
-                const { password, ...safeData } = data
-                await updateMutation.mutateAsync(safeData)
-                toast.success("User updated successfully")
-            }
-        } catch {
-            toast.error("Something went wrong")
+        if (mode === "create") {
+            await createMutation.mutateAsync(data, {
+                onSuccess: () => {
+                    toast.success("User created successfully")
+                    reset()
+                },
+                onError: (e) => toast.error(handleApiError(e, { setError }).message)
+            })
+        } else {
+            const { password, ...safeData } = data
+            await updateMutation.mutateAsync(safeData, {
+                onSuccess: () => toast.success("User updated successfully"),
+                onError: (e) => toast.error(handleApiError(e, { setError }).message)
+            })
         }
+
     }
 
     return (
@@ -84,9 +90,9 @@ export default function UserForm({
                 })}
             />
 
-            <Input
+            <PasswordInput
                 label={mode === "edit" ? "New Password (optional)" : "Password"}
-                type="password"
+                required={mode === "create"}
                 error={errors.password?.message}
                 register={register("password", {
                     ...(mode === "create" && {
@@ -185,3 +191,61 @@ const Select = ({
         )}
     </div>
 )
+
+
+/* =========================
+   PASSWORD
+========================= */
+
+type Props = {
+    label: string
+    register: any
+    required?: boolean
+    error?: string
+    placeholder?: string
+}
+
+export function PasswordInput({
+    label,
+    register,
+    required,
+    error,
+    placeholder,
+}: Props) {
+    const [show, setShow] = useState(false)
+
+    return (
+        <div>
+            <label className="text-sm text-slate-600">
+                {label} {required && <span className="text-red-500">*</span>}
+            </label>
+
+            <div className="relative mt-1">
+                <input
+                    type={show ? "text" : "password"}
+                    {...register}
+                    placeholder={placeholder}
+                    className="
+                        w-full rounded-md border px-3 py-2 pr-10 text-sm
+                        focus:ring-2 focus:ring-indigo-500
+                    "
+                />
+
+                <button
+                    type="button"
+                    onClick={() => setShow((s) => !s)}
+                    className="
+                        absolute right-2 top-2.5
+                        text-slate-400 hover:text-slate-600
+                    "
+                >
+                    {show ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+            </div>
+
+            {error && (
+                <p className="mt-1 text-xs text-red-600">{error}</p>
+            )}
+        </div>
+    )
+}

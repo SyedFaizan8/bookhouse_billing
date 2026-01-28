@@ -1,89 +1,28 @@
 import { Request, Response, Router } from "express";
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../prisma.js";
 import { upload } from "../../middlewares/upload.middleware.js";
-import { companyInfoSchema } from "./settings.schema.js";
+import { CompanyInfoInput, companyInfoSchema } from "./settings.schema.js";
 import { ZodError } from "zod";
 import { deleteFileIfExists } from "../../utils/file.js";
+import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
+import { asyncHandler } from "../../utils/async.js";
+import { AppError } from "../../utils/error.js";
 
 const router = Router();
 
 // GET company info (single row)
-router.get("/", async (_req: Request, res: Response) => {
-    const company = await prisma.companyInfo.findFirst()
-    res.json(company)
-})
+router.get("/", asyncHandler(async (_req: Request, res: Response) => {
+    const settings = await prisma.settings.findFirst()
+    if (!settings) throw new AppError('First Update the settings', 409)
+    res.json(settings)
+}))
 
-// PUT update (text + optional logo)
-// router.put("/",
-//     upload.fields([
-//         { name: "logo", maxCount: 1 },
-//         { name: "qrCode", maxCount: 1 },
-//     ]),
-//     async (req: Request, res: Response) => {
-//         try {
-//             const parsed = companyInfoSchema.parse({
-//                 ...req.body,
-//                 email: req.body.email || null,
-//                 gst: req.body.gst || null,
-//                 town: req.body.town || null,
-//                 district: req.body.district || null,
-//                 state: req.body.state || null,
-//                 pincode: req.body.pincode || null,
-//                 bankName: req.body.bankName || null,
-//                 accountNo: req.body.accountNo || null,
-//                 ifsc: req.body.ifsc || null,
-//             })
-
-//             const existing = await prisma.companyInfo.findFirst()
-
-//             const data = { ...parsed }
-
-//             // 🔥 DELETE OLD LOGO IF NEW ONE UPLOADED
-//             if (req.file) {
-//                 if (existing?.logoUrl) {
-//                     deleteFileIfExists(existing.logoUrl)
-//                 }
-
-//                 data.logoUrl = `/uploads/${req.file.filename}`
-//             }
-
-//             const result = existing
-//                 ? await prisma.companyInfo.update({
-//                     where: { id: existing.id },
-//                     data,
-//                 })
-//                 : await prisma.companyInfo.create({
-//                     data: {
-//                         ...data,
-//                         logoUrl: req.file
-//                             ? `/uploads/${req.file.filename}`
-//                             : null,
-//                     },
-//                 })
-
-//             res.json(result)
-//         } catch (error) {
-//             if (error instanceof ZodError) {
-//                 return res.status(400).json({
-//                     message: "Validation failed",
-//                     errors: error.flatten().fieldErrors,
-//                 })
-//             }
-
-//             res.status(500).json({
-//                 message: "Failed to update company info",
-//             })
-//         }
-//     }
-// )
-
-router.put(
-    "/",
+router.put("/", requireAdmin,
     upload.fields([
         { name: "logo", maxCount: 1 },
         { name: "qrCode", maxCount: 1 },
     ]),
-    async (req: Request, res: Response) => {
+    asyncHandler(async (req: Request, res: Response) => {
         try {
             /* ===============================
                1. VALIDATE BODY
@@ -101,13 +40,15 @@ router.put(
                 accountNo: req.body.accountNo || null,
                 ifsc: req.body.ifsc || null,
                 upi: req.body.upi || null,
+                phoneSecondary: req.body.phoneSecondary || null,
+                phoneTertiary: req.body.phoneTertiary || null,
             })
 
             /* ===============================
                2. FETCH EXISTING
             =============================== */
 
-            const existing = await prisma.companyInfo.findFirst()
+            const existing = await prisma.settings.findFirst()
 
             /* ===============================
                3. FILE HANDLING
@@ -118,7 +59,7 @@ router.put(
                 qrCode?: Express.Multer.File[]
             }
 
-            const data: any = { ...parsed }
+            const data: CompanyInfoInput = { ...parsed }
 
             // ---- LOGO ----
             if (files?.logo?.[0]) {
@@ -143,11 +84,11 @@ router.put(
             =============================== */
 
             const result = existing
-                ? await prisma.companyInfo.update({
+                ? await prisma.settings.update({
                     where: { id: existing.id },
                     data,
                 })
-                : await prisma.companyInfo.create({
+                : await prisma.settings.create({
                     data,
                 })
 
@@ -159,14 +100,9 @@ router.put(
                     errors: error.flatten().fieldErrors,
                 })
             }
-
-            console.error("Company info update error:", error)
-
-            return res.status(500).json({
-                message: "Failed to update company info",
-            })
+            throw new AppError('Failed to update company info', 500)
         }
-    }
+    })
 )
 
 export default router;

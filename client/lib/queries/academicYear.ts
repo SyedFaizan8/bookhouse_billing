@@ -10,17 +10,23 @@ export const useAcademicYears = () =>
 export const useCreateAcademicYear = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (data: { startDate: string; endDate: string }) =>
-            api.post(`/academic-year`, data),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ["academic-years"] }),
+        mutationFn: (data: { startDate: string; endDate: string }) => api.post(`/academic-year`, data),
+        onSuccess: () => qc.invalidateQueries(),
     })
 }
 
 export const useCloseAcademicYear = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (id: string) =>
-            api.post(`/academic-year/${id}/close`),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ["academic-years"] }),
+        mutationFn: (id: string) => api.post(`/academic-year/${id}/close`),
+        onSuccess: () => qc.invalidateQueries(),
+    })
+}
+
+export const useOpenAcademicYear = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: string) => api.post(`/academic-year/${id}/open`),
+        onSuccess: () => qc.invalidateQueries(),
     })
 }

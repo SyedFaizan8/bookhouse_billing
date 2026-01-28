@@ -1,14 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCustomerProfile } from "@/lib/queries/customers";
 import PageLoader from "@/components/loaders/PageLoader";
 import EmptyState from "@/components/EmptyState";
 import { School } from "lucide-react";
+import { useSchoolProfile } from "@/lib/queries/schools";
 
 export default function DealerProfilePage() {
     const { id } = useParams<{ id: string }>();
-    const { data, isLoading } = useCustomerProfile(id);
+    const { data, isLoading } = useSchoolProfile(id);
 
     if (isLoading) return <PageLoader />;
 

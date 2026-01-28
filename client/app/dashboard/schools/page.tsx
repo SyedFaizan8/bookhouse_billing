@@ -10,11 +10,11 @@ import ResponsiveTable, { Column } from "@/components/ResponsiveTable";
 import Pagination from "@/components/Pagination";
 
 import { School } from "@/lib/types/customer";
-import { useCustomersInfinite } from "@/lib/queries/customers";
 import { useSorting } from "@/lib/hooks/useSorting";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { sortData } from "@/lib/utils/sortData";
+import { useSchoolsInfinite } from "@/lib/queries/schools";
 
 const PAGE_SIZE = 10;
 
@@ -33,14 +33,14 @@ export default function CustomersPage() {
 
 
     const { sortBy, order, toggleSort } =
-        useSorting<"name" | "addedOn" | "amountDue">("addedOn");
+        useSorting<"name" | "addedOn">("addedOn");
 
     const {
         data,
         isLoading,
         hasNextPage,
         fetchNextPage,
-    } = useCustomersInfinite(sortBy, order, debouncedSearch);
+    } = useSchoolsInfinite(sortBy, order, debouncedSearch);
 
 
     // flatten server pages
@@ -98,12 +98,6 @@ export default function CustomersPage() {
             header: "Phone",
             className: "hidden md:table-cell",
             render: (c) => c.phone,
-        },
-        {
-            key: "amountDue",
-            header: sortHeader("Amount Due", "amountDue"),
-            className: "hidden md:table-cell text-rose-600 font-medium",
-            render: (c) => `₹${c.amountDue.toLocaleString()}`,
         },
         {
             key: "addedOn",

@@ -33,10 +33,8 @@ export const CreateInvoiceDTO = z.object({
 
     items: z.array(
         z.object({
-            textbookId: z.uuid(),
             quantity: z.number().int().min(1),
             unitPrice: z.number().min(0),
-            discountType: z.enum(["PERCENT", "AMOUNT"]),
             discountValue: z.number().min(0),
         })
     ).min(1),

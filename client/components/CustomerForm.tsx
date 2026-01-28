@@ -1,11 +1,13 @@
 "use client"
 
-import { useCreateCustomer, useUpdateCustomer } from "@/lib/queries/customers"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Spinner from "@/components/Spinner"
 import { customerFormSchema, CustomerFormValues } from "@/lib/validators/customer.schema"
 import { useEffect } from "react"
+import { useCreateSchool, useUpdateSchool } from "@/lib/queries/schools"
+import { toast } from "sonner"
+import { handleApiError } from "@/lib/utils/getApiError"
 
 export default function CustomerForm({
     defaultValues,
@@ -29,10 +31,10 @@ export default function CustomerForm({
         }
     }, [defaultValues, reset]);
 
-    const createMutation = useCreateCustomer()
+    const createMutation = useCreateSchool()
     const updateMutation =
         mode === "edit" && customerId
-            ? useUpdateCustomer(customerId)
+            ? useUpdateSchool(customerId)
             : null
 
     const isLoading =
@@ -42,10 +44,20 @@ export default function CustomerForm({
 
     const onSubmit = async (data: CustomerFormValues) => {
         if (mode === "edit" && updateMutation) {
-            updateMutation.mutate(data)
+            updateMutation.mutate(data,
+                {
+                    onSuccess: () => toast.success("Successfully updated School"),
+                    onError: (e) => toast.error(handleApiError(e).message)
+                }
+            )
         } else {
-            createMutation.mutate(data)
-            reset()
+            createMutation.mutate(data, {
+                onSuccess: () => {
+                    toast.success("Successfully creted School")
+                    reset()
+                },
+                onError: (e) => toast.error(handleApiError(e).message)
+            })
         }
     }
 

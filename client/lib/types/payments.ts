@@ -9,31 +9,48 @@ export type PaymentRow = {
 
 export type ReceiptPdfData = {
     receiptNo: string;
-    date: Date;
+    date: string;
     amount: number;
-    mode: "CASH" | "UPI" | "BANK";
-    referenceNo?: string;
+    mode: string;
+    note: string
 
-
-    company: {
+    school: {
         name: string;
-        address: string;
-        phone?: string;
-        email?: string;
-        gst?: string
-    };
-
-    customer: {
-        name: string;
-        phone?: string;
-        gst?: string
+        phone: string;
+        email?: string
+        gst?: string;
+        street?: string,
+        town?: string,
+        district?: string,
+        state?: string,
+        pincode?: string,
     };
 
     recordedBy: string;
-
 };
 
-export type ReceiptNo = {
-    receiptNo: string
-    nextNumber: number
-}
+export type CompanyReceiptPdfData = {
+    receiptNo: string;
+    date: string;
+    amount: number;
+    mode: string;
+    note: string
+
+    company: company
+
+    recordedBy: string;
+};
+
+export type company = {
+    name: string
+    phone: string
+    email?: string
+
+    street?: string
+    town?: string
+    district?: string
+    state?: string
+    pincode?: string
+
+    gst?: string
+};

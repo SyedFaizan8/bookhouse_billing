@@ -1,13 +1,16 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Plus, IndianRupee, Search } from "lucide-react";
 
 import ResponsiveTable, { Column } from "@/components/ResponsiveTable";
+import TableLoader from "@/components/loaders/TableLoader";
+import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
-import { useCustomerPayments } from "@/lib/queries/payments";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { useSchoolPayments } from "@/lib/queries/schools";
 import { PaymentRow } from "@/lib/types/payments";
 
 const PAGE_SIZE = 10;
@@ -16,7 +19,27 @@ export default function PaymentsPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
 
-    const { data = [], isLoading } = useCustomerPayments(id);
+    const [search, setSearch] = useState("");
+
+    const { data = [], isLoading } = useSchoolPayments(id);
+
+    /* ======================================================
+       SEARCH FILTER
+    ====================================================== */
+
+    const filtered = useMemo(() => {
+        if (!search) return data;
+
+        return data.filter((p) =>
+            p.receiptNo
+                .toLowerCase()
+                .includes(search.toLowerCase())
+        );
+    }, [data, search]);
+
+    /* ======================================================
+       PAGINATION
+    ====================================================== */
 
     const {
         page,
@@ -24,9 +47,13 @@ export default function PaymentsPage() {
         totalPages,
         pageData,
     } = useClientPagination({
-        data,
+        data: filtered,
         pageSize: PAGE_SIZE,
     });
+
+    /* ======================================================
+       TABLE COLUMNS
+    ====================================================== */
 
     const columns: Column<PaymentRow>[] = [
         {
@@ -38,7 +65,7 @@ export default function PaymentsPage() {
                         {p.receiptNo}
                     </div>
 
-                    {/* mobile info */}
+                    {/* mobile */}
                     <div className="text-xs text-slate-500 md:hidden">
                         {new Date(p.date).toLocaleDateString("en-IN")}
                     </div>
@@ -62,33 +89,68 @@ export default function PaymentsPage() {
             key: "amount",
             header: "Amount",
             className:
-                "text-right font-medium text-green-600",
+                "text-right font-semibold text-green-600",
             render: (p) =>
-                `₹${p.amount.toLocaleString()}`,
+                `₹${p.amount.toLocaleString("en-IN")}`,
         },
     ];
+
+    /* ======================================================
+       STATES
+    ====================================================== */
+
+    if (isLoading) return <TableLoader />;
+
+    if (!data.length) {
+        return (
+            <EmptyState
+                icon={IndianRupee}
+                title="No payments recorded"
+                description="No payments have been recorded for this school yet."
+                actionLabel="Add Payment"
+                actionHref={`/dashboard/payments/${id}/new`}
+            />
+        );
+    }
+
+    /* ======================================================
+       UI
+    ====================================================== */
 
     return (
         <div className="space-y-6">
 
-            {/* HEADER */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h1 className="text-xl font-semibold">
-                    Payments
-                </h1>
+            <h1 className="text-xl font-semibold">
+                Payments
+            </h1>
 
+            {/* SEARCH + ADD */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+
+                {/* SEARCH */}
+                <div className="relative max-w-sm w-full">
+                    <Search
+                        className="absolute left-3 top-2.5 text-slate-400"
+                        size={18}
+                    />
+                    <input
+                        className="w-full pl-10 pr-3 py-2 border rounded-md"
+                        placeholder="Search receipt number"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+
+                {/* ADD PAYMENT */}
                 <button
                     onClick={() =>
-                        router.push(
-                            `/dashboard/payments/${id}/new`
-                        )
+                        router.push(`/dashboard/payments/${id}/new`)
                     }
                     className="
-                        bg-indigo-600 text-white
-                        px-4 py-2 rounded-md
-                        inline-flex items-center gap-2
-                        w-full sm:w-auto
-                        justify-center
+                        bg-indigo-600 hover:bg-indigo-700
+                        text-white px-4 py-2 rounded-md
+                        flex items-center gap-2
+                        whitespace-nowrap
                     "
                 >
                     <Plus size={18} />
@@ -113,11 +175,11 @@ export default function PaymentsPage() {
                 onPageChange={setPage}
             />
 
-            {/* FOOTER INFO */}
+            {/* FOOTER */}
             <div className="text-xs text-slate-500">
                 Showing {(page - 1) * PAGE_SIZE + 1}–
-                {Math.min(page * PAGE_SIZE, data.length)} of{" "}
-                {data.length} payments
+                {Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
+                {filtered.length} payments
             </div>
         </div>
     );

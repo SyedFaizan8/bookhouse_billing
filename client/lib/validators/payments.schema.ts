@@ -10,6 +10,8 @@ export const paymentSchema = z.object({
     referenceNo: z.string().optional().or(z.literal("")),
 
     note: z.string().optional().or(z.literal("")),
+
+    receiptNo: z.string().optional(),
 });
 
 export type PaymentFormValues = z.infer<typeof paymentSchema>;

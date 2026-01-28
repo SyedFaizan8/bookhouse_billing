@@ -2,27 +2,16 @@
 
 import { useParams } from "next/navigation"
 import FormLoader from "@/components/loaders/FormLoader"
-import EmptyState from "@/components/EmptyState"
-import { LibraryBig } from "lucide-react"
-import { useDealerEdit } from "@/lib/queries/dealers"
-import DealerForm from "@/components/DealerForm"
+import DealerForm from "@/components/CompanyForm"
+import { useCompanyProfile } from "@/lib/queries/company"
 
 export default function EditDealerPage() {
     const { id } = useParams<{ id: string }>()
-    const { data, isLoading, error } = useDealerEdit(id)
+    const { data, isLoading, error } = useCompanyProfile(id)
 
     if (isLoading) return <FormLoader />
-    console.log()
 
-    if (!data) return (
-        <EmptyState
-            icon={LibraryBig}
-            title="No dealers found"
-            description="Add publishers or book suppliers."
-            actionLabel="Add Company"
-            actionHref="/dashboard/companies/new"
-        />
-    )
+    if (!data) return null
 
     return (
         <div className="space-y-6">
@@ -30,7 +19,7 @@ export default function EditDealerPage() {
 
             <DealerForm
                 mode="edit"
-                dealerId={id}
+                companyId={id}
                 defaultValues={data}
             />
         </div>

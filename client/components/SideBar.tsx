@@ -10,7 +10,6 @@ import {
     Menu,
     X,
     LucideIcon,
-    BookOpen,
     Bookmark,
     Calendar,
 } from "lucide-react";
@@ -18,6 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { useAuthUser, useLogout } from "@/lib/queries/auth";
+import Spinner from "./Spinner";
 
 type NavItem = {
     title: string;
@@ -29,13 +29,12 @@ const navItems: NavItem[] = [
     { title: "Academic Year", url: "/dashboard/year", icon: Calendar },
     { title: "Schools", url: "/dashboard/schools", icon: School },
     { title: "Companies", url: "/dashboard/companies", icon: LibraryBig },
-    { title: "Inventory", url: "/dashboard/inventory", icon: BookOpen },
 ];
 
 const protectedNavItems: NavItem[] = [
-    { title: "Reports", url: "/dashboard/reports", icon: Bookmark },
-    { title: "Users", url: "/dashboard/users", icon: Users },
-    { title: "Settings", url: "/dashboard/settings", icon: Settings },
+    { title: "Reports", url: "/dashboard/admin/reports", icon: Bookmark },
+    { title: "Users", url: "/dashboard/admin/users", icon: Users },
+    { title: "Settings", url: "/dashboard/admin/settings", icon: Settings },
 ];
 
 export default function DashboardLayout({
@@ -71,18 +70,18 @@ export default function DashboardLayout({
                 {/* SIDEBAR */}
                 <aside
                     className={`
-            fixed inset-y-0 left-0 z-50 w-72
-            bg-white border-r
-            transition-transform duration-200 ease-out
-            ${open ? "translate-x-0" : "-translate-x-full"}
-            md:translate-x-0
-          `}
+                        fixed inset-y-0 left-0 z-50 w-72
+                        bg-white border-r
+                        transition-transform duration-200 ease-out
+                        ${open ? "translate-x-0" : "-translate-x-full"}
+                        md:translate-x-0
+                    `}
                 >
                     {/* LOGO */}
                     <div className="h-14 flex items-center justify-between px-4 border-b">
                         <div className="flex items-center gap-2">
                             <Image src="/logo.png" alt="logo" width={36} height={36} />
-                            <span className="font-semibold text-lg text-slate-800">
+                            <span className="font-semibold text-md text-slate-800">
                                 Vinayaka Book House
                             </span>
                         </div>
@@ -105,13 +104,13 @@ export default function DashboardLayout({
                                     href={item.url}
                                     onClick={() => setOpen(false)}
                                     className={`
-                    flex items-center gap-4 rounded-md px-3 py-2 text-sm
-                    transition-colors
-                    ${active
+                                        flex items-center gap-4 rounded-md px-3 py-2 text-sm
+                                        transition-colors
+                                        ${active
                                             ? "bg-indigo-50 text-indigo-700 font-medium"
                                             : "text-slate-600 hover:bg-slate-100 hover:text-indigo-600"
                                         }
-                  `}
+                                    `}
                                 >
                                     <item.icon size={20} />
                                     {item.title}
@@ -155,7 +154,9 @@ export default function DashboardLayout({
                             className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
                         >
                             <LogOut size={18} />
-                            Logout
+                            {logout.isPending ? <span className="flex items-center justify-center gap-2">
+                                <Spinner size={18} />
+                            </span> : "Logout"}
                         </button>
                     </div>
                 </aside>

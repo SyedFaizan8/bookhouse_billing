@@ -1,5 +1,7 @@
 import { API_BASE_URL } from "@/lib/constants";
-import { InvoicePdfData } from "@/lib/types/invoice";
+import { SettingsInfoResponse } from "@/lib/queries/settings";
+import { InvoicePdfData, Item } from "@/lib/types/invoice";
+import { numberToWords } from "@/lib/utils/numberToWords";
 import {
     Document,
     Page,
@@ -45,6 +47,21 @@ const styles = StyleSheet.create({
         color: "#0f172a",
     },
 
+    bold: {
+        fontWeight: 700,
+    },
+
+    text: {
+        fontSize: 10,
+        color: "#0f172a",
+    },
+
+    muted: {
+        fontSize: 9,
+        color: "#475569",
+    },
+
+
     rowBetween: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -78,7 +95,12 @@ const styles = StyleSheet.create({
         backgroundColor: "#f8fafc",
     },
 
-    sectionTitle: { fontWeight: 700, marginBottom: 4 },
+    sectionTitle: {
+        fontWeight: 700,
+        fontSize: 10,
+        textDecoration: "underline",
+        marginBottom: 4,
+    },
 
     tableHeader: {
         flexDirection: "row",
@@ -98,17 +120,33 @@ const styles = StyleSheet.create({
     altRow: { backgroundColor: "#fafafa" },
 
     cellSl: { width: "5%", textAlign: "center" },
+
     cellDesc: {
-        width: "30%",
-        maxLines: 3,
-        overflow: "hidden",
+        width: "28%",
+        paddingRight: 4,
     },
+
+    cellClass: {
+        width: "7%",
+        textAlign: "center",
+    },
+
+    cellCompany: {
+        width: "15%",
+        paddingRight: 4,
+    },
+
     cellQty: { width: "7%", textAlign: "center" },
+
     cellRate: { width: "10%", textAlign: "right" },
-    cellAmt: { width: "12%", textAlign: "right" },
+
     cellDiscPct: { width: "8%", textAlign: "center" },
-    cellDiscAmt: { width: "12%", textAlign: "right" },
-    cellNet: { width: "12%", textAlign: "right", fontWeight: 500 },
+
+    cellNet: {
+        width: "10%",
+        textAlign: "right",
+        fontWeight: 500,
+    },
 
     continued: {
         marginTop: 8,
@@ -187,39 +225,15 @@ const styles = StyleSheet.create({
 
 /* ================= HELPERS ================= */
 
-function numberToWords(num: number): string {
-    const a = [
-        "", "One", "Two", "Three", "Four", "Five", "Six",
-        "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
-        "Thirteen", "Fourteen", "Fifteen", "Sixteen",
-        "Seventeen", "Eighteen", "Nineteen",
-    ];
-    const b = [
-        "", "", "Twenty", "Thirty", "Forty",
-        "Fifty", "Sixty", "Seventy", "Eighty", "Ninety",
-    ];
-
-    const inWords = (n: number): string => {
-        if (n < 20) return a[n];
-        if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
-        if (n < 1000)
-            return a[Math.floor(n / 100)] + " Hundred " + inWords(n % 100);
-        if (n < 100000)
-            return inWords(Math.floor(n / 1000)) + " Thousand " + inWords(n % 1000);
-        if (n < 10000000)
-            return inWords(Math.floor(n / 100000)) + " Lakh " + inWords(n % 100000);
-        return "";
-    };
-
-    return inWords(Math.floor(num)).trim();
-}
+const money = (value: number) =>
+    Number(value || 0).toFixed(2);
 
 
 /* ================= DYNAMIC PAGINATION ================= */
 
-function paginate(items: any[]) {
+function paginate(items: Item[]) {
     const pages: any[][] = [];
-    let current: any[] = [];
+    let current: Item[] = [];
     let usedHeight = HEADER_HEIGHT + TABLE_HEADER_HEIGHT;
 
     items.forEach((item, idx) => {
@@ -245,7 +259,7 @@ function paginate(items: any[]) {
 
 /* ================= PDF ================= */
 
-export default function InvoicePdf({ data }: { data: InvoicePdfData }) {
+export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, settings: SettingsInfoResponse }) {
 
     const pages = paginate(data.items);
     const totalPages = pages.length;
@@ -259,7 +273,7 @@ export default function InvoicePdf({ data }: { data: InvoicePdfData }) {
                     <Page key={pageIndex} size="A4" style={styles.page}>
                         {/* HEADER */}
                         <View style={styles.rowBetween}>
-                            <Text>{data.invoiceNo}</Text>
+                            <Text>{String(data.kind).toLowerCase() + " no: "}{data.documentNo}</Text>
                             <View>
                                 <Text>{new Date(data.date).toLocaleDateString("en-IN", {
                                     day: "2-digit",
@@ -274,43 +288,126 @@ export default function InvoicePdf({ data }: { data: InvoicePdfData }) {
                         </View>
 
                         <View style={styles.header}>
-                            {data.company.logoUrl && (
-                                <Image src={API_BASE_URL + data.company.logoUrl} style={styles.logo} />
+                            {settings?.logoUrl && (
+                                <Image
+                                    src={API_BASE_URL + settings.logoUrl}
+                                    style={styles.logo}
+                                />
                             )}
-                            <Text style={styles.title}>{data.company.name.toUpperCase()}</Text>
-                            <Text style={styles.companyInfo}>
-                                {data.company.address}{"\n"}
-                                {data.company.phone}
-                                {data.company.email && ` • ${data.company.email}`}{"\n"}
-                                {data.company.gst && "GST: " + data.company.gst}
+
+                            <Text style={styles.title}>
+                                {settings?.name?.toUpperCase()}
                             </Text>
+
+                            {/* Address */}
+                            {(settings?.street ||
+                                settings?.town ||
+                                settings?.district ||
+                                settings?.state ||
+                                settings?.pincode) && (
+                                    <Text style={styles.companyInfo}>
+                                        {[
+                                            settings.street,
+                                            settings.town,
+                                            settings.district,
+                                            settings.state,
+                                            settings.pincode,
+                                        ]
+                                            .filter(Boolean)
+                                            .join(", ")}
+                                    </Text>
+                                )}
+
+                            {/* Contact */}
+                            <Text style={styles.companyInfo}>
+                                Phone: {settings?.phone}
+                                {settings?.phoneSecondary && `, ${settings.phoneSecondary}`}
+                                {settings?.phoneTertiary && `, ${settings.phoneTertiary}`}
+                            </Text>
+
+                            {/* Email */}
+                            {settings?.email && (
+                                <Text style={styles.companyInfo}>
+                                    Email: {settings.email}
+                                </Text>
+                            )}
+
+                            {/* GST */}
+                            {settings?.gst && (
+                                <Text style={styles.companyInfo}>
+                                    GSTIN: {settings.gst}
+                                </Text>
+                            )}
                         </View>
 
-                        <Text style={styles.badge}>BILL OF SUPPLY</Text>
+                        <Text style={styles.badge}>{String(data.kind) === "INVOICE" ? "BILL OF SUPPLY" : data.kind}</Text>
 
-                        {
-                            pageIndex === 0 && (
-                                <View style={styles.box}>
-                                    <Text style={styles.sectionTitle}>Bill To</Text>
-                                    <Text>Name: {data.customer.name}</Text>
-                                    <Text>Address: {data.customer.address}</Text>
-                                    {data.customer.phone && <Text>Phone: {data.customer.phone}</Text>}
-                                    {data.customer.gst && <Text>{data.customer.gst}</Text>}
-                                </View>
-                            )
-                        }
+                        {pageIndex === 0 && (
+                            <View style={styles.box}>
+                                <Text style={styles.sectionTitle}>
+                                    {String(data.kind) === "INVOICE" ? "BILL TO" : "TO"}
+                                </Text>
+
+                                <Text style={styles.bold}>
+                                    {data.school.name}
+                                </Text>
+
+                                {data.school.contactPerson && (
+                                    <Text>
+                                        Attn: {data.school.contactPerson}
+                                    </Text>
+                                )}
+
+                                {(data.school.street ||
+                                    data.school.town ||
+                                    data.school.district ||
+                                    data.school.state ||
+                                    data.school.pincode) && (
+                                        <Text>
+                                            {[
+                                                data.school.street,
+                                                data.school.town,
+                                                data.school.district,
+                                                data.school.state,
+                                                data.school.pincode,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(", ")}
+                                        </Text>
+                                    )}
+
+                                <Text>
+                                    Phone: {data.school.phone}
+                                </Text>
+
+                                {data.school.email && (
+                                    <Text>
+                                        Email: {data.school.email}
+                                    </Text>
+                                )}
+
+                                {data.school.gst && (
+                                    <Text>
+                                        GSTIN: {data.school.gst}
+                                    </Text>
+                                )}
+                            </View>
+                        )}
+
 
                         {/* TABLE HEADER */}
-                        <View style={styles.tableHeader} >
+                        <View style={styles.tableHeader}>
                             <Text style={styles.cellSl}>#</Text>
                             <Text style={styles.cellDesc}>Description</Text>
+                            <Text style={styles.cellClass}>Class</Text>
+                            <Text style={styles.cellCompany}>Company</Text>
                             <Text style={styles.cellQty}>Qty</Text>
                             <Text style={styles.cellRate}>Rate</Text>
-                            <Text style={styles.cellAmt}>Amount</Text>
                             <Text style={styles.cellDiscPct}>Disc%</Text>
-                            <Text style={styles.cellDiscAmt}>Disc</Text>
-                            <Text style={styles.cellNet}>Net</Text>
+                            <Text style={styles.cellNet}>Total</Text>
                         </View>
+
+
 
                         {/* ROWS */}
                         {
@@ -322,16 +419,22 @@ export default function InvoicePdf({ data }: { data: InvoicePdfData }) {
                                     <Text style={styles.cellSl}>
                                         {pageIndex * 100 + idx + 1}
                                     </Text>
-                                    <Text style={styles.cellDesc}>{r.title}</Text>
-                                    <Text style={styles.cellQty}>{r.qty}</Text>
-                                    <Text style={styles.cellRate}>{r.rate}</Text>
-                                    <Text style={styles.cellAmt}>{r.gross}</Text>
-                                    <Text style={styles.cellDiscPct}>
-                                        {r.discountPercent}%
-                                    </Text>
-                                    <Text style={styles.cellDiscAmt}>{r.discount}</Text>
-                                    <Text style={styles.cellNet}>{r.net}</Text>
+
+                                    <Text style={styles.cellDesc}>{r.description}</Text>
+
+                                    <Text style={styles.cellClass}>{r.class || "-"}</Text>
+
+                                    <Text style={styles.cellCompany}>{r.company || "-"}</Text>
+
+                                    <Text style={styles.cellQty}>{r.quantity}</Text>
+
+                                    <Text style={styles.cellRate}>₹ {money(r.rate)}</Text>
+
+                                    <Text style={styles.cellDiscPct}>{r.discountPercent}%</Text>
+
+                                    <Text style={styles.cellNet}>₹ {money(r.netAmount)}</Text>
                                 </View>
+
                             ))
                         }
 
@@ -350,52 +453,56 @@ export default function InvoicePdf({ data }: { data: InvoicePdfData }) {
                                 <View wrap={false} style={styles.footerBlock}>
                                     <View style={styles.totalsBox}>
                                         <View style={styles.totalRow}>
-                                            <Text>Total Qty</Text>
-                                            <Text>{data.totals.qty}</Text>
+                                            <Text>Total Quantity</Text>
+                                            <Text>{data.totals.totalQuantity}</Text>
                                         </View>
+
                                         <View style={styles.totalRow}>
-                                            <Text>Gross</Text>
-                                            <Text>{data.totals.gross}</Text>
+                                            <Text>Gross Amount</Text>
+                                            <Text>₹ {money(data.totals.grossAmount)}</Text>
                                         </View>
+
                                         <View style={styles.totalRow}>
-                                            <Text>Discount</Text>
-                                            <Text>-{data.totals.discount}</Text>
+                                            <Text>Total Discount</Text>
+                                            <Text>- ₹ {money(data.totals.totalDiscount)}</Text>
                                         </View>
+
                                         <View style={[styles.totalRow, styles.totalBold]}>
                                             <Text>Final Amount</Text>
-                                            <Text>{data.totals.final}</Text>
+                                            <Text>₹ {money(data.totals.netAmount)}</Text>
                                         </View>
                                     </View>
+
 
                                     <View style={styles.amountWords}>
                                         <Text>
                                             Amount Chargeable (in words):{" "}
                                             <Text style={{ fontWeight: 700 }}>
-                                                Rupees {numberToWords(data.totals.final)} Only
+                                                {numberToWords(data.totals.netAmount)}
                                             </Text>
                                         </Text>
                                     </View>
 
                                     <View style={styles.twoCol}>
                                         <View style={styles.bankBox}>
-                                            {data.company.name && <Text>Account: {data.company.name}</Text>}
-                                            {data.company.bankName && <Text>Bank: {data.company.bankName}</Text>}
-                                            {data.company.accountNo && <Text>A/C No: {data.company.accountNo}</Text>}
-                                            {data.company.ifsc && <Text>IFSC: {data.company.ifsc}</Text>}
-                                            {data.company.upi && <Text>UPI: {data.company.upi}</Text>}
+                                            {settings?.name && <Text>Account: {settings.name}</Text>}
+                                            {settings?.bankName && <Text>Bank: {settings.bankName}</Text>}
+                                            {settings?.accountNo && <Text>A/C No: {settings.accountNo}</Text>}
+                                            {settings?.ifsc && <Text>IFSC: {settings.ifsc}</Text>}
+                                            {settings?.upi && <Text>UPI: {settings.upi}</Text>}
                                         </View>
 
                                         <View style={styles.qrBox}>
-                                            {data.company.qrCodeUrl && <Image src={API_BASE_URL + data.company.qrCodeUrl} style={styles.qr} />}
+                                            {settings?.qrCodeUrl && <Image src={API_BASE_URL + settings.qrCodeUrl} style={styles.qr} />}
                                         </View>
                                     </View>
 
                                     <View style={styles.billedBy}>
-                                        <Text>For {data.company.name}</Text>
+                                        <Text>For {settings?.name}</Text>
                                         <Text style={{ fontWeight: 700, marginTop: 12 }}>
                                             Authorized Signatory
                                         </Text>
-                                        <Text>Billed By: {data.billedBy}</Text>
+                                        <Text>Recorded By: {data.billedBy}</Text>
                                     </View>
                                     <Text style={styles.footer}>
                                         This is a computer-generated invoice

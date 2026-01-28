@@ -1,14 +1,14 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { useDealerProfile } from "@/lib/queries/dealers"
 import PageLoader from "@/components/loaders/PageLoader"
 import EmptyState from "@/components/EmptyState"
 import { LibraryBig } from "lucide-react"
+import { useCompanyProfile } from "@/lib/queries/company"
 
 export default function DealerProfilePage() {
     const { id } = useParams<{ id: string }>()
-    const { data, isLoading } = useDealerProfile(id)
+    const { data, isLoading } = useCompanyProfile(id)
 
     if (isLoading) return null
     if (!data) return null

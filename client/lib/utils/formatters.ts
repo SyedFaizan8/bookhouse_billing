@@ -1,4 +1,1 @@
-export const currency = (value?: number) =>
-    typeof value === "number"
-        ? `₹${value.toLocaleString()}`
-        : "₹0"
+export const formatINR = (amount: number) => amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })

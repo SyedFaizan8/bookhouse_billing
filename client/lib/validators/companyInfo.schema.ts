@@ -1,12 +1,13 @@
 import { z } from "zod"
 
-export const companyInfoSchema = z.object({
+export const settingsInfoSchema = z.object({
     name: z.string().min(1, "Company name is required"),
     phone: z.string().min(6, "Phone is required"),
 
     email: z.email("Invalid email").optional().or(z.literal("")),
     gst: z.string().optional(),
 
+    street: z.string().optional(),
     town: z.string().optional(),
     district: z.string().optional(),
     state: z.string().optional(),
@@ -17,9 +18,12 @@ export const companyInfoSchema = z.object({
     ifsc: z.string().optional(),
     upi: z.string().optional(),
 
+    phoneSecondary: z.string().optional(),
+    phoneTertiary: z.string().optional(),
+
     logoUrl: z.string().optional(),
     qrCodeUrl: z.string().optional()
 
 })
 
-export type CompanyInfoForm = z.infer<typeof companyInfoSchema>
+export type SettingsInfoForm = z.infer<typeof settingsInfoSchema>

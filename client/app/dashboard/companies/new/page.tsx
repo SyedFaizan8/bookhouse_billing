@@ -1,9 +1,9 @@
 "use client"
 
 import Breadcrumbs from "@/components/Breadcrumbs"
-import DealerForm from "@/components/DealerForm"
+import CompanyForm from "@/components/CompanyForm"
 
-export default function NewDealerPage() {
+export default function NewCompanyPage() {
     return (
         <div className="space-y-6">
             <Breadcrumbs
@@ -16,7 +16,7 @@ export default function NewDealerPage() {
 
             <h1 className="text-xl font-semibold">Add Company</h1>
 
-            <DealerForm mode="create" />
+            <CompanyForm mode="create" />
         </div>
     )
 }

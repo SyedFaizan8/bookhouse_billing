@@ -1,34 +1,36 @@
 import { Router } from "express";
-import authRoutes from "./modules/auth/auth.route";
-import userRoutes from "./modules/user/user.route.js";
-import customerRoutes from "./modules/customer/customer.route.js";
-import dealerRoutes from "./modules/dealer/dealer.route.js";
-import companyRoutes from "./modules/company/company.route.js";
-import companyInfoRoutes from "./modules/settings/settings.route.js";
+
+import { requireAuth } from "./middlewares/auth.middleware.js";
+import { requireAdmin } from "./middlewares/requireAdmin.middleware.js";
+
+import authRoutes from "./modules/auth/auth.route.js";
 import academicYearRoutes from "./modules/academicYear/academicYear.route.js";
-import dealer2Routes from "./modules/dealer2/dealer.route.js";
-import customer2Routes from "./modules/customer2/customer.route.js";
-import inventoryRoutes from "./modules/inventory/inventory.route.js";
+import userRoutes from "./modules/user/user.route.js";
+import settingsRoutes from "./modules/settings/settings.route.js";
+import schoolRoutes from "./modules/school/school.route.js";
+import estimationRoutes from "./modules/estimation/estimation.route.js";
 import invoiceRoutes from "./modules/invoice/invoice.route.js";
-import salesReturnsRoutes from "./modules/sale-returns/sale-returns.route.js";
-import paymentsRoutes from "./modules/payments/payments.routes.js";
-import { requireAuth } from "./modules/auth/auth.middleware";
-import { requireAdmin } from "./modules/auth/requireAdmin.middleware";
+import creditNoteRoutes from "./modules/credit/credit.route.js";
+import paymentRoutes from "./modules/payments/payments.routes.js";
+import statementRoutes from "./modules/statement/statement.route.js";
+import companyRoutes from "./modules/company/company.route.js";
+import dashboardRoutes from "./modules/dashboard/dashboard.route.js";
+import nextNumberRoutes from "./modules/nextNumber/nextNumber.route.js";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
-router.use("/customers", requireAuth, customerRoutes);
-router.use("/dealers", requireAuth, dealerRoutes);
-router.use("/company", requireAuth, companyRoutes);
-router.use("/users", requireAuth, userRoutes);
-router.use("/company-info", requireAuth, companyInfoRoutes)
 router.use("/academic-year", requireAuth, academicYearRoutes)
-router.use("/dealer2", requireAuth, dealer2Routes) // change the name later
-router.use("/customer2", requireAuth, customer2Routes) // change the name later
-router.use("/inventory", requireAuth, inventoryRoutes)
-router.use("/invoices", requireAuth, invoiceRoutes)
-router.use("/sales-returns", requireAuth, salesReturnsRoutes)
-router.use("/payments", requireAuth, paymentsRoutes)
+router.use("/users", requireAuth, requireAdmin, userRoutes);
+router.use("/settings", requireAuth, settingsRoutes)
+router.use("/schools", requireAuth, schoolRoutes)
+router.use("/estimation", requireAuth, estimationRoutes)
+router.use("/invoice", requireAuth, invoiceRoutes)
+router.use("/credit", requireAuth, creditNoteRoutes)
+router.use("/payment", requireAuth, paymentRoutes)
+router.use("/statement", requireAuth, statementRoutes)
+router.use("/company", requireAuth, companyRoutes)
+router.use("/dashboard", requireAuth, requireAdmin, dashboardRoutes)
+router.use("/next-number", requireAuth, nextNumberRoutes)
 
 export default router;
