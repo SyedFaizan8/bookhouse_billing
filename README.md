@@ -144,6 +144,7 @@ FIRST_ADMIN_PHONE=first_admin_phone
 FIRST_ADMIN_PASSWORD=first_admin_password
 FIRST_ADMIN_NAME=first_admin_name
 FIRST_ADMIN_EMAIL=admin@example.com
+CLIENT_URL=http://localhost:3000
 ```
 
 ---

@@ -1,10 +1,7 @@
 import { CorsOptions } from "cors"
+import { env } from "./env.js";
 
-const allowedOrigins = [
-    "http://localhost:3000",          // Next.js dev
-    "http://127.0.0.1:3000",
-    "https://yourdomain.com",         // production
-]
+const allowedOrigins = [env.CLIENT_URL]
 
 export const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
