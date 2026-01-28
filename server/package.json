@@ -7,8 +7,7 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
-    "prisma:push": "npx prisma db push",
-    "prisma:generate": "npx prisma generate"
+    "postinstall": "npx prisma generate"
   },
   "keywords": [],
   "author": "",
