@@ -221,6 +221,31 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#64748b",
     },
+    watermark: {
+        position: "absolute",
+        top: "40%",
+        left: "8%",
+        width: "100%",
+        textAlign: "center",
+        fontSize: 90,
+        fontWeight: 800,
+        color: "#dc262620",
+        transform: "rotate(-30deg)",
+        letterSpacing: 6,
+    },
+
+    statusRibbon: {
+        backgroundColor: "#fee2e2",
+        color: "#b91c1c",
+        paddingVertical: 4,
+        paddingHorizontal: 12,
+        borderRadius: 4,
+        fontSize: 10,
+        fontWeight: 700,
+        textAlign: "center",
+        alignSelf: "center",
+    },
+
 });
 
 /* ================= HELPERS ================= */
@@ -271,6 +296,12 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
 
                 return (
                     <Page key={pageIndex} size="A4" style={styles.page}>
+
+                        {data.status === "VOIDED" && (
+                            <Text style={styles.watermark}>
+                                VOIDED
+                            </Text>
+                        )}
                         {/* HEADER */}
                         <View style={styles.rowBetween}>
                             <Text>{String(data.kind).toLowerCase() + " no: "}{data.documentNo}</Text>
@@ -284,6 +315,14 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
                                 {totalPages > 1 && <Text>
                                     Page {pageIndex + 1} / {totalPages}
                                 </Text>}
+
+                                {data.status === "VOIDED" && (
+                                    <View style={{ width: "100%", marginTop: 6 }}>
+                                        <Text style={styles.statusRibbon}>
+                                            VOIDED
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                         </View>
 
@@ -339,6 +378,8 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
                                 </Text>
                             )}
                         </View>
+
+
 
                         <Text style={styles.badge}>{String(data.kind) === "INVOICE" ? "BILL OF SUPPLY" : data.kind}</Text>
 
@@ -503,6 +544,19 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
                                             Authorized Signatory
                                         </Text>
                                         <Text>Recorded By: {data.billedBy}</Text>
+
+                                        {data.status === "VOIDED" && (
+                                            <View style={{ marginTop: 6 }}>
+                                                <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                                    Voided By: {data.voidedBy}
+                                                </Text>
+                                                <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                                    Voided At:{" "}
+                                                    {new Date(data.voidedAt!).toLocaleString("en-IN")}
+                                                </Text>
+                                            </View>
+                                        )}
+
                                     </View>
                                     <Text style={styles.footer}>
                                         This is a computer-generated invoice

@@ -1,21 +1,6 @@
-export type InvoicePdfData = {
+export type PdfData = {
     documentNo: string;
     date: string;
-
-    school: {
-        name: string
-        phone: string
-        email?: string
-        contactPerson?: string
-
-        street?: string
-        town?: string
-        district?: string
-        state?: string
-        pincode?: string
-
-        gst?: string
-    };
 
     items: Item[];
 
@@ -28,40 +13,26 @@ export type InvoicePdfData = {
 
     billedBy: string;
     kind: DocumentKind
+
+
+    status: "ISSUED" | "VOIDED"
+    voidedBy?: string;
+    voidedAt?: string
 };
 
+type Information = {
+    name: string
+    phone: string
+    email?: string
 
-export type CompanyInvoicePdfData = {
-    documentNo: string;
-    date: string;
+    street?: string
+    town?: string
+    district?: string
+    state?: string
+    pincode?: string
 
-    company: {
-        name: string
-        phone: string
-        email?: string
-
-        street?: string
-        town?: string
-        district?: string
-        state?: string
-        pincode?: string
-
-        gst?: string
-    };
-
-    items: Item[];
-
-    totals: {
-        totalQuantity: number;
-        grossAmount: number;
-        totalDiscount: number;
-        netAmount: number;
-    };
-
-    billedBy: string;
-    kind: DocumentKind
+    gst?: string
 };
-
 
 export type Item = {
     description: string;
@@ -76,3 +47,7 @@ export type Item = {
 }
 
 export type DocumentKind = ["INVOICE", "ESTIMATION", "CREDIT_NOTE"]
+
+export type InvoicePdfData = PdfData & { school: Information & { contactPerson?: string } }
+
+export type CompanyInvoicePdfData = PdfData & { company: Information }

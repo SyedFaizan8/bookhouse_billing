@@ -50,4 +50,5 @@ export type InvoiceRow = {
     totalQty: number;
     amount: number;
     createdAt: string;
+    status: "ISSUED" | "VOIDED";
 };

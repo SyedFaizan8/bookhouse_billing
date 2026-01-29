@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
-import { DocumentKind, FlowStatus } from "../../generated/prisma/enums.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus, InvoiceStatus } from "../../generated/prisma/enums.js";
 import { CreateCompanyInvoiceDTO, CreateInvoiceDTO } from "./invoice.schema.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
+import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
 
 const router = Router()
 
@@ -300,7 +301,7 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
 
 // router.get("/next-number", getNextInvoiceNumber);
 
-// GET SCHOOL INVOICES
+// GET ALL SCHOOL INVOICES
 router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
 
     const schoolId = req.params.id;
@@ -331,7 +332,8 @@ router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
             date: true,
             totalQuantity: true,
             netAmount: true,
-            createdAt: true,
+            status: true,
+            createdAt: true
         },
     });
 
@@ -344,7 +346,8 @@ router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
             date: inv.date,
             totalQty: inv.totalQuantity,
             amount: inv.netAmount.toNumber(),
-            createdAt: inv.createdAt,
+            status: inv.status,
+            createdAt: inv.createdAt
         }))
     );
 }))
@@ -380,7 +383,8 @@ router.get("/company/:id", asyncHandler(async (req: Request, res: Response) => {
             date: true,
             totalQuantity: true,
             netAmount: true,
-            createdAt: true,
+            status: true,
+            createdAt: true
         },
     });
 
@@ -393,7 +397,8 @@ router.get("/company/:id", asyncHandler(async (req: Request, res: Response) => {
             date: inv.date,
             totalQty: inv.totalQuantity,
             amount: inv.netAmount.toNumber(),
-            createdAt: inv.createdAt,
+            status: inv.status,
+            createdAt: inv.createdAt
         }))
     );
 }))
@@ -424,8 +429,13 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
                 select: {
                     name: true
                 }
+            },
+            voidedByUser: {
+                select: {
+                    name: true,
+                }
             }
-        },
+        }
     });
 
     if (!invoice) throw new AppError('Invoice not found', 401)
@@ -482,7 +492,11 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
         totals,
 
         billedBy: invoice.billedByUser?.name,
-        kind: invoice.kind
+        kind: invoice.kind,
+
+        status: invoice.status,
+        voidedBy: invoice.voidedByUser?.name ?? null,
+        voidedAt: invoice.voidedAt
     }
     )
 }))
@@ -510,6 +524,11 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
                 },
             },
             billedByUser: {
+                select: {
+                    name: true
+                }
+            },
+            voidedByUser: {
                 select: {
                     name: true
                 }
@@ -571,10 +590,55 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
         totals,
 
         billedBy: invoice.billedByUser?.name,
-        kind: invoice.kind
+        kind: invoice.kind,
+
+        status: invoice.status,
+
+        voidedBy: invoice.voidedByUser?.name,
+        voidedAt: invoice.voidedAt
     })
 
 }))
 
+router.post('/void/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const invoiceId = req.params.id
+    const userId = req.user?.userId
+
+    if (!invoiceId || !userId) throw new AppError('InvoiceId or UserId is required', 401)
+
+    const invoice = await prisma.invoice.findUnique({
+        where: { id: invoiceId },
+        include: {
+            flowGroup: {
+                include: {
+                    academicYear: true,
+                },
+            },
+        },
+    })
+
+    if (!invoice) throw new AppError('Invoice not found', 404)
+
+    if (invoice.status === InvoiceStatus.VOIDED) throw new AppError('Invoice already voided', 400)
+
+    // 🔒 Academic year lock
+    if (invoice.flowGroup.academicYear.status !== AcademicYearStatus.OPEN)
+        throw new AppError('Academic year is closed. Cannot void invoice.', 403)
+
+    // 🔒 Flow group lock
+    if (invoice.flowGroup.status !== FlowStatus.OPEN)
+        throw new AppError('Flow group is closed. Cannot void invoice.', 403)
+
+    await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: {
+            status: InvoiceStatus.VOIDED,
+            voidedAt: new Date(),
+            voidedByUserId: userId,
+        },
+    })
+
+    res.json({ message: "Invoice voided successfully" })
+}))
 
 export default router

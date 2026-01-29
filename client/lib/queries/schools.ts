@@ -167,12 +167,7 @@ export function useCreateCreditNote() {
     const qc = useQueryClient();
 
     return useMutation({
-        mutationFn: async (payload: CreatePayload) =>
-            (await api.post(
-                "/credit/school/new",
-                payload
-            )).data,
-
+        mutationFn: async (payload: CreatePayload) => (await api.post("/credit/school/new", payload)).data,
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["school-creditNote"] });
             qc.invalidateQueries({ queryKey: ["statement"] })
@@ -217,3 +212,42 @@ export const useSchoolStatement = (id: string) =>
         queryKey: ["statement", id],
         queryFn: async () => (await api.get(`/statement/school/${id}`)).data
     });
+
+// VOID INVOICE / CREDIT NOTE
+export const voidInvoice = () => {
+    const q = useQueryClient()
+    return useMutation({
+        mutationFn: async (id: string) => (await api.post(`/invoice/void/${id}`)).data,
+        onSuccess: () => {
+            q.invalidateQueries({ queryKey: ["statement"] })
+            q.invalidateQueries({ queryKey: ["school-invoices"] })
+            q.invalidateQueries({ queryKey: ["company-invoices"] })
+            q.invalidateQueries({ queryKey: ["school-creditNote"] })
+            q.invalidateQueries({ queryKey: ["company-creditNote"] })
+        }
+    });
+}
+
+// VOID PAYMENT
+export const reversePayment = () => {
+    const q = useQueryClient()
+    return useMutation({
+        mutationFn: async (id: string) => (await api.post(`/payment/reverse/${id}`)).data,
+        onSuccess: () => {
+            q.invalidateQueries({ queryKey: ["statement"] })
+            q.invalidateQueries({ queryKey: ["payments"] })
+            q.invalidateQueries({ queryKey: ["receipt-pdf"] })
+        }
+    });
+}
+
+// DELETE ESTIMATION
+export const deleteEstimation = () => {
+    const q = useQueryClient()
+    return useMutation({
+        mutationFn: async (id: string) => (await api.post(`/estimation/delete/${id}`)).data,
+        onSuccess: () => {
+            q.invalidateQueries({ queryKey: ["school-estimations"] })
+        }
+    });
+}

@@ -12,6 +12,12 @@ import Pagination from "@/components/Pagination";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { PaymentRow } from "@/lib/types/payments";
 import { useCompanyPayments } from "@/lib/queries/company";
+import { useAuthUser } from "@/lib/queries/auth";
+import { reversePayment } from "@/lib/queries/schools";
+import { CompanyPaymentReverseDialog } from "@/components/alertBox/CompanyPaymentReverseDialog";
+import { toast } from "sonner";
+import { handleApiError } from "@/lib/utils/getApiError";
+import RowActions from "@/components/RowActions";
 
 const PAGE_SIZE = 10;
 
@@ -22,6 +28,13 @@ export default function PaymentsPage() {
     const [search, setSearch] = useState("");
 
     const { data = [], isLoading } = useCompanyPayments(id);
+    const { data: user, isLoading: authLoading } = useAuthUser()
+
+    const ReversePaymentMutation = reversePayment()
+
+    const [voidTarget, setVoidTarget] = useState<PaymentRow | null>(null)
+
+    const isAdmin = user?.role === "ADMIN"
 
     /* ======================================================
        SEARCH FILTER
@@ -55,51 +68,94 @@ export default function PaymentsPage() {
        TABLE COLUMNS
     ====================================================== */
 
-    const columns: Column<PaymentRow>[] = [
-        {
-            key: "receiptNo",
-            header: "Receipt No",
-            render: (p) => (
-                <div>
-                    <div className="font-medium text-indigo-700">
-                        {p.receiptNo}
-                    </div>
+    const columns: Column<PaymentRow>[] = useMemo(() => {
 
-                    {/* mobile */}
-                    <div className="text-xs text-slate-500 md:hidden">
-                        {new Date(p.date).toLocaleDateString("en-IN")}
+        const base: Column<PaymentRow>[] = [
+            {
+                key: "receiptNo",
+                header: "Receipt No",
+                render: (p) => (
+                    <div>
+                        <div className="font-medium text-indigo-700">
+                            {p.receiptNo}
+                        </div>
+
+                        {/* mobile */}
+                        <div className="text-xs text-slate-500 md:hidden">
+                            {new Date(p.date).toLocaleDateString("en-IN")}
+                        </div>
                     </div>
-                </div>
-            ),
-        },
-        {
-            key: "date",
-            header: "Date",
-            className: "hidden md:table-cell",
-            render: (p) =>
-                new Date(p.date).toLocaleDateString("en-IN"),
-        },
-        {
-            key: "mode",
-            header: "Mode",
-            className: "hidden sm:table-cell",
-            render: (p) => p.mode,
-        },
-        {
-            key: "amount",
-            header: "Amount",
-            className:
-                "text-right font-semibold text-green-600",
-            render: (p) =>
-                `₹${p.amount.toLocaleString("en-IN")}`,
-        },
-    ];
+                ),
+            },
+            {
+                key: "date",
+                header: "Date",
+                className: "hidden md:table-cell",
+                render: (p) =>
+                    new Date(p.date).toLocaleDateString("en-IN"),
+            },
+            {
+                key: "mode",
+                header: "Mode",
+                className: "hidden sm:table-cell",
+                render: (p) => p.mode,
+            },
+            {
+                key: "amount",
+                header: "Amount",
+                className:
+                    "text-right font-semibold text-green-600",
+                render: (p) =>
+                    `₹${p.amount.toLocaleString("en-IN")}`,
+            },
+            {
+                key: "status",
+                header: "Status",
+                className: "text-right",
+                render: (i) => (<span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
+                                            ${i.status === "POSTED"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }
+                                        `}
+                >
+                    {i.status === "POSTED" ? "Posted" : "Reversed"}
+                </span>)
+            }
+        ];
+
+
+        if (isAdmin) {
+            base.push({
+                key: "actions",
+                header: "",
+                className: "text-right font-medium",
+                render: (y) => (
+                    <RowActions
+                        actions={
+                            y.status === "POSTED"
+                                ? [
+                                    {
+                                        label: "Reverse",
+                                        onClick: () => setVoidTarget(y),
+                                        variant: "danger",
+                                    },
+                                ] : []
+                        }
+                    />
+                ),
+            })
+        }
+
+        return base
+    }, [isAdmin])
 
     /* ======================================================
        STATES
     ====================================================== */
 
-    if (isLoading) return <TableLoader />;
+    if (isLoading || authLoading) return <TableLoader />;
 
     if (!data.length) {
         return (
@@ -181,6 +237,22 @@ export default function PaymentsPage() {
                 {Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
                 {filtered.length} payments
             </div>
+
+            <CompanyPaymentReverseDialog
+                open={!!voidTarget}
+                payment={voidTarget}
+                loading={ReversePaymentMutation.isPending}
+                onCancel={() => setVoidTarget(null)}
+                onConfirm={() => {
+                    ReversePaymentMutation.mutate(voidTarget!.id, {
+                        onSuccess: () => {
+                            toast.success("Payment Reversed successfully")
+                            setVoidTarget(null)
+                        },
+                        onError: (e) => toast.error(handleApiError(e).message),
+                    })
+                }}
+            />
         </div>
     );
 }

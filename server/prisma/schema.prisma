@@ -36,6 +36,16 @@ enum DocumentKind {
   PAYMENT
 }
 
+enum InvoiceStatus {
+  ISSUED
+  VOIDED
+}
+
+enum PaymentStatus {
+  POSTED
+  REVERSED
+}
+
 model Settings {
   id String @id @default(uuid())
 
@@ -74,10 +84,14 @@ model User {
 
   role UserRole
 
-  createdAt  DateTime  @default(now())
-  modifiedAt DateTime  @updatedAt
-  invoice    Invoice[]
-  payments   Payment[]
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  billedInvoices Invoice[] @relation(name: "UserBilledInvoices")
+  voidedInvoices Invoice[] @relation(name: "UserVoidedInvoices")
+
+  recordedPayments Payment[] @relation(name: "UserRecordedPayments")
+  reversedPayments Payment[] @relation(name: "UserReversedPayments")
 
   @@index([id])
   @@index([phone])
@@ -213,7 +227,8 @@ model Invoice {
   flowGroupId String
   flowGroup   FlowGroup @relation(fields: [flowGroupId], references: [id])
 
-  kind DocumentKind
+  kind   DocumentKind
+  status InvoiceStatus @default(ISSUED)
 
   items Item[]
 
@@ -225,7 +240,11 @@ model Invoice {
   notes String?
 
   billedByUserId String
-  billedByUser   User   @relation(fields: [billedByUserId], references: [id])
+  billedByUser   User   @relation(name: "UserBilledInvoices", fields: [billedByUserId], references: [id])
+
+  voidedAt       DateTime?
+  voidedByUserId String?
+  voidedByUser   User?     @relation(name: "UserVoidedInvoices", fields: [voidedByUserId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -271,12 +290,18 @@ model Payment {
 
   receiptNo Decimal @db.Decimal(12, 2)
 
-  amount Decimal     @db.Decimal(12, 2)
+  amount Decimal       @db.Decimal(12, 2)
   mode   PaymentMode
-  note   String?
+  status PaymentStatus @default(POSTED)
+
+  note String?
 
   recordedByUserId String
-  recordedByUser   User   @relation(fields: [recordedByUserId], references: [id])
+  recordedByUser   User   @relation(name: "UserRecordedPayments", fields: [recordedByUserId], references: [id])
+
+  reversedAt       DateTime?
+  reversedByUserId String?
+  reversedByUser   User?     @relation(name: "UserReversedPayments", fields: [reversedByUserId], references: [id])
 
   createdAt DateTime @default(now())
 

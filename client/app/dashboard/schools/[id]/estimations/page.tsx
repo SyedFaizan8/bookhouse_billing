@@ -10,18 +10,15 @@ import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { useSchoolEstimations } from "@/lib/queries/schools";
+import { deleteEstimation, useSchoolEstimations } from "@/lib/queries/schools";
 import RowActions from "@/components/RowActions";
+import { InvoiceRow } from "@/lib/types/customer";
+import { useAuthUser } from "@/lib/queries/auth";
+import { EstimationDeleteDialog } from "@/components/alertBox/EstimationDeleteDialog";
+import { toast } from "sonner";
+import { handleApiError } from "@/lib/utils/getApiError";
 
 const PAGE_SIZE = 5;
-
-type InvoiceRow = {
-    id: string;
-    documentNo: string;
-    date: string;
-    totalQty: number;
-    amount: number;
-};
 
 export default function CustomerInvoicesPage() {
     const { id } = useParams<{ id: string }>();
@@ -30,6 +27,10 @@ export default function CustomerInvoicesPage() {
     const [search, setSearch] = useState("");
 
     const { data = [], isLoading } = useSchoolEstimations(id);
+
+    const deleteMutation = deleteEstimation()
+
+    const [target, setTarget] = useState<InvoiceRow | null>(null)
 
     const filtered = useMemo(() => {
         if (!search) return data;
@@ -93,7 +94,12 @@ export default function CustomerInvoicesPage() {
                                 label: "Convert To Invoice",
                                 onClick: () => router.replace(`/dashboard/invoices/new/${id}/${u.id}`),
                                 variant: 'warning'
-                            }
+                            },
+                            {
+                                label: "Delete",
+                                onClick: () => setTarget(u),
+                                variant: "danger",
+                            },
                         ]
                     }
                 />
@@ -171,6 +177,24 @@ export default function CustomerInvoicesPage() {
                 {Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
                 {filtered.length}
             </div>
+
+            <EstimationDeleteDialog
+                open={!!target}
+                estimation={target}
+                loading={deleteMutation.isPending}
+                onCancel={() => setTarget(null)}
+                onConfirm={() => {
+                    deleteMutation.mutate(target!.id, {
+                        onSuccess: () => {
+                            toast.success("Estimation Deleted successfully")
+                            setTarget(null)
+                        },
+                        onError: (e) =>
+                            toast.error(handleApiError(e).message),
+                    })
+                }}
+            />
+
         </div>
     );
 }

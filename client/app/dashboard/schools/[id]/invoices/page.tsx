@@ -10,17 +10,15 @@ import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { useSchoolInvoices } from "@/lib/queries/schools";
+import { useSchoolInvoices, voidInvoice } from "@/lib/queries/schools";
+import { InvoiceRow } from "@/lib/types/customer";
+import RowActions from "@/components/RowActions";
+import { useAuthUser } from "@/lib/queries/auth";
+import { InvoiceVoidDialog } from "@/components/alertBox/InvoiceVoid";
+import { toast } from "sonner";
+import { handleApiError } from "@/lib/utils/getApiError";
 
 const PAGE_SIZE = 10;
-
-type InvoiceRow = {
-    id: string;
-    documentNo: string;
-    date: string;
-    totalQty: number;
-    amount: number;
-};
 
 export default function CustomerInvoicesPage() {
     const { id } = useParams<{ id: string }>();
@@ -29,6 +27,13 @@ export default function CustomerInvoicesPage() {
     const [search, setSearch] = useState("");
 
     const { data = [], isLoading } = useSchoolInvoices(id);
+    const { data: user, isLoading: authLoading } = useAuthUser()
+
+    const voidInvoiceMutation = voidInvoice()
+
+    const [voidTarget, setVoidTarget] = useState<InvoiceRow | null>(null)
+
+    const isAdmin = user?.role === "ADMIN"
 
     const filtered = useMemo(() => {
         if (!search) return data;
@@ -47,38 +52,80 @@ export default function CustomerInvoicesPage() {
         pageSize: PAGE_SIZE,
     });
 
-    const columns: Column<InvoiceRow>[] = [
-        {
-            key: "invoiceNo",
-            header: "Invoice No",
-            render: (i) => (
-                <div className="font-medium text-indigo-700">
-                    {i.documentNo}
-                </div>
-            ),
-        },
-        {
-            key: "date",
-            header: "Date",
-            className: "hidden md:table-cell",
-            render: (i) =>
-                new Date(i.date).toLocaleDateString("en-IN"),
-        },
-        {
-            key: "totalQty",
-            header: "Qty",
-            className: "hidden lg:table-cell",
-            render: (i) => i.totalQty,
-        },
-        {
-            key: "amount",
-            header: "Amount",
-            className: "text-right font-medium text-rose-600",
-            render: (i) => `₹${i.amount.toLocaleString()}`,
-        },
-    ];
+    const columns: Column<InvoiceRow>[] = useMemo(() => {
 
-    if (isLoading) return <TableLoader />;
+        const base: Column<InvoiceRow>[] = [
+            {
+                key: "invoiceNo",
+                header: "Invoice No",
+                render: (i) => (
+                    <div className="font-medium text-indigo-700">
+                        {i.documentNo}
+                    </div>
+                ),
+            },
+            {
+                key: "date",
+                header: "Date",
+                className: "hidden md:table-cell",
+                render: (i) => new Date(i.date).toLocaleDateString("en-IN"),
+            },
+            {
+                key: "totalQty",
+                header: "Qty",
+                className: "hidden lg:table-cell",
+                render: (i) => i.totalQty,
+            },
+            {
+                key: "amount",
+                header: "Amount",
+                className: "text-right font-medium text-rose-600",
+                render: (i) => `₹${i.amount.toLocaleString()}`,
+            },
+            {
+                key: "status",
+                header: "Status",
+                className: "text-right",
+                render: (i) => (<span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
+                        ${i.status === "ISSUED"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }
+                    `}
+                >
+                    {i.status === "ISSUED" ? "Issued" : "Voided"}
+                </span>)
+            }
+        ];
+
+
+        if (isAdmin) {
+            base.push({
+                key: "actions",
+                header: "",
+                className: "text-right font-medium",
+                render: (y) => (
+                    <RowActions
+                        actions={
+                            y.status === "ISSUED"
+                                ? [
+                                    {
+                                        label: "VOID",
+                                        onClick: () => setVoidTarget(y),
+                                        variant: "danger",
+                                    },
+                                ] : []
+                        }
+                    />
+                ),
+            })
+        }
+
+        return base
+    }, [isAdmin])
+
+    if (isLoading || authLoading) return <TableLoader />;
 
     if (!data.length) {
         return (
@@ -149,6 +196,23 @@ export default function CustomerInvoicesPage() {
                 {Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
                 {filtered.length}
             </div>
+
+            <InvoiceVoidDialog
+                open={!!voidTarget}
+                invoice={voidTarget}
+                loading={voidInvoiceMutation.isPending}
+                onCancel={() => setVoidTarget(null)}
+                onConfirm={() => {
+                    voidInvoiceMutation.mutate(voidTarget!.id, {
+                        onSuccess: () => {
+                            toast.success("Invoice Voided successfully")
+                            setVoidTarget(null)
+                        },
+                        onError: (e) =>
+                            toast.error(handleApiError(e).message),
+                    })
+                }}
+            />
         </div>
     );
 }

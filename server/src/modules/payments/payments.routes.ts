@@ -2,9 +2,10 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
 import { paymentCompanySchema, paymentSchema } from "../school/school.schema.js";
-import { DocumentKind } from "../../generated/prisma/enums.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus, PaymentStatus } from "../../generated/prisma/enums.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
+import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
 
 const router = Router();
 
@@ -50,7 +51,7 @@ router.get("/school/:schoolId", asyncHandler(async (req: Request, res: Response)
         },
         orderBy: {
             createdAt: "desc",
-        },
+        }
     });
 
     return res.json(payments.map((p) => ({
@@ -59,7 +60,8 @@ router.get("/school/:schoolId", asyncHandler(async (req: Request, res: Response)
         amount: p.amount.toNumber(),
         mode: p.mode,
         note: p.note,
-        date: p.createdAt,
+        status: p.status,
+        date: p.createdAt
     })),
     );
 }))
@@ -106,7 +108,7 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
         },
         orderBy: {
             createdAt: "desc",
-        },
+        }
     });
 
     return res.json(payments.map((p) => ({
@@ -115,7 +117,8 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
         amount: p.amount.toNumber(),
         mode: p.mode,
         note: p.note,
-        date: p.createdAt,
+        status: p.status,
+        date: p.createdAt
     })),
     );
 }))
@@ -359,6 +362,9 @@ router.get("/school/receipt/:id", asyncHandler(async (req: Request, res: Respons
             recordedByUser: {
                 select: { name: true },
             },
+            reversedByUser: {
+                select: { name: true }
+            }
         },
     });
 
@@ -397,6 +403,10 @@ router.get("/school/receipt/:id", asyncHandler(async (req: Request, res: Respons
 
         recordedBy:
             payment.recordedByUser?.name ?? "System",
+
+        status: payment.status,
+        reversedBy: payment.recordedByUser?.name ?? null,
+        reversedAt: payment.reversedAt
     });
 
 }))
@@ -470,9 +480,54 @@ router.get("/company/receipt/:id", asyncHandler(async (req: Request, res: Respon
                 .join(", "),
         },
 
-        recordedBy:
-            payment.recordedByUser?.name ?? "System",
+        recordedBy: payment.recordedByUser?.name ?? "System",
+
+        status: payment.status,
+        reversedBy: payment.recordedByUser?.name ?? null,
+        reversedAt: payment.reversedAt
     });
+
+}))
+
+
+router.post('/reverse/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const paymentId = req.params.id
+    const userId = req.user?.userId
+
+    if (!paymentId || !userId) throw new AppError('InvoiceId or UserId is required', 401)
+
+    const payment = await prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: {
+            academicYear: true,
+            flowGroup: true,
+        },
+    })
+
+    if (!payment) throw new AppError('Payment not found', 404)
+
+    if (payment.status === PaymentStatus.REVERSED) throw new AppError('Payment already reversed', 400)
+
+    // 🔒 academic year lock
+    if (payment.academicYear.status !== AcademicYearStatus.OPEN) throw new AppError('Academic year is closed. Cannot reverse payment.', 403)
+
+    // 🔒 flow group lock (if linked)
+    if (payment.flowGroup && payment.flowGroup.status !== FlowStatus.OPEN) {
+        throw new AppError('Flow group is closed. Cannot reverse payment.', 403)
+    }
+
+    const updatedPayment = await prisma.payment.update({
+        where: { id: paymentId },
+        data: {
+            status: PaymentStatus.REVERSED,
+            reversedAt: new Date(),
+            reversedByUserId: userId,
+        },
+    })
+
+    if (!updatedPayment) throw new AppError("Unable to reverse the payment", 500)
+
+    return res.json({ message: "Payment reversed successfully" })
 
 }))
 

@@ -135,6 +135,30 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#64748b",
     },
+    watermark: {
+        position: "absolute",
+        top: "40%",
+        left: 0,
+        right: 0,
+        textAlign: "center",
+        fontSize: 90,
+        fontWeight: 800,
+        color: "#dc262620",
+        transform: "rotate(-30deg)",
+        letterSpacing: 6,
+    },
+    statusRibbon: {
+        backgroundColor: "#fee2e2",
+        color: "#b91c1c",
+        paddingVertical: 4,
+        paddingHorizontal: 12,
+        borderRadius: 4,
+        fontSize: 10,
+        fontWeight: 700,
+        textAlign: "center",
+        alignSelf: "center",
+        marginTop: 6,
+    },
 });
 
 /* ================= PDF ================= */
@@ -150,16 +174,31 @@ export default function ReceiptPdf({
         <Document>
             <Page size="A4" style={styles.page}>
 
+                {data.status === "REVERSED" && (
+                    <Text style={styles.watermark}>
+                        REVERSED
+                    </Text>
+                )}
+
                 {/* TOP BAR */}
                 <View style={styles.rowBetween}>
                     <Text>Receipt No: {data.receiptNo}</Text>
-                    <Text>
-                        {new Date(data.date).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                        })}
-                    </Text>
+                    <View>
+                        <Text>
+                            {new Date(data.date).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "long",
+                                year: "numeric",
+                            })}
+                        </Text>
+                        {data.status === "REVERSED" && (
+                            <View style={{ width: "100%" }}>
+                                <Text style={styles.statusRibbon}>
+                                    REVERSED
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
 
                 {/* HEADER */}
@@ -302,6 +341,18 @@ export default function ReceiptPdf({
                     <Text style={{ marginTop: 4 }}>
                         Recorded By: {data.recordedBy}
                     </Text>
+
+                    {data.status === "REVERSED" && (
+                        <View style={{ marginTop: 6 }}>
+                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                Reversed By: {data.reversedBy}
+                            </Text>
+                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                Reversed At:{" "}
+                                {new Date(data.reversedAt!).toLocaleString("en-IN")}
+                            </Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* FOOTER */}

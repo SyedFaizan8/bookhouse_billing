@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { Response, Request } from "express";
 import { prisma } from "../../prisma.js";
-import { DocumentKind, FlowStatus } from "../../generated/prisma/enums.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus } from "../../generated/prisma/enums.js";
 import { CreateEstimationDTO } from "./estimation.schema.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
+import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
 
 const router = Router()
 
@@ -248,6 +249,40 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response) => {
             createdAt: est.createdAt,
         }))
     );
+}))
+
+
+router.post('/delete/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const estimationId = req.params.id
+
+    const estimation = await prisma.invoice.findFirst({
+        where: {
+            id: estimationId,
+            kind: DocumentKind.ESTIMATION,
+        },
+        include: {
+            flowGroup: {
+                include: {
+                    academicYear: true,
+                },
+            },
+        },
+    })
+
+    if (!estimation)
+        throw new AppError("Estimation not found", 404)
+
+    // 🔒 Academic year lock
+    if (estimation.flowGroup.academicYear.status !== AcademicYearStatus.OPEN)
+        throw new AppError("Academic year is closed. Cannot delete estimation.", 403)
+
+    // 🔒 Flow group lock
+    if (estimation.flowGroup.status !== FlowStatus.OPEN)
+        throw new AppError("Flow group is closed. Cannot delete estimation.", 403)
+
+    await prisma.invoice.delete({ where: { id: estimationId }, })
+
+    res.json({ message: "Estimation deleted successfully", })
 }))
 
 export default router

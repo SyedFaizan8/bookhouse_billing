@@ -125,6 +125,30 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#64748b",
     },
+    watermark: {
+        position: "absolute",
+        top: "40%",
+        left: "8%",
+        width: "100%",
+        textAlign: "center",
+        fontSize: 90,
+        fontWeight: 800,
+        color: "#dc262620",
+        transform: "rotate(-30deg)",
+        letterSpacing: 6,
+    },
+
+    statusRibbon: {
+        backgroundColor: "#fee2e2",
+        color: "#b91c1c",
+        paddingVertical: 4,
+        paddingHorizontal: 12,
+        borderRadius: 4,
+        fontSize: 10,
+        fontWeight: 700,
+        textAlign: "center",
+        alignSelf: "center",
+    },
 });
 
 /* ================= PDF ================= */
@@ -140,16 +164,31 @@ export default function CompanyCreditNotePdf({
         <Document>
             <Page size="A4" style={styles.page} wrap>
 
+                {data.status === "VOIDED" && (
+                    <Text style={styles.watermark}>
+                        VOIDED
+                    </Text>
+                )}
+
                 {/* TOP */}
                 <View style={styles.rowBetween}>
                     <Text>Credit Note No: {data.documentNo}</Text>
-                    <Text>
-                        {new Date(data.date).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                        })}
-                    </Text>
+                    <View>
+                        <Text>
+                            {new Date(data.date).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "long",
+                                year: "numeric",
+                            })}
+                        </Text>
+                        {data.status === "VOIDED" && (
+                            <View style={{ width: "100%", marginTop: 6 }}>
+                                <Text style={styles.statusRibbon}>
+                                    VOIDED
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
 
                 {/* HEADER */}
@@ -318,7 +357,20 @@ export default function CompanyCreditNotePdf({
                     <Text style={{ marginTop: 22, fontWeight: 700 }}>
                         Authorized Signatory
                     </Text>
+                    {data.status === "VOIDED" && (
+                        <View style={{ marginTop: 6 }}>
+                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                Voided By: {data.voidedBy}
+                            </Text>
+                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                Voided At:{" "}
+                                {new Date(data.voidedAt!).toLocaleString("en-IN")}
+                            </Text>
+                        </View>
+                    )}
                 </View>
+
+
 
                 <Text style={styles.footerNote}>
                     This is a computer-generated credit note

@@ -5,52 +5,37 @@ export type PaymentRow = {
     mode: "CASH" | "UPI" | "BANK";
     note?: string;
     date: string;
+    status: "POSTED" | "REVERSED"
 };
 
-export type ReceiptPdfData = {
+type ReceiptData = {
     receiptNo: string;
     date: string;
     amount: number;
     mode: string;
     note: string
 
-    school: {
-        name: string;
-        phone: string;
-        email?: string
-        gst?: string;
-        street?: string,
-        town?: string,
-        district?: string,
-        state?: string,
-        pincode?: string,
-    };
+    recordedBy: string,
 
-    recordedBy: string;
-};
+    status?: "POSTED" | "REVERSED",
+    reversedBy?: string,
+    reversedAt?: string
+}
 
-export type CompanyReceiptPdfData = {
-    receiptNo: string;
-    date: string;
-    amount: number;
-    mode: string;
-    note: string
-
-    company: company
-
-    recordedBy: string;
-};
-
-export type company = {
-    name: string
-    phone: string
+type data = {
+    name: string;
+    phone: string;
     email?: string
 
-    street?: string
-    town?: string
-    district?: string
-    state?: string
-    pincode?: string
+    street?: string,
+    town?: string,
+    district?: string,
+    state?: string,
+    pincode?: string,
 
-    gst?: string
+    gst?: string;
 };
+
+export type ReceiptPdfData = ReceiptData & { school: data }
+
+export type CompanyReceiptPdfData = ReceiptData & { company: data }

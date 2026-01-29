@@ -3,7 +3,7 @@ import { Router } from "express"
 import { prisma } from "../../prisma.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
-
+import { InvoiceStatus, PaymentStatus } from "../../generated/prisma/enums.js";
 
 const router = Router();
 
@@ -53,6 +53,7 @@ router.get("/school/:schoolId", asyncHandler(async (req: Request, res: Response)
         where: {
             flowGroupId: { in: flowIds },
             kind: { in: ["INVOICE", "CREDIT_NOTE"] },
+            status: InvoiceStatus.ISSUED
         },
         select: {
             date: true,
@@ -66,6 +67,7 @@ router.get("/school/:schoolId", asyncHandler(async (req: Request, res: Response)
         where: {
             flowGroupId: { in: flowIds },
             academicYearId: academicYear.id,
+            status: PaymentStatus.POSTED
         },
         select: {
             createdAt: true,
@@ -186,7 +188,7 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
     const flows = await prisma.flowGroup.findMany({
         where: {
             companyId,
-            academicYearId: academicYear.id,
+            academicYearId: academicYear.id
         },
         select: { id: true },
     });
@@ -207,6 +209,7 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
         where: {
             flowGroupId: { in: flowIds },
             kind: { in: ["INVOICE", "CREDIT_NOTE"] },
+            status: InvoiceStatus.ISSUED
         },
         select: {
             date: true,
@@ -220,6 +223,7 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
         where: {
             flowGroupId: { in: flowIds },
             academicYearId: academicYear.id,
+            status: PaymentStatus.POSTED
         },
         select: {
             createdAt: true,

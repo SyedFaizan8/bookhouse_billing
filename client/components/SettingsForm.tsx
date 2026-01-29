@@ -10,7 +10,7 @@ import {
     SettingsInfoForm,
 } from "@/lib/validators/companyInfo.schema"
 
-import { CompanySettings } from "@/lib/types/company"
+import { CompanySettings } from "@/lib/types/settings"
 import { API_BASE_URL } from "@/lib/constants"
 import { useUpdateSettingsInfo } from "@/lib/queries/settings"
 import { handleApiError } from "@/lib/utils/getApiError"
