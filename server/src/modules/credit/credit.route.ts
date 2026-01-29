@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Response, Request } from "express";
 import { prisma } from "../../prisma.js";
-import { DocumentKind, FlowStatus } from "../../generated/prisma/enums.js";
+import { DocumentKind, FlowStatus, SequenceScope } from "../../generated/prisma/enums.js";
 import { CreateCompanyCreditNoteDTO, CreateCreditNoteDTO } from "./credit.schema.js";
 import { AppError } from "../../utils/error.js";
 import { asyncHandler } from "../../utils/async.js";
@@ -60,9 +60,10 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
 
         const seq = await tx.documentSequence.upsert({
             where: {
-                academicYearId_type: {
+                academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.CREDIT_NOTE,
+                    scope: SequenceScope.SCHOOL
                 },
             },
             update: {
@@ -72,6 +73,7 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
                 academicYearId: academicYear.id,
                 type: DocumentKind.CREDIT_NOTE,
                 lastNumber: 1,
+                scope: SequenceScope.SCHOOL
             },
         });
 
@@ -213,9 +215,10 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
 
         const seq = await tx.documentSequence.upsert({
             where: {
-                academicYearId_type: {
+                academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.CREDIT_NOTE,
+                    scope: SequenceScope.COMPANY
                 },
             },
             update: {
@@ -225,6 +228,7 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
                 academicYearId: academicYear.id,
                 type: DocumentKind.CREDIT_NOTE,
                 lastNumber: 1,
+                scope: SequenceScope.COMPANY
             },
         });
 

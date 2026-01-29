@@ -42,8 +42,8 @@ export function AcademicYearOpenDialog({
                         <br /><br />
 
                         Period:{" "}
-                        {new Date(year.startDate).toLocaleDateString()} →{" "}
-                        {new Date(year.endDate).toLocaleDateString()}
+                        {new Date(year.startDate).toLocaleDateString("en-IN")} →{" "}
+                        {new Date(year.endDate).toLocaleDateString("en-IN")}
                         <br />
                         Current Status: {year.status}
                         <br /><br />

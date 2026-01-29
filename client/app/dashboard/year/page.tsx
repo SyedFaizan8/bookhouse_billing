@@ -22,10 +22,13 @@ import { handleApiError } from "@/lib/utils/getApiError"
 
 import { AcademicYearCloseDialog } from "@/components/alertBox/AcademicYearCloseDialog"
 import { AcademicYearOpenDialog } from "@/components/alertBox/AcademicYearOpenDialog"
+import { useRouter } from "next/navigation"
 
 export default function AcademicYearsPage() {
     const { data, isLoading } = useAcademicYears()
     const { data: user, isLoading: authLoading } = useAuthUser()
+
+    const router = useRouter()
 
     const closeMutation = useCloseAcademicYear()
     const openMutation = useOpenAcademicYear()
@@ -45,8 +48,8 @@ export default function AcademicYearsPage() {
                     <div>
                         <div className="font-medium">{y.name}</div>
                         <div className="text-xs text-slate-500">
-                            {new Date(y.startDate).toLocaleDateString()} →{" "}
-                            {new Date(y.endDate).toLocaleDateString()}
+                            {new Date(y.startDate).toLocaleDateString("en-IN")} →{" "}
+                            {new Date(y.endDate).toLocaleDateString("en-IN")}
                         </div>
                     </div>
                 ),
@@ -81,6 +84,11 @@ export default function AcademicYearsPage() {
                                         label: "Close",
                                         onClick: () => setCloseTarget(y),
                                         variant: "danger",
+                                    },
+                                    {
+                                        label: "Edit",
+                                        onClick: () =>
+                                            router.push(`/dashboard/year/${y.id}`),
                                     },
                                 ]
                                 : [

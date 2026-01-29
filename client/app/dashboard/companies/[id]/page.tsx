@@ -45,13 +45,14 @@ export default function DealerProfilePage() {
                     <Info label="Phone" value={data.phone} />
                     {data.email && <Info label="Email" value={data.email} />}
 
-                    {data.street && <Info label="Street" value={data.street} />}
+                    {data.gst && <Info label="GST Number" value={data.gst} />}
+
                     {data.town && <Info label="Town" value={data.town} />}
                     {data.district && <Info label="District" value={data.district} />}
                     {data.state && <Info label="State" value={data.state} />}
                     {data.pincode && <Info label="Pincode" value={data.pincode} />}
 
-                    {data.gst && <Info label="GST Number" value={data.gst} />}
+                    {data.street && <Info label="Street" value={data.street} />}
                 </div>
             </div>
 

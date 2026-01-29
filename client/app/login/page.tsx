@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Phone } from "lucide-react";
-import axios, { isAxiosError } from "axios";
+import { Eye, EyeOff, Phone, Lock } from "lucide-react";
+import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/constants";
 
 export default function LoginPage() {
@@ -15,16 +16,14 @@ export default function LoginPage() {
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    /* ================= SUBMIT ================= */
-
     const submit = async () => {
         if (!phone || !password) {
             toast.error("Phone number and password required");
             return;
         }
 
-        if (phone.length < 10) {
-            toast.error("Enter valid phone number");
+        if (phone.length !== 10) {
+            toast.error("Enter valid 10 digit phone number");
             return;
         }
 
@@ -37,7 +36,7 @@ export default function LoginPage() {
                 { withCredentials: true }
             );
 
-            toast.success("Login successful");
+            toast.success("Welcome back 👋");
             router.replace("/dashboard/year");
         } catch (err: any) {
             toast.error(
@@ -48,31 +47,50 @@ export default function LoginPage() {
         }
     };
 
-    /* ================= UI ================= */
-
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-slate-100 px-4">
-
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
-
-                {/* LOGO */}
-                <div className="text-center space-y-1">
-                    <h1 className="text-2xl font-bold text-indigo-700">
-                        SRI VINAYAKA BOOK HOUSE
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-600 to-indigo-800 px-4"
+        >
+            {/* CARD */}
+            <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.45, ease: "easeOut" }}
+                className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6 space-y-6"
+            >
+                {/* BRAND */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-center space-y-1"
+                >
+                    <h1 className="text-xl font-bold text-indigo-700">
+                        Sri Vinayaka Book House
                     </h1>
-                    <p className="text-sm text-slate-500">
-                        Login to your account
+                    <p className="text-xs text-slate-500">
+                        Login to continue
                     </p>
-                </div>
+                </motion.div>
 
                 {/* PHONE */}
-                <div className="space-y-1">
-                    <label className="text-sm text-slate-600">Phone Number</label>
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="space-y-1"
+                >
+                    <label className="text-xs text-slate-600">
+                        Phone Number
+                    </label>
 
                     <div className="relative">
                         <Phone
-                            className="absolute left-3 top-3 text-slate-400"
-                            size={18}
+                            size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                         />
 
                         <input
@@ -83,50 +101,62 @@ export default function LoginPage() {
                             onChange={(e) =>
                                 setPhone(e.target.value.replace(/\D/g, ""))
                             }
-                            placeholder="Enter phone number"
-                            className="w-full pl-10 pr-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="10 digit mobile number"
+                            className="w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                     </div>
-                </div>
+                </motion.div>
 
                 {/* PASSWORD */}
-                <div className="space-y-1">
-                    <label className="text-sm text-slate-600">Password</label>
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="space-y-1"
+                >
+                    <label className="text-xs text-slate-600">
+                        Password
+                    </label>
 
                     <div className="relative">
+                        <Lock
+                            size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        />
+
                         <input
                             type={show ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter password"
-                            className="w-full pr-10 px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="w-full pl-9 pr-9 py-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                         />
 
                         <button
                             type="button"
                             onClick={() => setShow((s) => !s)}
-                            className="absolute right-3 top-3 text-slate-400"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
                         >
-                            {show ? <EyeOff size={18} /> : <Eye size={18} />}
+                            {show ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* BUTTON */}
-                <button
+                <motion.button
+                    whileTap={{ scale: 0.97 }}
                     disabled={loading}
                     onClick={submit}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-3 rounded-lg font-medium transition"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
                 >
                     {loading ? "Signing in..." : "Login"}
-                </button>
+                </motion.button>
 
                 {/* FOOTER */}
-                <div className="text-center text-xs text-slate-500">
+                <div className="text-center text-[11px] text-slate-400">
                     © {new Date().getFullYear()} VBH
                 </div>
-
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

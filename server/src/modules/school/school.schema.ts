@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const schoolCreateSchema = z.object({
     name: z.string().min(2).max(100),
-    phone: z.string().regex(/^[6-9]\d{9}$/),
+    phone: z.string().min(2).max(12),
 
     email: z.email().max(150).optional(),
     contactPerson: z.string().max(100).optional(),

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
-import { AcademicYearStatus, DocumentKind, FlowStatus, InvoiceStatus } from "../../generated/prisma/enums.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus, InvoiceStatus, SequenceScope } from "../../generated/prisma/enums.js";
 import { CreateCompanyInvoiceDTO, CreateInvoiceDTO } from "./invoice.schema.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
@@ -62,9 +62,10 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
 
         const seq = await tx.documentSequence.upsert({
             where: {
-                academicYearId_type: {
+                academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.INVOICE,
+                    scope: SequenceScope.SCHOOL
                 },
             },
             update: {
@@ -73,7 +74,8 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
             create: {
                 academicYearId: academicYear.id,
                 type: DocumentKind.INVOICE,
-                lastNumber: 1,
+                scope: SequenceScope.SCHOOL,
+                lastNumber: 1
             },
         });
 
@@ -496,7 +498,9 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
 
         status: invoice.status,
         voidedBy: invoice.voidedByUser?.name ?? null,
-        voidedAt: invoice.voidedAt
+        voidedAt: invoice.voidedAt,
+
+        notes: invoice.notes ?? null
     }
     )
 }))
@@ -595,7 +599,9 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
         status: invoice.status,
 
         voidedBy: invoice.voidedByUser?.name,
-        voidedAt: invoice.voidedAt
+        voidedAt: invoice.voidedAt,
+
+        notes: invoice.notes ?? null
     })
 
 }))

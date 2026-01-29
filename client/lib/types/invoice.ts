@@ -18,6 +18,8 @@ export type PdfData = {
     status: "ISSUED" | "VOIDED"
     voidedBy?: string;
     voidedAt?: string
+
+    notes?: string
 };
 
 type Information = {

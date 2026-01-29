@@ -190,4 +190,76 @@ router.post("/:id/open", requireAdmin, asyncHandler(async (req: Request, res: Re
     res.json({ success: result })
 }))
 
+router.patch("/:id", requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params
+
+    const parsed = academicYearSchema.safeParse(req.body)
+    if (!parsed.success) throw new AppError("Validation error", 400)
+
+    const { startDate, endDate } = parsed.data
+
+    if (startDate >= endDate) throw new AppError("Start date must be before end date", 400)
+
+
+    const existing = await prisma.academicYear.findUnique({ where: { id } })
+
+    if (!existing) throw new AppError("Academic year not found", 404)
+
+    if (existing.status === 'CLOSED') throw new AppError('Academic year is closed please, Open the academic year then try again', 409)
+
+    // 🔒 Overlap check (excluding current year)
+    const overlapping = await prisma.academicYear.findFirst({
+        where: {
+            id: { not: id },
+            startDate: { lte: endDate },
+            endDate: { gte: startDate },
+        },
+        select: { id: true },
+    })
+
+    if (overlapping) {
+        throw new AppError(
+            "Updated academic year overlaps with an existing year",
+            409
+        )
+    }
+
+    await prisma.academicYear.update({
+        where: { id },
+        data: {
+            startDate,
+            endDate,
+            name: `${startDate.getFullYear()}-${String(
+                endDate.getFullYear()
+            ).slice(-2)}`,
+        },
+    })
+
+    res.json({ message: "successfully updated." })
+}))
+
+router.get("/single/:id", requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params
+
+    const academicYear = await prisma.academicYear.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            name: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+            createdAt: true,
+            closedAt: true,
+        },
+    })
+
+    if (!academicYear) {
+        throw new AppError("Academic year not found", 404)
+    }
+
+    res.json(academicYear)
+})
+)
+
 export default router

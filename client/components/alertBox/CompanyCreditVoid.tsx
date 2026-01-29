@@ -47,7 +47,7 @@ export function CompanyCreditNoteVoidDialog({
 
                         Date:
                         <strong className="ml-1">
-                            {new Date(creditNote.date).toLocaleDateString()}
+                            {new Date(creditNote.date).toLocaleDateString("en-IN")}
                         </strong>
                         <br />
 

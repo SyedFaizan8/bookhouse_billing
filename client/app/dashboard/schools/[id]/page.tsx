@@ -62,17 +62,15 @@ export default function DealerProfilePage() {
                     >
                         <Info label="Phone" value={data.phone} />
                         {data.email && <Info label="Email" value={data.email} />}
-                        {data.street && <Info label="Street" value={data.street} />}
-                        {data.town && <Info label="Town" value={data.town} />}
                         {data.medium && <Info label="Medium" value={data.medium} />}
                         {data.board && <Info label="Board" value={data.board} />}
-                        {data.contactPerson && (
-                            <Info label="Contact Person" value={data.contactPerson} />
-                        )}
+                        {data.contactPerson && (<Info label="Contact Person" value={data.contactPerson} />)}
+                        {data.gst && <Info label="GST Number" value={data.gst} />}
+                        {data.town && <Info label="Town" value={data.town} />}
                         {data.district && <Info label="District" value={data.district} />}
                         {data.state && <Info label="State" value={data.state} />}
                         {data.pincode && <Info label="Pincode" value={data.pincode} />}
-                        {data.gst && <Info label="GST Number" value={data.gst} />}
+                        {data.street && <Info label="Street" value={data.street} />}
                     </div>
                 </div>
             </div>

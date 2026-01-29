@@ -47,7 +47,7 @@ export function EstimationDeleteDialog({
 
                         Date:
                         <strong className="ml-1">
-                            {new Date(estimation.date).toLocaleDateString()}
+                            {new Date(estimation.date).toLocaleDateString("en-IN")}
                         </strong>
                         <br />
 

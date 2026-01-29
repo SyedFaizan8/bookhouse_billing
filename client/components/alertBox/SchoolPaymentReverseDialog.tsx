@@ -47,7 +47,7 @@ export function SchoolPaymentReverseDialog({
 
                         Date:
                         <strong className="ml-1">
-                            {new Date(payment.date).toLocaleDateString()}
+                            {new Date(payment.date).toLocaleDateString("en-IN")}
                         </strong>
                         <br />
 

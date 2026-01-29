@@ -10,7 +10,7 @@ export const useAcademicYears = () =>
 export const useCreateAcademicYear = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (data: { startDate: string; endDate: string }) => api.post(`/academic-year`, data),
+        mutationFn: async (data: { startDate: string; endDate: string }) => await api.post(`/academic-year`, data),
         onSuccess: () => qc.invalidateQueries(),
     })
 }
@@ -18,7 +18,7 @@ export const useCreateAcademicYear = () => {
 export const useCloseAcademicYear = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (id: string) => api.post(`/academic-year/${id}/close`),
+        mutationFn: async (id: string) => await api.post(`/academic-year/${id}/close`),
         onSuccess: () => qc.invalidateQueries(),
     })
 }
@@ -26,7 +26,26 @@ export const useCloseAcademicYear = () => {
 export const useOpenAcademicYear = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (id: string) => api.post(`/academic-year/${id}/open`),
+        mutationFn: async (id: string) => await api.post(`/academic-year/${id}/open`),
         onSuccess: () => qc.invalidateQueries(),
     })
 }
+
+export const useAcademicYear = (id: string) =>
+    useQuery({
+        queryKey: ["academic-years", id],
+        queryFn: async () => (await api.get(`/academic-year/single/${id}`)).data,
+    })
+
+export const useUpdateAcademicYear = (id: string) => {
+    const qc = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (data: {
+            startDate: string,
+            endDate: string
+        }) => await api.patch(`/academic-year/${id}`, data),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["academic-years"] })
+    })
+}
+

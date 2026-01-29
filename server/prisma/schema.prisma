@@ -46,6 +46,11 @@ enum PaymentStatus {
   REVERSED
 }
 
+enum SequenceScope {
+  SCHOOL
+  COMPANY
+}
+
 model Settings {
   id String @id @default(uuid())
 
@@ -317,10 +322,12 @@ model DocumentSequence {
   academicYearId String
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
 
-  type       DocumentKind
+  type  DocumentKind
+  scope SequenceScope
+
   lastNumber Int
 
   updatedAt DateTime @updatedAt
 
-  @@unique([academicYearId, type])
+  @@unique([academicYearId, type, scope])
 }

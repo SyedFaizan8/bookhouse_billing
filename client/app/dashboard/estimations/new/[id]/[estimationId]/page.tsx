@@ -5,42 +5,36 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useEffect, useMemo } from "react";
-import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { useAuthUser } from "@/lib/queries/auth";
 import { API_BASE_URL } from "@/lib/constants";
-import { useCreateEstimation, useSchoolProfile } from "@/lib/queries/schools";
 import { numberToWords } from "@/lib/utils/numberToWords";
-import { useSettingsInfo } from "@/lib/queries/settings";
-import { useNextEstimationNumber } from "@/lib/queries/nextNumber";
 import { handleApiError } from "@/lib/utils/getApiError";
+
+import { useAuthUser } from "@/lib/queries/auth";
+import { useSettingsInfo } from "@/lib/queries/settings";
+
 import Spinner from "@/components/Spinner";
+import { useInvoicePdf, useUpdateEstimation } from "@/lib/queries/schools";
 import FormLoader from "@/components/loaders/FormLoader";
 
 /* ======================================================
-   VALIDATION SCHEMA
+   VALIDATION
 ====================================================== */
 
 const ItemSchema = z.object({
-    description: z.string().trim().min(1, "Description required"),
+    description: z.string().trim().min(1),
     class: z.string().optional(),
     company: z.string().optional(),
-    quantity: z.number().int().min(1, "Qty must be ≥ 1"),
-    rate: z.number().min(0, "Rate cannot be negative"),
-    discountPercent: z
-        .number()
-        .min(0)
-        .max(99, "Discount cannot be 100%"),
+    quantity: z.number().int().min(1),
+    rate: z.number().min(0),
+    discountPercent: z.number().min(0).max(99),
 });
 
 const Schema = z.object({
-    estimationNo: z
-        .string()
-        .trim()
-        .min(1, "Estimation number is required"),
-    items: z.array(ItemSchema).min(1, "At least one item required"),
+    estimationNo: z.string().regex(/^\d+$/, "Estimation number must be numeric"),
+    items: z.array(ItemSchema).min(1),
     notes: z.string().optional(),
 });
 
@@ -50,8 +44,8 @@ type Form = z.infer<typeof Schema>;
    HELPERS
 ====================================================== */
 
-const formatDate = () =>
-    new Date().toLocaleDateString("en-GB", {
+const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-GB", {
         day: "numeric",
         month: "long",
         year: "numeric",
@@ -61,53 +55,58 @@ const formatDate = () =>
    PAGE
 ====================================================== */
 
-export default function EstimationPage() {
-    const { id } = useParams<{ id: string }>();
+export default function EditEstimationPage() {
+    const { estimationId } = useParams<{ estimationId: string }>();
     const router = useRouter();
 
-    const { data: customer, isLoading } = useSchoolProfile(id);
+    const { data: estimation, isLoading } = useInvoicePdf(estimationId);
     const { data: company } = useSettingsInfo();
     const { data: user } = useAuthUser();
-    const { data: estimationNextNumber } = useNextEstimationNumber()
 
-    const createInvoice = useCreateEstimation();
+    const updateEstimation = useUpdateEstimation(estimationId);
 
     const form = useForm<Form>({
         resolver: zodResolver(Schema),
         defaultValues: {
             estimationNo: "",
-            items: [
-                {
-                    description: "",
-                    class: "",
-                    company: "",
-                    quantity: 1,
-                    rate: 0,
-                    discountPercent: 0,
-                },
-            ],
+            items: [],
+            notes: "",
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control: form.control,
         name: "items",
     });
 
-    const items = useWatch({ control: form.control, name: "items" }) || [];
-
-    useEffect(() => {
-        if (estimationNextNumber?.nextNumber) {
-            form.setValue(
-                "estimationNo",
-                String(estimationNextNumber.nextNumber)
-            );
-        }
-    }, [estimationNextNumber]);
-
+    const items = useWatch({
+        control: form.control,
+        name: "items",
+    }) || [];
 
     /* ======================================================
-       CALCULATIONS (SAFE)
+       LOAD EXISTING DATA
+    ===================================================== */
+
+    useEffect(() => {
+        if (!estimation) return;
+
+        form.reset({
+            estimationNo: estimation.documentNo,
+            notes: estimation.notes ?? "",
+            items: estimation.items.map((i: any) => ({
+                description: i.description,
+                class: i.class ?? "",
+                company: i.company ?? "",
+                quantity: i.quantity,
+                rate: i.rate,
+                discountPercent: i.discountPercent,
+            })),
+        });
+    }, [estimation, form]);
+
+    /* ======================================================
+       CALCULATIONS
     ===================================================== */
 
     const totals = useMemo(() => {
@@ -145,42 +144,15 @@ export default function EstimationPage() {
     ===================================================== */
 
     const submit = (data: Form) => {
-
-        if (data.items.length === 0) {
-            toast.warning("Add at least one item");
-            return;
-        }
-
-        for (const [index, item] of data.items.entries()) {
-
-            if (!item.description.trim()) {
-                toast.warning(`Item ${index + 1}: Description required`);
-                return;
-            }
-
-            if (item.quantity <= 0) {
-                toast.warning(`Item ${index + 1}: Quantity must be greater than zero`);
-                return;
-            }
-
-            if (item.discountPercent >= 100) {
-                toast.warning(`Item ${index + 1}: Discount cannot be 100%`);
-                return;
-            }
-        }
-
         if (totals.finalAmount <= 0) {
-            toast.warning("Estimation total must be greater than zero");
+            toast.warning("Total must be greater than zero");
             return;
         }
 
-        createInvoice.mutate(
+        updateEstimation.mutate(
             {
-                schoolId: id,
-                billedByUserId: user!.id,
-                notes: data.notes,
                 documentNo: data.estimationNo,
-
+                notes: data.notes,
                 items: data.items.map((i) => ({
                     description: i.description.trim(),
                     class: i.class?.trim() || null,
@@ -192,16 +164,15 @@ export default function EstimationPage() {
             },
             {
                 onSuccess: () => {
-                    toast.success("Estimation created successfully");
+                    toast.success("Estimation updated successfully");
                     router.back();
                 },
-                onError: (e) => toast.error(handleApiError(e).message)
+                onError: (e) => toast.error(handleApiError(e).message),
             }
         );
     };
 
-
-    if (isLoading || !customer || !company) return <FormLoader />;
+    if (isLoading || !estimation || !company) return <FormLoader />;
 
     /* ======================================================
        UI
@@ -219,19 +190,20 @@ export default function EstimationPage() {
             </button>
 
             <div className="mx-auto bg-white shadow-2xl p-8 rounded-lg space-y-6">
+
                 {/* HEADER */}
                 <div className=" text-center">
 
                     {/* Top row: estimation no + date */}
                     <div
                         className="
-                        flex flex-col
-                        sm:flex-row
-                        sm:justify-between
-                        gap-2
-                        text-sm
-                        text-slate-600
-                        "
+                            flex flex-col
+                            sm:flex-row
+                            sm:justify-between
+                            gap-2
+                            text-sm
+                            text-slate-600
+                            "
                     >
                         {/* Estimation number */}
                         <div className="flex items-center gap-2">
@@ -240,6 +212,7 @@ export default function EstimationPage() {
                             </span>
 
                             <input
+                                type="number"
                                 {...form.register("estimationNo")}
                                 className="
                                     w-28 sm:w-32
@@ -247,12 +220,15 @@ export default function EstimationPage() {
                                     px-2 py-0.5
                                     text-sm text-center font-semibold
                                     focus:ring-2 focus:ring-indigo-500
+                                    appearance-none
+                                    [&::-webkit-inner-spin-button]:appearance-none
+                                    [&::-webkit-outer-spin-button]:appearance-none
                                     "
                             />
                         </div>
 
                         {/* Date */}
-                        <span>{formatDate()}</span>
+                        <span>{formatDate(estimation.date)}</span>
                     </div>
 
                     {/* Logo */}
@@ -317,36 +293,35 @@ export default function EstimationPage() {
                     </span>
                 </div>
 
-
                 {/* School */}
                 <div className="border rounded-md p-4 bg-slate-50">
-                    <div className="font-bold text-slate-700">TO</div>
+                    <div className="font-bold text-slate-700 underline">TO</div>
 
                     {/* School name */}
                     <div className="font-semibold text-slate-900">
-                        {customer.name}
+                        {estimation.school.name}
                     </div>
 
                     {/* Contact person */}
-                    {customer.contactPerson && (
+                    {estimation.school.contactPerson && (
                         <div className="text-sm text-slate-700">
-                            Attn: {customer.contactPerson}
+                            Attn: {estimation.school.contactPerson}
                         </div>
                     )}
 
                     {/* Address */}
-                    {(customer.street ||
-                        customer.town ||
-                        customer.district ||
-                        customer.state ||
-                        customer.pincode) && (
+                    {(estimation.school.street ||
+                        estimation.school.town ||
+                        estimation.school.district ||
+                        estimation.school.state ||
+                        estimation.school.pincode) && (
                             <div className="text-sm text-slate-600 leading-relaxed">
                                 {[
-                                    customer.street,
-                                    customer.town,
-                                    customer.district,
-                                    customer.state,
-                                    customer.pincode,
+                                    estimation.school.street,
+                                    estimation.school.town,
+                                    estimation.school.district,
+                                    estimation.school.state,
+                                    estimation.school.pincode,
                                 ]
                                     .filter(Boolean)
                                     .join(", ")}
@@ -355,26 +330,24 @@ export default function EstimationPage() {
 
                     {/* Phone */}
                     <div className="text-sm text-slate-700">
-                        Phone: {customer.phone}
+                        Phone: {estimation.school.phone}
                     </div>
 
                     {/* Email */}
-                    {customer.email && (
+                    {estimation.school.email && (
                         <div className="text-sm text-slate-600">
-                            Email: {customer.email}
+                            Email: {estimation.school.email}
                         </div>
                     )}
 
                     {/* GST */}
-                    {customer.gst && (
+                    {estimation.school.gst && (
                         <div className="text-sm font-medium text-slate-700">
-                            GSTIN: {customer.gst}
+                            GSTIN: {estimation.school.gst}
                         </div>
                     )}
                 </div>
 
-
-                {/* TABLE */}
                 <div className="overflow-x-auto">
                     <table className="min-w-[1100px] w-full text-sm border">
                         <thead className="bg-indigo-50 text-xs font-bold text-slate-700">
@@ -510,7 +483,7 @@ export default function EstimationPage() {
 
                 {/* TOTALS */}
                 <div className="flex justify-end">
-                    <div className="w-96 border p-4 bg-slate-50 text-sm space-y-1">
+                    <div className="w-96 border p-4 bg-slate-50 text-sm">
                         <div className="flex justify-between">
                             <span>Total Qty</span>
                             <span>{totals.totalQty}</span>
@@ -530,7 +503,7 @@ export default function EstimationPage() {
                     </div>
                 </div>
 
-                {/* AMOUNT WORDS */}
+                {/* AMOUNT IN WORDS */}
                 <div className="italic text-sm">
                     Amount Chargeable (in words):{" "}
                     <strong>{numberToWords(totals.finalAmount)}</strong>
@@ -540,8 +513,9 @@ export default function EstimationPage() {
                 <textarea
                     {...form.register("notes")}
                     className="w-full border p-2 text-sm"
-                    placeholder="Notes (optional)"
+                    placeholder="Notes"
                 />
+
 
                 {/* BANK + QR */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -584,27 +558,20 @@ export default function EstimationPage() {
                     This is a computer-generated invoice
                 </p>
 
+
                 {/* SAVE */}
                 <button
-                    disabled={createInvoice.isPending}
+                    disabled={updateEstimation.isPending}
                     onClick={form.handleSubmit(submit)}
-                    className="
-                        w-full
-                        bg-indigo-700
-                        hover:bg-indigo-800
-                        text-white
-                        py-3
-                        rounded-lg
-                        text-lg
-                        disabled:opacity-50
-                        disabled:cursor-not-allowed
-                    "
+                    className="w-full bg-indigo-700 hover:bg-indigo-800 text-white py-3 rounded-lg text-lg disabled:opacity-50"
                 >
-                    {createInvoice.isPending
-                        ? <span className="flex items-center justify-center gap-2">
-                            <Spinner size={18} /> Saving...
+                    {updateEstimation.isPending ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <Spinner size={18} /> Updating...
                         </span>
-                        : "Save Estimation"}
+                    ) : (
+                        "Update Estimation"
+                    )}
                 </button>
 
             </div>

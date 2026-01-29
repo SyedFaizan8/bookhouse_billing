@@ -4,11 +4,7 @@ import { useAuthUser } from "@/lib/queries/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AdminLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function AdminLayout({ children, }: { children: React.ReactNode; }) {
     const router = useRouter();
     const { data: user, isLoading } = useAuthUser();
 

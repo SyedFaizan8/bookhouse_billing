@@ -13,14 +13,9 @@ export const customerFormSchema = z.object({
         .min(2, "Customer name must be at least 2 characters")
         .max(100),
 
-    phone: z
-        .string()
-        .trim()
-        .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
+    phone: z.string().trim(),
 
-    email: optionalField(
-        z.email("Invalid email address").max(150)
-    ),
+    email: optionalField(z.email("Invalid email address").max(150)),
 
     contactPerson: optionalField(z.string().trim().max(100)),
 

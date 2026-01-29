@@ -6,7 +6,6 @@ import { toast } from "sonner"
 
 import { CompanyFormValues, companySchema } from "@/lib/validators/dealer.schema"
 import { useCreateCompany, useUpdateCompany } from "@/lib/queries/company"
-import { AxiosError, isAxiosError } from "axios"
 import { handleApiError } from "@/lib/utils/getApiError"
 
 export default function CompanyForm({

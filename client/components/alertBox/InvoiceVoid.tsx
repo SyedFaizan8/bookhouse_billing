@@ -47,7 +47,7 @@ export function InvoiceVoidDialog({
 
                         Date:
                         <strong className="ml-1">
-                            {new Date(invoice.date).toLocaleDateString()}
+                            {new Date(invoice.date).toLocaleDateString("en-IN")}
                         </strong>
                         <br />
 

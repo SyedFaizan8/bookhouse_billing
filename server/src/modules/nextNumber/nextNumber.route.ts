@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
-import { DocumentKind } from "../../generated/prisma/enums.js";
+import { DocumentKind, SequenceScope } from "../../generated/prisma/enums.js";
 import { AppError } from "../../utils/error.js";
 import { asyncHandler } from "../../utils/async.js";
 
@@ -45,9 +45,10 @@ router.get("/:type", asyncHandler(async (req: Request, res: Response) => {
 
     const sequence = await prisma.documentSequence.findUnique({
         where: {
-            academicYearId_type: {
+            academicYearId_type_scope: {
                 academicYearId: academicYear.id,
                 type: documentType,
+                scope: SequenceScope.SCHOOL
             },
         },
         select: {

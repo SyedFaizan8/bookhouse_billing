@@ -7,9 +7,7 @@ export const companySchema = z.object({
             .min(2, "Company name is required")
             .max(150, "Company name too long"),
 
-        phone: z
-            .string()
-            .regex(/^[6-9]\d{9}$/, "Invalid phone number"),
+        phone: z.string(),
 
         email: z
             .email("Invalid email address")
@@ -52,9 +50,7 @@ export const companyUpdateSchema = z.object({
             .min(2, "Company name is required")
             .max(150, "Company name too long"),
 
-        phone: z
-            .string()
-            .regex(/^[6-9]\d{9}$/, "Invalid phone number"),
+        phone: z.string(),
 
         email: nullableString(
             z.string().email("Invalid email address").max(150)
@@ -68,26 +64,15 @@ export const companyUpdateSchema = z.object({
 
         state: nullableString(z.string().max(100)),
 
-        pincode: nullableString(
-            z.string().regex(/^\d{6}$/, "Invalid pincode")
-        ),
+        pincode: nullableString(z.string()),
 
-        gst: nullableString(
-            z.string().regex(
-                /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/,
-                "Invalid GST number"
-            )
-        ),
+        gst: nullableString(z.string()),
 
         bankName: nullableString(z.string().max(200)),
 
-        accountNo: nullableString(
-            z.string().regex(/^\d{6,20}$/, "Invalid account number")
-        ),
+        accountNo: nullableString(z.string()),
 
-        ifsc: nullableString(
-            z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code")
-        ),
+        ifsc: nullableString(z.string()),
     })
 });
 

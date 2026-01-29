@@ -134,17 +134,24 @@ export function useCreateEstimation() {
 
     return useMutation({
         mutationFn: async (payload: CreatePayload) =>
-            (await api.post(
-                "/estimation/new",
-                payload
-            )).data,
+            (await api.post("/estimation/new", payload)).data,
 
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["school-estimations"] });
-            qc.invalidateQueries({ queryKey: ["next-number", "estimation"] });
         },
     });
 }
+
+export const useUpdateEstimation = (id: string) => {
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: any) => (await api.patch(`/estimation/${id}`, data)).data,
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["school-estimations", id] });
+        },
+    });
+};
 
 // PACKAGE NOTE
 export const useSchoolPackage = (schoolId: string) =>
@@ -171,7 +178,6 @@ export function useCreateCreditNote() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["school-creditNote"] });
             qc.invalidateQueries({ queryKey: ["statement"] })
-            qc.invalidateQueries({ queryKey: ["next-number", "creditNote"] })
         },
     });
 }
@@ -194,7 +200,6 @@ export function useCreateSchoolPayment(schoolId: string) {
             q.invalidateQueries({ queryKey: ["payments", schoolId] })
             q.invalidateQueries({ queryKey: ["statement"] })
             q.invalidateQueries({ queryKey: ["dashboard"] })
-            q.invalidateQueries({ queryKey: ["next-number", "payment"] })
         }
     });
 }

@@ -81,7 +81,7 @@ export default function CustomerInvoicesPage() {
         {
             key: "actions",
             header: "",
-            className: "text-black text-xs",
+            className: "text-black text-xs text-right",
             render: (u) =>
                 <RowActions
                     actions={
@@ -93,6 +93,11 @@ export default function CustomerInvoicesPage() {
                             {
                                 label: "Convert To Invoice",
                                 onClick: () => router.replace(`/dashboard/invoices/new/${id}/${u.id}`),
+                                variant: 'warning'
+                            },
+                            {
+                                label: "Edit",
+                                onClick: () => router.replace(`/dashboard/estimations/new/${id}/${u.id}`),
                                 variant: 'warning'
                             },
                             {

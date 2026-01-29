@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
 import { paymentCompanySchema, paymentSchema } from "../school/school.schema.js";
-import { AcademicYearStatus, DocumentKind, FlowStatus, PaymentStatus } from "../../generated/prisma/enums.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus, PaymentStatus, SequenceScope } from "../../generated/prisma/enums.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
 import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
@@ -175,9 +175,10 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
         /* 3. RECEIPT NUMBER */
         const seq = await tx.documentSequence.findUnique({
             where: {
-                academicYearId_type: {
+                academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.PAYMENT,
+                    scope: SequenceScope.SCHOOL
                 },
             }
         });
@@ -194,9 +195,10 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
 
             await tx.documentSequence.upsert({
                 where: {
-                    academicYearId_type: {
+                    academicYearId_type_scope: {
                         academicYearId: academicYear.id,
                         type: DocumentKind.PAYMENT,
+                        scope: SequenceScope.SCHOOL
                     },
                 },
                 update: {
@@ -205,6 +207,7 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
                 create: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.PAYMENT,
+                    scope: SequenceScope.SCHOOL,
                     lastNumber: finalReceiptNo,
                 },
             });
@@ -214,9 +217,10 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
 
             await tx.documentSequence.upsert({
                 where: {
-                    academicYearId_type: {
+                    academicYearId_type_scope: {
                         academicYearId: academicYear.id,
                         type: DocumentKind.PAYMENT,
+                        scope: SequenceScope.SCHOOL
                     },
                 },
                 update: {
@@ -225,7 +229,8 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
                 create: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.PAYMENT,
-                    lastNumber: finalReceiptNo,
+                    scope: SequenceScope.SCHOOL,
+                    lastNumber: finalReceiptNo
                 },
             });
         }

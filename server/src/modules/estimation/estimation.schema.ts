@@ -22,3 +22,10 @@ export const CreateEstimationDTO = z.object({
 });
 
 export type CreateEstimationDTOType = z.infer<typeof CreateEstimationDTO>;
+
+
+export const UpdateEstimationDTO = z.object({
+    documentNo: z.string().optional(),
+    notes: z.string().optional(),
+    items: z.array(CreateEstimationItemDTO).min(1),
+});

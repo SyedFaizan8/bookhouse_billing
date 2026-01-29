@@ -1,11 +1,10 @@
 import { Router } from "express";
 import { Response, Request } from "express";
 import { prisma } from "../../prisma.js";
-import { AcademicYearStatus, DocumentKind, FlowStatus } from "../../generated/prisma/enums.js";
-import { CreateEstimationDTO } from "./estimation.schema.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus, SequenceScope } from "../../generated/prisma/enums.js";
+import { CreateEstimationDTO, UpdateEstimationDTO } from "./estimation.schema.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
-import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
 
 const router = Router()
 
@@ -38,9 +37,10 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
 
         const seq = await tx.documentSequence.findUnique({
             where: {
-                academicYearId_type: {
+                academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.ESTIMATION,
+                    scope: SequenceScope.SCHOOL
                 },
             },
         });
@@ -59,9 +59,10 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
 
             await tx.documentSequence.upsert({
                 where: {
-                    academicYearId_type: {
+                    academicYearId_type_scope: {
                         academicYearId: academicYear.id,
                         type: DocumentKind.ESTIMATION,
+                        scope: SequenceScope.SCHOOL
                     },
                 },
                 update: {
@@ -70,7 +71,8 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
                 create: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.ESTIMATION,
-                    lastNumber: finalNumber,
+                    scope: SequenceScope.SCHOOL,
+                    lastNumber: finalNumber
                 },
             });
 
@@ -80,9 +82,10 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
 
             await tx.documentSequence.upsert({
                 where: {
-                    academicYearId_type: {
+                    academicYearId_type_scope: {
                         academicYearId: academicYear.id,
                         type: DocumentKind.ESTIMATION,
+                        scope: SequenceScope.SCHOOL
                     },
                 },
                 update: {
@@ -92,6 +95,7 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
                     academicYearId: academicYear.id,
                     type: DocumentKind.ESTIMATION,
                     lastNumber: finalNumber,
+                    scope: SequenceScope.SCHOOL
                 },
             });
         }
@@ -213,7 +217,7 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response) => {
         select: { id: true },
     });
 
-    if (!academicYear) throw new AppError('create academic year first', 401)
+    if (!academicYear) throw new AppError('open academic year first', 401)
 
     // 🔹 get invoices directly using relation filter
     const estimations = await prisma.invoice.findMany({
@@ -252,8 +256,15 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response) => {
 }))
 
 
-router.post('/delete/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+router.post('/delete/:id', asyncHandler(async (req: Request, res: Response) => {
     const estimationId = req.params.id
+
+    const academicYear = await prisma.academicYear.findFirst({
+        where: { status: "OPEN" },
+        select: { id: true },
+    });
+
+    if (!academicYear) throw new AppError('open academic year first', 401)
 
     const estimation = await prisma.invoice.findFirst({
         where: {
@@ -284,5 +295,190 @@ router.post('/delete/:id', requireAdmin, asyncHandler(async (req: Request, res: 
 
     res.json({ message: "Estimation deleted successfully", })
 }))
+
+router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
+    const estimationId = req.params.id;
+
+    const academicYear = await prisma.academicYear.findFirst({
+        where: { status: "OPEN" },
+        select: { id: true },
+    });
+
+    if (!academicYear) throw new AppError('open academic year first', 401)
+
+    const parsed = UpdateEstimationDTO.safeParse(req.body);
+    if (!parsed.success) throw new AppError("Invalid request data", 400);
+
+    const { items, notes, documentNo: userDocumentNo } = parsed.data;
+
+    const round = (n: number) => Number(n.toFixed(2));
+
+    const estimation = await prisma.invoice.findUnique({
+        where: { id: estimationId },
+        include: { flowGroup: true, },
+    });
+
+    if (!estimation) throw new AppError("Estimation not found", 404);
+
+    if (estimation.kind !== DocumentKind.ESTIMATION)
+        throw new AppError("Not an estimation document", 400);
+
+    const result = await prisma.$transaction(async (tx) => {
+
+        /* ======================================================
+           1. OPEN ACADEMIC YEAR
+        ====================================================== */
+
+        const academicYear = await tx.academicYear.findFirst({
+            where: { status: FlowStatus.OPEN },
+        });
+
+        if (!academicYear)
+            throw new AppError("No open academic year found", 404);
+
+        /* ======================================================
+           2. DOCUMENT SEQUENCE (SAME AS CREATE)
+        ====================================================== */
+
+        const seq = await tx.documentSequence.findUnique({
+            where: {
+                academicYearId_type_scope: {
+                    academicYearId: academicYear.id,
+                    type: DocumentKind.ESTIMATION,
+                    scope: SequenceScope.SCHOOL
+                },
+            },
+        });
+
+        let finalNumber = Number(estimation.documentNo);
+
+        if (userDocumentNo) {
+            const userNo = Number(userDocumentNo);
+
+            if (Number.isNaN(userNo) || userNo <= 0) {
+                throw new AppError("Invalid estimation number", 400);
+            }
+
+            finalNumber = Math.max(seq?.lastNumber ?? 0, userNo);
+
+            await tx.documentSequence.upsert({
+                where: {
+                    academicYearId_type_scope: {
+                        academicYearId: academicYear.id,
+                        type: DocumentKind.ESTIMATION,
+                        scope: SequenceScope.SCHOOL
+                    },
+                },
+                update: {
+                    lastNumber: finalNumber,
+                },
+                create: {
+                    academicYearId: academicYear.id,
+                    type: DocumentKind.ESTIMATION,
+                    scope: SequenceScope.SCHOOL,
+                    lastNumber: finalNumber,
+                },
+            });
+        }
+
+        /* ======================================================
+           3. DELETE OLD ITEMS
+        ====================================================== */
+
+        await tx.item.deleteMany({
+            where: { invoiceId: estimationId },
+        });
+
+        /* ======================================================
+           4. RECALCULATE ITEMS
+        ====================================================== */
+
+        let totalQuantity = 0;
+        let grossAmount = 0;
+        let totalDiscount = 0;
+
+        const calculatedItems = items.map((item, index) => {
+            if (!item.description?.trim())
+                throw new AppError(
+                    `Item ${index + 1}: Description required`,
+                    400
+                );
+
+            if (item.quantity <= 0)
+                throw new AppError(
+                    `Item ${index + 1}: Quantity must be at least 1`,
+                    400
+                );
+
+            const discountPercent = Math.min(
+                Math.max(item.discountPercent, 0),
+                99
+            );
+
+            const gross = round(item.quantity * item.unitPrice);
+            const discount = round((gross * discountPercent) / 100);
+            const net = round(gross - discount);
+
+            totalQuantity += item.quantity;
+            grossAmount += gross;
+            totalDiscount += discount;
+
+            return {
+                description: item.description.trim(),
+                class: item.class ?? null,
+                company: item.company ?? null,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                discountPercent,
+                grossAmount: gross,
+                netAmount: net,
+            };
+        });
+
+        const netAmount = round(grossAmount - totalDiscount);
+
+        if (netAmount <= 0)
+            throw new AppError(
+                "Total amount must be greater than zero",
+                409
+            );
+
+        /* ======================================================
+           5. RECREATE ITEMS
+        ====================================================== */
+
+        await tx.item.createMany({
+            data: calculatedItems.map((i) => ({
+                ...i,
+                invoiceId: estimationId,
+            })),
+        });
+
+        /* ======================================================
+           6. UPDATE ESTIMATION
+        ====================================================== */
+
+        const updated = await tx.invoice.update({
+            where: { id: estimationId },
+            data: {
+                documentNo: String(finalNumber),
+                totalQuantity,
+                grossAmount: round(grossAmount),
+                totalDiscount: round(totalDiscount),
+                netAmount,
+                notes,
+            },
+        });
+
+        return updated;
+    });
+
+    res.json({
+        success: true,
+        documentId: result.id,
+        documentNo: result.documentNo,
+    });
+})
+);
 
 export default router
