@@ -48,49 +48,48 @@ export default function LoginPage() {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-600 to-indigo-800 px-4"
-        >
+        <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-700">
+
+            {/* soft background blobs */}
+            <div className="absolute -top-32 -left-32 w-96 h-96 bg-pink-400/30 rounded-full blur-3xl" />
+            <div className="absolute top-1/3 -right-40 w-[28rem] h-[28rem] bg-cyan-400/30 rounded-full blur-3xl" />
+
             {/* CARD */}
             <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.45, ease: "easeOut" }}
-                className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6 space-y-6"
+                className="
+                    relative
+                    w-full max-w-sm
+                    backdrop-blur-xl
+                    bg-white/90
+                    rounded-2xl
+                    shadow-[0_20px_60px_rgba(0,0,0,0.25)]
+                    p-7
+                    space-y-6
+                "
             >
                 {/* BRAND */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className="text-center space-y-1"
-                >
-                    <h1 className="text-xl font-bold text-indigo-700">
-                        Sri Vinayaka Book House
+                <div className="text-center space-y-1">
+                    <h1 className="text-2xl font-extrabold text-indigo-700 tracking-wide">
+                        Sri Vinayaka
                     </h1>
                     <p className="text-xs text-slate-500">
-                        Login to continue
+                        Book House Management
                     </p>
-                </motion.div>
+                </div>
 
                 {/* PHONE */}
-                <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="space-y-1"
-                >
-                    <label className="text-xs text-slate-600">
+                <div className="space-y-1">
+                    <label className="text-xs text-slate-600 font-medium">
                         Phone Number
                     </label>
 
                     <div className="relative">
                         <Phone
-                            size={16}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={18}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400"
                         />
 
                         <input
@@ -102,26 +101,32 @@ export default function LoginPage() {
                                 setPhone(e.target.value.replace(/\D/g, ""))
                             }
                             placeholder="10 digit mobile number"
-                            className="w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="
+                                w-full
+                                pl-10 pr-3 py-3
+                                rounded-xl
+                                border border-slate-200
+                                text-sm
+                                bg-white
+                                outline-none
+                                focus:ring-2
+                                focus:ring-indigo-500
+                                transition
+                            "
                         />
                     </div>
-                </motion.div>
+                </div>
 
                 {/* PASSWORD */}
-                <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="space-y-1"
-                >
-                    <label className="text-xs text-slate-600">
+                <div className="space-y-1">
+                    <label className="text-xs text-slate-600 font-medium">
                         Password
                     </label>
 
                     <div className="relative">
                         <Lock
-                            size={16}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={18}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400"
                         />
 
                         <input
@@ -129,7 +134,18 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter password"
-                            className="w-full pl-9 pr-9 py-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="
+                                w-full
+                                pl-10 pr-10 py-3
+                                rounded-xl
+                                border border-slate-200
+                                text-sm
+                                bg-white
+                                outline-none
+                                focus:ring-2
+                                focus:ring-indigo-500
+                                transition
+                            "
                         />
 
                         <button
@@ -137,26 +153,41 @@ export default function LoginPage() {
                             onClick={() => setShow((s) => !s)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
                         >
-                            {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {show ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* BUTTON */}
                 <motion.button
-                    whileTap={{ scale: 0.97 }}
+                    whileTap={{ scale: 0.96 }}
                     disabled={loading}
                     onClick={submit}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                    className="
+                        w-full
+                        bg-gradient-to-r
+                        from-indigo-600
+                        to-violet-600
+                        hover:from-indigo-700
+                        hover:to-violet-700
+                        text-white
+                        py-3
+                        rounded-xl
+                        text-sm
+                        font-semibold
+                        shadow-lg
+                        transition
+                        disabled:opacity-60
+                    "
                 >
                     {loading ? "Signing in..." : "Login"}
                 </motion.button>
 
                 {/* FOOTER */}
                 <div className="text-center text-[11px] text-slate-400">
-                    © {new Date().getFullYear()} VBH
+                    © {new Date().getFullYear()} VBH • Secure Login
                 </div>
             </motion.div>
-        </motion.div>
+        </div>
     );
 }

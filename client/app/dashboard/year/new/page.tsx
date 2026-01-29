@@ -15,13 +15,17 @@ import Spinner from "@/components/Spinner"
 import { useAuthUser } from "@/lib/queries/auth"
 import PageLoader from "@/components/loaders/PageLoader"
 
+import { Controller } from "react-hook-form";
+import { DatePicker } from "@/components/DatePicker";
+
+
 const schema = z
     .object({
-        startDate: z.string().date(),
-        endDate: z.string().date(),
+        startDate: z.date("Please Select the date"),
+        endDate: z.date("Please Select the date"),
     })
     .refine(
-        (data) => new Date(data.startDate) < new Date(data.endDate),
+        (data) => data.startDate < data.endDate,
         {
             message: "End date must be after start date",
             path: ["endDate"],
@@ -33,7 +37,12 @@ type FormData = z.infer<typeof schema>
 export default function CreateAcademicYearPage() {
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
-    })
+        defaultValues: {
+            startDate: undefined,
+            endDate: undefined,
+        },
+    });
+
 
     const router = useRouter()
     const mutation = useCreateAcademicYear()
@@ -46,17 +55,11 @@ export default function CreateAcademicYearPage() {
         }
     }, [user, isLoading, router]);
 
-    // Auto-suggest March → Feb
-    useEffect(() => {
-        const now = new Date()
-        const year = now.getMonth() >= 2 ? now.getFullYear() : now.getFullYear() - 1
-
-        form.setValue("startDate", `${year}-03-01`)
-        form.setValue("endDate", `${year + 1}-02-28`)
-    }, [form])
-
     const onSubmit = (data: FormData) => {
-        mutation.mutate(data, {
+        mutation.mutate({
+            startDate: data.startDate.toISOString(),
+            endDate: data.endDate.toISOString(),
+        }, {
             onSuccess: () => {
                 toast.success("Academic year created and activated")
                 router.replace('/dashboard/year')
@@ -96,33 +99,49 @@ export default function CreateAcademicYearPage() {
                             <label className="block text-sm font-medium mb-1">
                                 Start Date
                             </label>
-                            <input
-                                type="date"
-                                {...form.register("startDate")}
-                                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+
+                            <Controller
+                                control={form.control}
+                                name="startDate"
+                                render={({ field }) => (
+                                    <DatePicker
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="Start date"
+                                    />
+                                )}
                             />
+
                             {form.formState.errors.startDate && (
                                 <p className="text-xs text-rose-600 mt-1">
                                     {form.formState.errors.startDate.message}
                                 </p>
                             )}
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 End Date
                             </label>
-                            <input
-                                type="date"
-                                {...form.register("endDate")}
-                                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+
+                            <Controller
+                                control={form.control}
+                                name="endDate"
+                                render={({ field }) => (
+                                    <DatePicker
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="End date"
+                                    />
+                                )}
                             />
+
                             {form.formState.errors.endDate && (
                                 <p className="text-xs text-rose-600 mt-1">
                                     {form.formState.errors.endDate.message}
                                 </p>
                             )}
                         </div>
+
                     </div>
 
                     <div className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">

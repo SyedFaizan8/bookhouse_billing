@@ -1,81 +1,121 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Calendar } from "lucide-react"
-import { toast } from "sonner"
-import { useRouter, useParams } from "next/navigation"
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Calendar } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter, useParams } from "next/navigation";
 
-import Breadcrumbs from "@/components/Breadcrumbs"
-import Spinner from "@/components/Spinner"
-import { handleApiError } from "@/lib/utils/getApiError"
+import Breadcrumbs from "@/components/Breadcrumbs";
+import Spinner from "@/components/Spinner";
+import PageLoader from "@/components/loaders/PageLoader";
+import { DatePicker } from "@/components/DatePicker";
+
+import { handleApiError } from "@/lib/utils/getApiError";
 import {
     useAcademicYear,
     useUpdateAcademicYear,
-} from "@/lib/queries/academicYear"
-import PageLoader from "@/components/loaders/PageLoader"
-import { useAuthUser } from "@/lib/queries/auth"
+} from "@/lib/queries/academicYear";
+import { useAuthUser } from "@/lib/queries/auth";
+
+/* ======================================================
+   VALIDATION
+====================================================== */
 
 const schema = z
     .object({
-        startDate: z.string().date(),
-        endDate: z.string().date(),
+        startDate: z.date(),
+        endDate: z.date(),
     })
-    .refine(
-        (data) => new Date(data.startDate) < new Date(data.endDate),
-        {
-            message: "End date must be after start date",
-            path: ["endDate"],
-        }
-    )
+    .refine((data) => data.startDate < data.endDate, {
+        message: "End date must be after start date",
+        path: ["endDate"],
+    });
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
+
+/* ======================================================
+   PAGE
+====================================================== */
 
 export default function EditAcademicYearPage() {
-    const { id } = useParams<{ id: string }>()
-    const router = useRouter()
+    const { id } = useParams<{ id: string }>();
+    const router = useRouter();
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
-    })
+        defaultValues: {
+            startDate: undefined,
+            endDate: undefined,
+        },
+    });
 
-    const { data, isLoading } = useAcademicYear(id)
-    const mutation = useUpdateAcademicYear(id)
+    const { data, isLoading } = useAcademicYear(id);
+    const mutation = useUpdateAcademicYear(id);
 
     const { data: user, isLoading: authLoading } = useAuthUser();
 
+    /* ======================================================
+       ACCESS CONTROL
+    ===================================================== */
+
     useEffect(() => {
-        if (!isLoading && user && user.role !== "ADMIN") {
+        if (!authLoading && user && user.role !== "ADMIN") {
             router.replace("/dashboard");
         }
-    }, [user, isLoading, router]);
+    }, [user, authLoading, router]);
+
+    /* ======================================================
+       LOAD EXISTING DATA
+    ===================================================== */
 
     useEffect(() => {
-        if (!data) return
+        if (!data) return;
 
         form.reset({
-            startDate: data.startDate.slice(0, 10),
-            endDate: data.endDate.slice(0, 10),
-        })
-    }, [data, form])
+            startDate: new Date(data.startDate),
+            endDate: new Date(data.endDate),
+        });
+    }, [data, form]);
+
+    /* ======================================================
+       SUBMIT
+    ===================================================== */
 
     const onSubmit = (values: FormData) => {
-        mutation.mutate(values, {
-            onSuccess: () => {
-                toast.success("Academic year updated")
-                router.replace("/dashboard/year")
+        mutation.mutate(
+            {
+                startDate: values.startDate.toISOString(),
+                endDate: values.endDate.toISOString(),
             },
-            onError: (e) =>
-                toast.error(handleApiError(e).message),
-        })
-    }
+            {
+                onSuccess: () => {
+                    toast.success("Academic year updated successfully");
+                    router.replace("/dashboard/year");
+                },
+                onError: (e) =>
+                    toast.error(handleApiError(e).message),
+            }
+        );
+    };
 
-    if (isLoading || authLoading || !user || user.role !== "ADMIN") return <PageLoader />;
+    if (
+        isLoading ||
+        authLoading ||
+        !user ||
+        user.role !== "ADMIN"
+    )
+        return <PageLoader />;
+
+    /* ======================================================
+       UI
+    ===================================================== */
 
     return (
         <div className="space-y-6 max-w-2xl">
+
             <Breadcrumbs
                 items={[
                     { label: "Dashboard", href: "/dashboard" },
@@ -84,35 +124,49 @@ export default function EditAcademicYearPage() {
                 ]}
             />
 
-            <div className="rounded-lg border bg-white p-6 shadow-sm space-y-6">
+            <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
+
+                {/* HEADER */}
                 <div className="flex items-center gap-3">
                     <div className="rounded-full bg-indigo-100 p-2">
                         <Calendar className="text-indigo-600" size={20} />
                     </div>
+
                     <div>
                         <h1 className="text-lg font-semibold">
                             Edit Academic Year
                         </h1>
                         <p className="text-sm text-slate-500">
-                            Update academic year dates. Overlapping is not allowed.
+                            Modify dates. Overlapping academic years are not allowed.
                         </p>
                     </div>
                 </div>
 
+                {/* FORM */}
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-5"
                 >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        {/* START DATE */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Start Date
                             </label>
-                            <input
-                                type="date"
-                                {...form.register("startDate")}
-                                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+
+                            <Controller
+                                control={form.control}
+                                name="startDate"
+                                render={({ field }) => (
+                                    <DatePicker
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="Select start date"
+                                    />
+                                )}
                             />
+
                             {form.formState.errors.startDate && (
                                 <p className="text-xs text-rose-600 mt-1">
                                     {form.formState.errors.startDate.message}
@@ -120,15 +174,24 @@ export default function EditAcademicYearPage() {
                             )}
                         </div>
 
+                        {/* END DATE */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 End Date
                             </label>
-                            <input
-                                type="date"
-                                {...form.register("endDate")}
-                                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+
+                            <Controller
+                                control={form.control}
+                                name="endDate"
+                                render={({ field }) => (
+                                    <DatePicker
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="Select end date"
+                                    />
+                                )}
                             />
+
                             {form.formState.errors.endDate && (
                                 <p className="text-xs text-rose-600 mt-1">
                                     {form.formState.errors.endDate.message}
@@ -137,15 +200,17 @@ export default function EditAcademicYearPage() {
                         </div>
                     </div>
 
+                    {/* INFO BOX */}
                     <div className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
-                        <strong>Note:</strong>
+                        <strong>Important:</strong>
                         <ul className="list-disc ml-4 mt-2 space-y-1">
-                            <li>Dates can be corrected anytime</li>
+                            <li>You can correct dates anytime</li>
                             <li>Academic years cannot overlap</li>
-                            <li>Name will auto-update based on dates</li>
+                            <li>Name auto-updates from selected dates</li>
                         </ul>
                     </div>
 
+                    {/* ACTIONS */}
                     <div className="flex justify-end gap-3">
                         <button
                             type="button"
@@ -171,5 +236,5 @@ export default function EditAcademicYearPage() {
                 </form>
             </div>
         </div>
-    )
+    );
 }

@@ -62,7 +62,7 @@ export default function RowActions({ actions }: Props) {
                             className={`
                                 flex items-center
                                 rounded-md
-                                px-2 py-1
+                                px-2 py-1.5
                                 text-sm
                                 cursor-pointer
                                 transition
