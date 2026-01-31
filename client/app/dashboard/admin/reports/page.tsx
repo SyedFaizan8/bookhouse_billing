@@ -7,12 +7,14 @@ import {
     IndianRupee,
     FileText,
     Bookmark,
+    Users,
 } from "lucide-react";
 import { InvoicePaymentChart } from "@/components/charts/InvoicePaymentChart";
 import DashboardLoading from "@/components/loaders/DashboardLoader";
 import Link from "next/link";
 import EmptyState from "@/components/EmptyState";
 import { formatINR } from "@/lib/utils/formatters";
+import DocumentsDashboard from "@/components/DocumentsDashboard";
 
 export default function DashboardPage() {
 
@@ -37,7 +39,8 @@ export default function DashboardPage() {
             isMoney: false,
             icon: School,
             accent: "bg-indigo-50 text-indigo-600",
-            url: '/dashboard/schools'
+            url: '/dashboard/schools',
+            span: 'col-span-2'
         },
         {
             name: "Companies",
@@ -45,7 +48,17 @@ export default function DashboardPage() {
             isMoney: false,
             icon: LibraryBig,
             accent: "bg-emerald-50 text-emerald-600",
-            url: '/dashboard/companies'
+            url: '/dashboard/companies',
+            span: 'col-span-2'
+        },
+        {
+            name: "Users",
+            count: data.cards.users,
+            isMoney: false,
+            icon: Users,
+            accent: "bg-indigo-50 text-indigo-600",
+            url: '/dashboard/admin/users',
+            span: 'col-span-2'
         },
         {
             name: "Total Sales",
@@ -53,15 +66,17 @@ export default function DashboardPage() {
             isMoney: true,
             icon: FileText,
             accent: "bg-sky-50 text-sky-600",
-            url: '#'
+            url: '#',
+            span: 'col-span-3'
         },
         {
-            name: "Outstanding",
+            name: "Outstanding (Receivable)",
             count: data.cards.outstanding,
             isMoney: true,
             icon: IndianRupee,
             accent: "bg-amber-50 text-amber-600",
-            url: '#'
+            url: '#',
+            span: 'col-span-3'
         },
     ]
 
@@ -76,7 +91,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-6 mb-6">
                 {items.map((item, i) => {
                     const Icon = item.icon
 
@@ -84,10 +99,10 @@ export default function DashboardPage() {
                         <Link
                             key={i}
                             href={item.url}
-                            className={`
+                            className={`${item.span}
                                     bg-white rounded-md p-5
                                     shadow-sm hover:shadow-md transition
-                                    cursor-pointer hover:font-bold
+                                    cursor-pointer hover:font-bold col-span-2
                                 `}
                         >
                             <div className="flex items-center justify-between">
@@ -120,6 +135,9 @@ export default function DashboardPage() {
 
             {/* CHART */}
             <InvoicePaymentChart data={data.monthly} />
+
+            {/* Table */}
+            <DocumentsDashboard />
         </div>
     );
 }

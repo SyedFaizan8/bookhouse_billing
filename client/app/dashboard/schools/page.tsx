@@ -158,11 +158,6 @@ export default function CustomersPage() {
                 onPageChange={setPage}
             />
 
-            {/* <div className="text-xs text-slate-500">
-                Showing {(page - 1) * PAGE_SIZE + 1}–
-                {Math.min(page * PAGE_SIZE, allRows.length)} of{" "}
-                {allRows.length}
-            </div> */}
         </div>
     );
 }

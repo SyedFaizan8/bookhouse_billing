@@ -18,6 +18,7 @@ import RowActions from "@/components/RowActions";
 import { CompanyCreditNoteVoidDialog } from "@/components/alertBox/CompanyCreditVoid";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/utils/getApiError";
+import { Money } from "@/components/Money";
 
 const PAGE_SIZE = 5;
 
@@ -82,8 +83,8 @@ export default function CustomerInvoicesPage() {
             {
                 key: "amount",
                 header: "Amount",
-                className: "text-right font-medium text-rose-600",
-                render: (i) => `₹${i.amount.toLocaleString()}`,
+                className: "text-right font-medium",
+                render: (i) => <Money amount={i.amount} />,
             }, {
                 key: "status",
                 header: "Status",

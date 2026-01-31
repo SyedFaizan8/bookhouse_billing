@@ -36,6 +36,7 @@ router.get("/", asyncHandler(async (_req: Request, res: Response) => {
     const [
         schoolsCount,
         companiesCount,
+        usersCount,
 
         invoiceAgg,
         creditAgg,
@@ -49,6 +50,8 @@ router.get("/", asyncHandler(async (_req: Request, res: Response) => {
         prisma.company.count({
             where: { active: true },
         }),
+
+        prisma.user.count(),
 
         // SALES (schools only)
         prisma.invoice.aggregate({
@@ -171,6 +174,7 @@ router.get("/", asyncHandler(async (_req: Request, res: Response) => {
         cards: {
             schools: schoolsCount,
             companies: companiesCount,
+            users: usersCount,
             totalSales,
             totalPaid,
             outstanding,
@@ -178,6 +182,257 @@ router.get("/", asyncHandler(async (_req: Request, res: Response) => {
 
         monthly,
     });
+}))
+
+function qs(value: unknown): string | undefined {
+    return typeof value === "string" ? value : undefined
+}
+
+
+router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
+
+    const party = qs(req.query.party) as "SCHOOL" | "COMPANY"
+
+    if (!party) {
+        throw new AppError("party is required", 400)
+    }
+
+    const partyId = qs(req.query.partyId)
+    const type = qs(req.query.type) ?? "ALL"
+    const month = qs(req.query.month)
+    const fromStr = qs(req.query.from)
+    const toStr = qs(req.query.to)
+    const cursor = qs(req.query.cursor)
+    const limit = Number(req.query.limit ?? 20)
+
+    let dateFilter: any
+
+    if (month) {
+        const s = new Date(`${month}-01`)
+        const e = new Date(s)
+        e.setMonth(e.getMonth() + 1)
+        dateFilter = { gte: s, lt: e }
+    }
+
+    if (fromStr && toStr) {
+        dateFilter = {
+            gte: new Date(fromStr),
+            lte: new Date(toStr),
+        }
+    }
+
+    const activeYear = await prisma.academicYear.findFirst({
+        where: { status: "OPEN" },
+    })
+
+    if (!activeYear) throw new AppError("No active academic year found", 400)
+
+    const flowPartyFilter =
+        party === "SCHOOL"
+            ? { schoolId: partyId ? partyId : { not: null } }
+            : { companyId: partyId ? partyId : { not: null } }
+
+
+    // ============================
+    // CASE 1: ALL (special)
+    // ============================
+    if (type === "ALL") {
+        const invoices = await prisma.invoice.findMany({
+            where: {
+                ...(dateFilter && { date: dateFilter }),
+                flowGroup: {
+                    academicYearId: activeYear.id,
+                    ...flowPartyFilter,
+                }
+            },
+            include: {
+                flowGroup: { include: { school: true, company: true } },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 100,
+        })
+
+        const payments = await prisma.payment.findMany({
+            where: {
+                academicYearId: activeYear.id,
+                ...(dateFilter && { createdAt: dateFilter }),
+                flowGroup: flowPartyFilter
+            },
+            include: {
+                flowGroup: { include: { school: true, company: true } },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 100,
+        })
+
+        const merged = [
+            ...invoices.map((i) => ({
+                id: i.id,
+                docNo: i.documentNo,
+                kind: i.kind,
+                date: i.date.toISOString(),
+                amount: i.netAmount.toString(),
+                status: i.status,
+                party:
+                    i.flowGroup.school?.name ??
+                    i.flowGroup.company?.name ??
+                    "-",
+                partyId:
+                    i.flowGroup.school?.id ??
+                    i.flowGroup.company?.id ??
+                    "-",
+                partyType: i.flowGroup.schoolId
+                    ? "SCHOOL"
+                    : "COMPANY",
+            })),
+
+            ...payments.map((p) => ({
+                id: p.id,
+                docNo: p.receiptNo.toString(),
+                kind: "PAYMENT",
+                date: p.createdAt.toISOString(),
+                amount: p.amount.toString(),
+                status: p.status,
+                party:
+                    p.flowGroup.school?.name ??
+                    p.flowGroup.company?.name ??
+                    "-",
+                partyId:
+                    p.flowGroup.school?.id ??
+                    p.flowGroup.company?.id ??
+                    "-",
+                partyType: p.flowGroup.schoolId
+                    ? "SCHOOL"
+                    : "COMPANY",
+            })),
+        ]
+
+        merged.sort(
+            (a, b) =>
+                new Date(b.date).getTime() -
+                new Date(a.date).getTime()
+        )
+
+        const start = cursor
+            ? merged.findIndex((d) => d.id === cursor) + 1
+            : 0
+
+        const pageItems = merged.slice(
+            start,
+            start + limit
+        )
+
+        const nextCursor =
+            merged[start + limit]?.id ?? null
+
+        return res.json({
+            items: pageItems,
+            nextCursor,
+        })
+    }
+
+    // ============================
+    // CASE 2: PAYMENT ONLY
+    // ============================
+    if (type === "PAYMENT") {
+        const payments = await prisma.payment.findMany({
+            take: limit + 1,
+            ...(cursor && {
+                cursor: { id: cursor },
+                skip: 1,
+            }),
+            where: {
+                academicYearId: activeYear.id,
+                ...(dateFilter && { createdAt: dateFilter }),
+                flowGroup: flowPartyFilter,
+            },
+            include: {
+                flowGroup: { include: { school: true, company: true } },
+            },
+            orderBy: { createdAt: "desc" },
+        })
+
+        const rows = payments.map((p) => ({
+            id: p.id,
+            docNo: p.receiptNo.toString(),
+            kind: "PAYMENT",
+            date: p.createdAt.toISOString(),
+            amount: p.amount.toString(),
+            status: p.status,
+            party:
+                p.flowGroup.school?.name ??
+                p.flowGroup.company?.name ??
+                "-",
+            partyId:
+                p.flowGroup.school?.id ??
+                p.flowGroup.company?.id ??
+                "-",
+            partyType: p.flowGroup.schoolId
+                ? "SCHOOL"
+                : "COMPANY",
+        }))
+
+        return res.json({
+            items: rows.slice(0, limit),
+            nextCursor:
+                rows.length > limit
+                    ? rows[limit - 1].id
+                    : null,
+        })
+    }
+
+    // ============================
+    // CASE 3: INVOICE / CREDIT NOTE
+    // ============================
+    const kinds: DocumentKind[] =
+        type === "INVOICE"
+            ? ["INVOICE"]
+            : ["CREDIT_NOTE"]
+
+    const invoices = await prisma.invoice.findMany({
+        take: limit + 1,
+        ...(cursor && {
+            cursor: { id: cursor },
+            skip: 1,
+        }),
+        where: {
+            kind: { in: kinds },
+            ...(dateFilter && { date: dateFilter }),
+            flowGroup: flowPartyFilter,
+        },
+        include: {
+            flowGroup: { include: { school: true, company: true } },
+        },
+        orderBy: { createdAt: "desc" },
+    })
+
+    const rows = invoices.map((i) => ({
+        id: i.id,
+        docNo: i.documentNo,
+        kind: i.kind,
+        date: i.date.toISOString(),
+        amount: i.netAmount.toString(),
+        status: i.status,
+        party:
+            i.flowGroup.school?.name ??
+            i.flowGroup.company?.name ??
+            "-",
+        partyId:
+            i.flowGroup.school?.id ??
+            i.flowGroup.company?.id ??
+            "-",
+        partyType: i.flowGroup.schoolId
+            ? "SCHOOL"
+            : "COMPANY",
+    }))
+
+    res.json({
+        items: rows.slice(0, limit),
+        nextCursor:
+            rows.length > limit
+                ? rows[limit - 1].id
+                : null,
+    })
 }))
 
 export default router;

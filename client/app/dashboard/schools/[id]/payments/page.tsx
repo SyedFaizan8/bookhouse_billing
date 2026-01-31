@@ -17,6 +17,7 @@ import RowActions from "@/components/RowActions";
 import { SchoolPaymentReverseDialog } from "@/components/alertBox/SchoolPaymentReverseDialog";
 import { handleApiError } from "@/lib/utils/getApiError";
 import { toast } from "sonner";
+import { Money } from "@/components/Money";
 
 const PAGE_SIZE = 10;
 
@@ -105,8 +106,7 @@ export default function PaymentsPage() {
                 header: "Amount",
                 className:
                     "text-right font-semibold text-green-600",
-                render: (p) =>
-                    `₹${p.amount.toLocaleString("en-IN")}`,
+                render: (p) => <Money amount={p.amount.toLocaleString('en-IN')} />,
             },
             {
                 key: "status",
