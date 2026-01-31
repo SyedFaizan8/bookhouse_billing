@@ -31,3 +31,7 @@ export type DashboardPdfRow = {
     amount: string
     status: string
 }
+
+export type DashboardExportResponse = {
+    items: DashboardDocument[]
+}

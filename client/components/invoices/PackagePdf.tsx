@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "@/lib/constants";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
 import { InvoicePdfData, Item } from "@/lib/types/invoice";
+import { formatMoney } from "@/lib/utils/formatters";
 import {
     Document,
     Page,
@@ -13,26 +13,22 @@ import {
 
 /* ================= FONT REGISTRATION ================= */
 
+
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        {
-            src: "/fonts/Inter_18pt-Italic.ttf",
-            fontWeight: 400,
-            fontStyle: "italic",
-        },
-        { src: "/fonts/Inter_18pt-Medium.ttf", fontWeight: 500 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
+
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
 
@@ -135,35 +131,38 @@ const styles = StyleSheet.create({
     },
 
     cellSl: {
-        width: "5%",
+        width: 28,
         textAlign: "center",
     },
 
     cellDesc: {
-        width: "35%",
+        width: 220,
         paddingRight: 6,
     },
 
     cellClass: {
-        width: "8%",
+        width: 50,
         textAlign: "center",
     },
 
     cellCompany: {
-        width: "25%",
+        width: 140,
         paddingRight: 6,
     },
 
     cellQty: {
-        width: "10%",
+        width: 50,
         textAlign: "center",
         fontWeight: 600,
     },
 
     cellMrp: {
-        width: "12%",
+        width: 110,
         textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
     },
+
 
     /* ================= FOOTER ================= */
 
@@ -196,7 +195,7 @@ export default function PackagePdf({ data, settings }: { data: InvoicePdfData, s
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -317,25 +316,15 @@ export default function PackagePdf({ data, settings }: { data: InvoicePdfData, s
                     <View key={idx} style={styles.row} wrap={false}>
                         <Text style={styles.cellSl}>{idx + 1}</Text>
 
-                        <Text style={styles.cellDesc}>
-                            {r.description}
-                        </Text>
+                        <Text style={styles.cellDesc}>{r.description}</Text>
 
-                        <Text style={styles.cellClass}>
-                            {r.class || "-"}
-                        </Text>
+                        <Text style={styles.cellClass}>{r.class || "-"}</Text>
 
-                        <Text style={styles.cellCompany}>
-                            {r.company || "-"}
-                        </Text>
+                        <Text style={styles.cellCompany}>{r.company || "-"}</Text>
 
-                        <Text style={styles.cellQty}>
-                            {r.quantity}
-                        </Text>
+                        <Text style={styles.cellQty}>{r.quantity}</Text>
 
-                        <Text style={styles.cellMrp}>
-                            ₹{Number(r.rate).toFixed(2)}
-                        </Text>
+                        <Text style={styles.cellMrp}>{formatMoney(r.rate)}</Text>
                     </View>
                 ))}
 

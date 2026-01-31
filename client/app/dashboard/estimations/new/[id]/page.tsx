@@ -10,7 +10,6 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { useAuthUser } from "@/lib/queries/auth";
-import { API_BASE_URL } from "@/lib/constants";
 import { useCreateEstimation, useSchoolProfile } from "@/lib/queries/schools";
 import { numberToWords } from "@/lib/utils/numberToWords";
 import { useSettingsInfo } from "@/lib/queries/settings";
@@ -257,7 +256,7 @@ export default function EstimationPage() {
 
                     {/* Logo */}
                     {company.logoUrl && (
-                        <img
+                        <Image
                             src={'/api' + company.logoUrl}
                             alt="Company Logo"
                             width={90}

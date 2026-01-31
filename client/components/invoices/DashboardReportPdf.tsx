@@ -8,18 +8,17 @@ import {
     Font,
 } from "@react-pdf/renderer"
 import { format } from "date-fns"
-import { API_BASE_URL } from "@/lib/constants"
 import { SettingsInfoResponse } from "@/lib/queries/settings"
 import { DashboardPdfRow } from "@/lib/types/dashboard"
+import { formatMoney } from "@/lib/utils/formatters"
 
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/Inter_18pt-Medium.ttf", fontWeight: 500 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
 })
 
@@ -29,89 +28,132 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 9,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
+        backgroundColor: "#ffffff",
     },
-
-    /* ---------- common ---------- */
 
     bold: { fontWeight: 700 },
 
     muted: {
-        color: "#475569",
         fontSize: 8.5,
+        color: "#64748b",
     },
 
     rowBetween: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 6,
+        marginBottom: 10,
     },
 
-    /* ---------- header ---------- */
+    /* ===== HEADER ===== */
 
     header: {
         alignItems: "center",
-        marginBottom: 12,
-    },
-
-    logo: {
-        height: 52,
         marginBottom: 6,
     },
+
+    logo: { height: 48, marginBottom: 6 },
 
     title: {
         fontSize: 18,
         fontWeight: 700,
-        color: "#1e3a8a",
-        letterSpacing: 0.6,
+        color: "#4f46e5",
+        letterSpacing: 1,
     },
 
     companyInfo: {
         textAlign: "center",
         fontSize: 8.8,
         color: "#475569",
-        lineHeight: 1.4,
+        lineHeight: 1.5,
     },
 
     badge: {
         alignSelf: "center",
         marginVertical: 12,
-        paddingVertical: 4,
-        paddingHorizontal: 26,
+        paddingVertical: 5,
+        paddingHorizontal: 30,
         borderRadius: 20,
-        border: "1px solid #6366f1",
-        color: "#3730a3",
+        backgroundColor: "#eef2ff",
+        color: "#4338ca",
         fontSize: 10,
         fontWeight: 700,
-        letterSpacing: 0.4,
+        letterSpacing: 0.8,
     },
 
-    /* ---------- table ---------- */
+    /* ===== SUMMARY BAR ===== */
+
+    summaryBar: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        backgroundColor: "#f1f5f9",
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 14,
+    },
+
+    summaryItem: {
+        fontSize: 9,
+        color: "#0f172a",
+    },
+
+    /* ===== TABLE ===== */
 
     tableHeader: {
         flexDirection: "row",
-        borderTop: "1px solid #000",
-        borderBottom: "1px solid #000",
-        backgroundColor: "#f8fafc",
-        paddingVertical: 6,
+        backgroundColor: "#eef2ff",
+        borderTop: "1px solid #c7d2fe",
+        borderBottom: "1px solid #c7d2fe",
+        paddingVertical: 7,
         fontWeight: 700,
+        color: "#1e1b4b",
     },
 
     row: {
         flexDirection: "row",
-        borderBottom: "1px solid #e5e7eb",
         paddingVertical: 6,
-        wrap: true,
+        borderBottom: "1px solid #e5e7eb",
     },
 
-    cellSl: { width: "5%", textAlign: "center" },
-    cellDoc: { width: "16%" },
-    cellType: { width: "14%" },
-    cellParty: { width: "27%" },
-    cellDate: { width: "14%" },
-    cellAmount: { width: "14%", textAlign: "right" },
-    cellStatus: { width: "10%", textAlign: "center" },
+    altRow: {
+        backgroundColor: "#f8fafc",
+    },
+
+    cellSl: { width: "4%", textAlign: "center" },
+
+    cellDoc: { width: "13%" },
+
+    cellType: { width: "11%" },
+
+    cellParty: { width: "28%" },
+
+    cellDate: { width: "12%" },
+
+    cellAmount: {
+        width: "17%",
+        textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 8.6,
+        letterSpacing: 0.2,
+    },
+
+    cellStatus: {
+        width: "15%",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    statusPill: {
+        paddingVertical: 2,
+        paddingHorizontal: 8,
+        borderRadius: 12,
+        fontSize: 8,
+        fontWeight: 700,
+        textAlign: "center",
+        minWidth: 52,
+    },
+
 
     footer: {
         marginTop: 20,
@@ -120,6 +162,15 @@ const styles = StyleSheet.create({
         color: "#64748b",
     },
 })
+
+/* ===== STATUS COLORS ===== */
+
+const statusPillMap: Record<string, any> = {
+    POSTED: { backgroundColor: "#dcfce7", color: "#166534" },
+    ISSUED: { backgroundColor: "#dbeafe", color: "#1d4ed8" },
+    VOIDED: { backgroundColor: "#fee2e2", color: "#b91c1c" },
+    REVERSED: { backgroundColor: "#ffedd5", color: "#c2410c" },
+}
 
 /* ================= COMPONENT ================= */
 
@@ -136,11 +187,9 @@ export default function DashboardReportPdf({
         <Document>
             <Page size="A4" style={styles.page} wrap>
 
-                {/* TOP META */}
+                {/* TOP */}
                 <View style={styles.rowBetween}>
-                    <Text style={styles.muted}>
-                        Generated on
-                    </Text>
+                    <Text style={styles.muted}>Generated on</Text>
                     <Text style={styles.muted}>
                         {format(new Date(), "dd MMM yyyy")}
                     </Text>
@@ -150,7 +199,7 @@ export default function DashboardReportPdf({
                 <View style={styles.header}>
                     {settings.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -159,41 +208,40 @@ export default function DashboardReportPdf({
                         {settings.name?.toUpperCase()}
                     </Text>
 
-                    {(settings.street ||
-                        settings.town ||
-                        settings.district ||
-                        settings.state ||
-                        settings.pincode) && (
-                            <Text style={styles.companyInfo}>
-                                {[settings.street, settings.town, settings.district, settings.state, settings.pincode]
-                                    .filter(Boolean)
-                                    .join(", ")}
-                            </Text>
-                        )}
+                    <Text style={styles.companyInfo}>
+                        {[settings.street, settings.town, settings.district, settings.state, settings.pincode]
+                            .filter(Boolean)
+                            .join(", ")}
+                    </Text>
 
                     <Text style={styles.companyInfo}>
                         Phone: {settings.phone}
-                        {settings.phoneSecondary && `, ${settings.phoneSecondary}`}
-                        {settings.phoneTertiary && `, ${settings.phoneTertiary}`}
                     </Text>
-
-                    {settings.email && (
-                        <Text style={styles.companyInfo}>
-                            Email: {settings.email}
-                        </Text>
-                    )}
-
-                    {settings.gst && (
-                        <Text style={styles.companyInfo}>
-                            GSTIN: {settings.gst}
-                        </Text>
-                    )}
                 </View>
 
                 {/* BADGE */}
-                <Text style={styles.badge}>
-                    {title.toUpperCase()}
-                </Text>
+                <Text style={styles.badge}>{title.toUpperCase()}</Text>
+
+                {/* SUMMARY */}
+                <View
+                    style={{
+                        backgroundColor: "#f8fafc",
+                        borderRadius: 8,
+                        padding: 10,
+                        marginBottom: 14,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                    }}
+                >
+                    <Text style={{ fontSize: 9 }}>
+                        Total Records: {rows.length}
+                    </Text>
+
+                    <Text style={{ fontSize: 9, color: "#64748b" }}>
+                        Auto generated
+                    </Text>
+                </View>
+
 
                 {/* TABLE HEADER */}
                 <View style={styles.tableHeader} fixed>
@@ -203,29 +251,43 @@ export default function DashboardReportPdf({
                     <Text style={styles.cellParty}>Party</Text>
                     <Text style={styles.cellDate}>Date</Text>
                     <Text style={styles.cellAmount}>Amount</Text>
-                    <Text style={styles.cellStatus}>Status</Text>
+                    <View style={styles.cellStatus}>
+                        <Text>Status</Text>
+                    </View>
                 </View>
 
-                {/* ROWS — wraps automatically */}
+                {/* ROWS */}
                 {rows.map((r, idx) => (
-                    <View key={idx} style={styles.row}>
+                    <View
+                        key={idx}
+                        style={idx % 2 ? [styles.row, styles.altRow] : styles.row}
+                    >
                         <Text style={styles.cellSl}>{idx + 1}</Text>
                         <Text style={styles.cellDoc}>{r.docNo}</Text>
-                        <Text style={styles.cellType}>
-                            {r.kind.replace("_", " ")}
-                        </Text>
+                        <Text style={styles.cellType}>{r.kind.replace("_", " ")}</Text>
                         <Text style={styles.cellParty}>{r.party}</Text>
                         <Text style={styles.cellDate}>
                             {format(new Date(r.date), "dd/MM/yyyy")}
                         </Text>
+
                         <Text style={styles.cellAmount}>
-                            ₹{Number(r.amount).toFixed(2)}
+                            {formatMoney(Number(r.amount))}
                         </Text>
-                        <Text style={styles.cellStatus}>{r.status}</Text>
+
+                        <View style={styles.cellStatus}>
+                            <Text
+                                style={[
+                                    styles.statusPill,
+                                    statusPillMap[r.status] || {},
+                                ]}
+                            >
+                                {r.status}
+                            </Text>
+                        </View>
+
                     </View>
                 ))}
 
-                {/* FOOTER */}
                 <Text style={styles.footer}>
                     This is a computer-generated report
                 </Text>

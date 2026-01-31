@@ -9,17 +9,17 @@ import {
 } from "@react-pdf/renderer";
 import { ReceiptPdfData } from "@/lib/types/payments";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
-import { API_BASE_URL } from "@/lib/constants";
+import { formatMoney } from "@/lib/utils/formatters";
 
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 
 /* ================= STYLES ================= */
 
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
 
@@ -112,15 +112,17 @@ const styles = StyleSheet.create({
         border: "1px solid #86efac",
         backgroundColor: "#ecfdf5",
         borderRadius: 8,
-        padding: 14,
+        padding: 16,
         marginVertical: 18,
         alignItems: "center",
     },
 
     amountText: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: 700,
         color: "#166534",
+        fontFamily: "Mono",
+        letterSpacing: 0.5,
     },
 
     footerRight: {
@@ -158,7 +160,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         alignSelf: "center",
         marginTop: 6,
-    },
+    }
 });
 
 /* ================= PDF ================= */
@@ -205,7 +207,7 @@ export default function ReceiptPdf({
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -320,10 +322,12 @@ export default function ReceiptPdf({
                 {/* AMOUNT */}
                 <View style={styles.amountBox}>
                     <Text>Amount Received</Text>
-                    <Text style={styles.amountText}>
-                        ₹ {data.amount.toLocaleString("en-IN")}
+                    <Text style={styles.amountText}>{formatMoney(data.amount)}</Text>
+                    <Text style={{ fontSize: 9, color: "#475569", marginTop: 4 }}>
+                        Amount in INR
                     </Text>
                 </View>
+
 
                 {/* SIGNATURE */}
                 <View style={styles.footerRight}>

@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "@/lib/constants";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
 import { CompanyStatement } from "@/lib/types/company";
+import { formatMoney } from "@/lib/utils/formatters";
 import {
     Document,
     Page,
@@ -14,10 +14,10 @@ import {
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
 });
 
@@ -27,15 +27,13 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
-
 
     bold: {
         fontWeight: 700,
     },
-
 
     rowBetween: {
         flexDirection: "row",
@@ -118,16 +116,24 @@ const styles = StyleSheet.create({
         width: "15%",
         textAlign: "right",
         color: "#16a34a",
+        fontSize: 9,
+        letterSpacing: 0.3,
     },
+
     cellCredit: {
         width: "15%",
         textAlign: "right",
         color: "#dc2626",
+        fontSize: 9,
+        letterSpacing: 0.3,
     },
+
     cellBal: {
         width: "16%",
         textAlign: "right",
         fontWeight: 700,
+        fontSize: 9,
+        letterSpacing: 0.3,
     },
 
     footer: {
@@ -177,7 +183,7 @@ export default function CompanyStatementPdf({
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -297,18 +303,29 @@ export default function CompanyStatementPdf({
                         <Text style={styles.cellRef}>{r.refNo}</Text>
 
                         <Text style={styles.cellDebit}>
-                            {r.debit ? `₹${r.debit.toLocaleString()}` : "-"}
+                            {r.debit ? formatMoney(r.debit) : "-"}
                         </Text>
 
                         <Text style={styles.cellCredit}>
-                            {r.credit ? `₹${r.credit.toLocaleString()}` : "-"}
+                            {r.credit ? formatMoney(r.credit) : "-"}
                         </Text>
 
                         <Text style={styles.cellBal}>
-                            ₹{r.balance.toLocaleString()}
+                            {formatMoney(r.balance)}
                         </Text>
                     </View>
                 ))}
+
+                <Text
+                    style={{
+                        textAlign: "right",
+                        fontSize: 8,
+                        color: "#64748b",
+                        marginTop: 6,
+                    }}
+                >
+                    All amounts are in INR
+                </Text>
 
                 {/* SIGN */}
                 <View style={styles.signature}>

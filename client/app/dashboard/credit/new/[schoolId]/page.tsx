@@ -10,7 +10,6 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { useAuthUser } from "@/lib/queries/auth";
-import { API_BASE_URL } from "@/lib/constants";
 import { useCreateCreditNote, useSchoolProfile } from "@/lib/queries/schools";
 import { numberToWords } from "@/lib/utils/numberToWords";
 import { useSettingsInfo } from "@/lib/queries/settings";

@@ -9,13 +9,13 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { useAuthUser } from "@/lib/queries/auth";
-import { API_BASE_URL } from "@/lib/constants";
 import { useCreateInvoice, useSchoolProfile } from "@/lib/queries/schools";
 import { numberToWords } from "@/lib/utils/numberToWords";
 import { useSettingsInfo } from "@/lib/queries/settings";
 import { useNextInvoiceNumber } from "@/lib/queries/nextNumber";
 import { handleApiError } from "@/lib/utils/getApiError";
 import Spinner from "@/components/Spinner";
+import Image from "next/image";
 
 /* ======================================================
    VALIDATION SCHEMA
@@ -225,7 +225,7 @@ export default function InvoicePage() {
 
                     {/* Logo */}
                     {company.logoUrl && (
-                        <img
+                        <Image
                             src={'/api' + company.logoUrl}
                             alt="Company Logo"
                             width={90}

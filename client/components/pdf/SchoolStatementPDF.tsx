@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "@/lib/constants";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
 import { SchoolStatement } from "@/lib/types/school";
+import { formatMoney } from "@/lib/utils/formatters";
 import {
     Document,
     Page,
@@ -15,12 +15,12 @@ import {
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 
 /* ================= STYLES ================= */
 
@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
 
@@ -115,16 +115,24 @@ export const styles = StyleSheet.create({
     cellDebit: {
         width: "15%",
         textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
         color: "#dc2626",
     },
+
     cellCredit: {
         width: "15%",
         textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
         color: "#16a34a",
     },
+
     cellBal: {
         width: "16%",
         textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
         fontWeight: 700,
     },
 
@@ -176,7 +184,7 @@ export default function SchoolStatementPdf({
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -300,18 +308,29 @@ export default function SchoolStatementPdf({
                         <Text style={styles.cellRef}>{r.refNo}</Text>
 
                         <Text style={styles.cellDebit}>
-                            {r.debit ? `₹${r.debit.toLocaleString()}` : "-"}
+                            {r.debit ? formatMoney(r.debit) : "-"}
                         </Text>
 
                         <Text style={styles.cellCredit}>
-                            {r.credit ? `₹${r.credit.toLocaleString()}` : "-"}
+                            {r.credit ? formatMoney(r.credit) : "-"}
                         </Text>
 
                         <Text style={styles.cellBal}>
-                            ₹{r.balance.toLocaleString()}
+                            {formatMoney(r.balance)}
                         </Text>
                     </View>
                 ))}
+
+                <Text
+                    style={{
+                        textAlign: "right",
+                        fontSize: 8,
+                        color: "#64748b",
+                        marginTop: 6,
+                    }}
+                >
+                    All amounts are in INR
+                </Text>
 
                 {/* SIGNATURE */}
                 <View style={styles.signature}>
@@ -323,6 +342,8 @@ export default function SchoolStatementPdf({
                         Authorized Signatory
                     </Text>
                 </View>
+
+
 
                 {/* FOOTER */}
                 <Text style={styles.footer}>

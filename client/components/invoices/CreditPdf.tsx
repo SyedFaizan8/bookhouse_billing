@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "@/lib/constants";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
-import { InvoicePdfData, Item } from "@/lib/types/invoice";
+import { InvoicePdfData } from "@/lib/types/invoice";
+import { formatMoney } from "@/lib/utils/formatters";
 import {
     Document,
     Page,
@@ -14,25 +14,19 @@ import {
 /* ================= FONT REGISTRATION ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        {
-            src: "/fonts/Inter_18pt-Italic.ttf",
-            fontWeight: 400,
-            fontStyle: "italic",
-        },
-        { src: "/fonts/Inter_18pt-Medium.ttf", fontWeight: 500 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 
 /* ================= STYLES ================= */
 const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
 
@@ -132,23 +126,48 @@ const styles = StyleSheet.create({
         wrap: false,
     },
 
-    cellSl: { width: "5%", textAlign: "center" },
+    cellSl: {
+        width: 28,
+        textAlign: "center",
+    },
 
-    cellDesc: { width: "30%", paddingRight: 6 },
+    cellDesc: {
+        width: 210,
+        paddingRight: 6,
+    },
 
-    cellClass: { width: "7%", textAlign: "center" },
+    cellClass: {
+        width: 45,
+        textAlign: "center",
+    },
 
-    cellCompany: { width: "18%", paddingRight: 6 },
+    cellCompany: {
+        width: 130,
+        paddingRight: 6,
+    },
 
-    cellQty: { width: "7%", textAlign: "center" },
+    cellQty: {
+        width: 45,
+        textAlign: "center",
+    },
 
-    cellRate: { width: "10%", textAlign: "right" },
+    cellRate: {
+        width: 80,
+        textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
+    },
 
-    cellDisc: { width: "8%", textAlign: "center" },
+    cellDisc: {
+        width: 45,
+        textAlign: "center",
+    },
 
     cellTotal: {
-        width: "15%",
+        width: 100,
         textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
         fontWeight: 600,
     },
 
@@ -223,7 +242,7 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -357,36 +376,45 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
 
                         <Text style={styles.cellQty}>{r.quantity}</Text>
 
-                        <Text style={styles.cellRate}>
-                            ₹{Number(r.rate).toFixed(2)}
-                        </Text>
+                        <Text style={styles.cellRate}>{formatMoney(r.rate)}</Text>
 
-                        <Text style={styles.cellDisc}>
-                            {r.discountPercent}%
-                        </Text>
+                        <Text style={styles.cellDisc}>{r.discountPercent}%</Text>
 
-                        <Text style={styles.cellTotal}>
-                            ₹{Number(r.netAmount).toFixed(2)}
-                        </Text>
+                        <Text style={styles.cellTotal}>{formatMoney(r.netAmount)}</Text>
                     </View>
                 ))}
+
                 <View
                     style={{
                         flexDirection: "row",
                         borderTop: "1px solid #000",
                         paddingTop: 6,
                         marginTop: -1,
-                        fontWeight: 700,
                     }}
                 >
-                    <Text style={{ width: "85%", textAlign: "right", paddingRight: 8 }}>
+                    <Text
+                        style={{
+                            width: 600,
+                            textAlign: "right",
+                            paddingRight: 8,
+                            fontWeight: 700,
+                        }}
+                    >
                         TOTAL
                     </Text>
 
-                    <Text style={{ width: "15%", textAlign: "right" }}>
-                        ₹{Number(data.totals.netAmount).toFixed(2)}
+                    <Text
+                        style={{
+                            width: 100,
+                            textAlign: "right",
+                            fontFamily: "Mono",
+                            fontWeight: 700,
+                        }}
+                    >
+                        {formatMoney(data.totals.netAmount)}
                     </Text>
                 </View>
+
 
                 <View
                     style={{

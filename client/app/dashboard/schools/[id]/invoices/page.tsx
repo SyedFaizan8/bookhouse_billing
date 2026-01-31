@@ -81,7 +81,7 @@ export default function CustomerInvoicesPage() {
                 key: "amount",
                 header: "Amount",
                 className: "text-right font-medium",
-                render: (i) => <Money amount={i.amount.toLocaleString()} />,
+                render: (i) => <Money amount={i.amount} />,
             },
             {
                 key: "status",

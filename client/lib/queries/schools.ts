@@ -115,6 +115,7 @@ export function useCreateInvoice() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["school-invoices"] });
             qc.invalidateQueries({ queryKey: ["statement"] })
+            qc.invalidateQueries({ queryKey: ["documents-export"] });
         },
     });
 }
@@ -178,6 +179,7 @@ export function useCreateCreditNote() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["school-creditNote"] });
             qc.invalidateQueries({ queryKey: ["statement"] })
+            qc.invalidateQueries({ queryKey: ["documents-export"] });
         },
     });
 }
@@ -200,6 +202,7 @@ export function useCreateSchoolPayment(schoolId: string) {
             q.invalidateQueries({ queryKey: ["payments", schoolId] })
             q.invalidateQueries({ queryKey: ["statement"] })
             q.invalidateQueries({ queryKey: ["dashboard"] })
+            q.invalidateQueries({ queryKey: ["documents-export"] });
         }
     });
 }
@@ -229,6 +232,7 @@ export const voidInvoice = () => {
             q.invalidateQueries({ queryKey: ["company-invoices"] })
             q.invalidateQueries({ queryKey: ["school-creditNote"] })
             q.invalidateQueries({ queryKey: ["company-creditNote"] })
+            q.invalidateQueries({ queryKey: ["documents-export"] });
         }
     });
 }
@@ -242,6 +246,7 @@ export const reversePayment = () => {
             q.invalidateQueries({ queryKey: ["statement"] })
             q.invalidateQueries({ queryKey: ["payments"] })
             q.invalidateQueries({ queryKey: ["receipt-pdf"] })
+            q.invalidateQueries({ queryKey: ["documents-export"] });
         }
     });
 }

@@ -1,4 +1,4 @@
-import { DashboardResponse, DocumentType, PartyType } from "../types/dashboard"
+import { DashboardResponse, DocumentType, PartyType, DashboardDocument } from "../types/dashboard"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import api from "../utils/axios";
 
@@ -35,4 +35,17 @@ export function useDashboardDocuments(filters: DashboardFilters) {
     })
 }
 
-
+export function useExportDocuments(params: {
+    party: PartyType
+    type: DocumentType
+    month?: string
+}) {
+    return useQuery({
+        queryKey: ["documents-export", params],
+        enabled: false, // 🔥 IMPORTANT
+        queryFn: async () => {
+            const res = await api.get("/dashboard/documents/export", { params })
+            return res.data.items as DashboardDocument[]
+        },
+    })
+}

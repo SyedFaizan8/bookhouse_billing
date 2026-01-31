@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "@/lib/constants";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
 import { InvoicePdfData, Item } from "@/lib/types/invoice";
+import { formatMoney } from "@/lib/utils/formatters";
 import { numberToWords } from "@/lib/utils/numberToWords";
 import {
     Document,
@@ -15,18 +15,13 @@ import {
 /* ================= FONT REGISTRATION ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        {
-            src: "/fonts/Inter_18pt-Italic.ttf",
-            fontWeight: 400,
-            fontStyle: "italic",
-        },
-        { src: "/fonts/Inter_18pt-Medium.ttf", fontWeight: 500 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400, },
+        { src: "/fonts/JetBrainsMono-Italic.ttf", fontWeight: 400, fontStyle: "italic" },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 
 /* ================= LAYOUT CONSTANTS ================= */
 
@@ -39,28 +34,17 @@ const FOOTER_HEIGHT = 260;
 
 /* ================= STYLES ================= */
 
+
 const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
 
-    bold: {
-        fontWeight: 700,
-    },
-
-    text: {
-        fontSize: 10,
-        color: "#0f172a",
-    },
-
-    muted: {
-        fontSize: 9,
-        color: "#475569",
-    },
-
+    bold: { fontWeight: 700 },
+    muted: { fontSize: 9, color: "#475569" },
 
     rowBetween: {
         flexDirection: "row",
@@ -81,7 +65,7 @@ const styles = StyleSheet.create({
         alignSelf: "center",
         backgroundColor: "#eef2ff",
         paddingVertical: 5,
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         borderRadius: 16,
         fontWeight: 700,
         marginBottom: 12,
@@ -102,6 +86,8 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
 
+    /* ================= TABLE ================= */
+
     tableHeader: {
         flexDirection: "row",
         backgroundColor: "#f1f5f9",
@@ -114,38 +100,39 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         paddingVertical: 6,
         borderBottom: "1px solid #e5e7eb",
-        wrap: false, // 🔒 row never splits
+        wrap: false,
     },
 
     altRow: { backgroundColor: "#fafafa" },
 
-    cellSl: { width: "5%", textAlign: "center" },
+    cellSl: { width: 28, textAlign: "center" },
+    cellDesc: { width: 190, paddingRight: 4 },
+    cellClass: { width: 45, textAlign: "center" },
+    cellCompany: { width: 110, paddingRight: 4 },
+    cellQty: { width: 40, textAlign: "center" },
 
-    cellDesc: {
-        width: "28%",
-        paddingRight: 4,
+    cellRate: {
+        width: 75,
+        textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
+        whiteSpace: "nowrap",
+        fontWeight: 600,
     },
-
-    cellClass: {
-        width: "7%",
-        textAlign: "center",
-    },
-
-    cellCompany: {
-        width: "15%",
-        paddingRight: 4,
-    },
-
-    cellQty: { width: "7%", textAlign: "center" },
-
-    cellRate: { width: "10%", textAlign: "right" },
-
-    cellDiscPct: { width: "8%", textAlign: "center" },
 
     cellNet: {
-        width: "10%",
+        width: 90,
         textAlign: "right",
-        fontWeight: 500,
+        fontFamily: "Mono",
+        fontSize: 9,
+        whiteSpace: "nowrap",
+        fontWeight: 600,
+    },
+
+    cellDiscPct: {
+        width: 45,
+        textAlign: "center",
+        fontSize: 9,
     },
 
     continued: {
@@ -159,7 +146,7 @@ const styles = StyleSheet.create({
     footerBlock: { marginTop: 12 },
 
     totalsBox: {
-        width: "45%",
+        width: 240,
         alignSelf: "flex-end",
         border: "1px solid #c7d2fe",
         padding: 10,
@@ -167,7 +154,11 @@ const styles = StyleSheet.create({
         backgroundColor: "#eef2ff",
     },
 
-    totalRow: { flexDirection: "row", justifyContent: "space-between" },
+    totalRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
+
     totalBold: {
         fontWeight: 700,
         borderTop: "1px solid #818cf8",
@@ -193,14 +184,14 @@ const styles = StyleSheet.create({
     },
 
     bankBox: {
-        width: "65%",
+        width: 300,
         border: "1px solid #e5e7eb",
         padding: 10,
         borderRadius: 6,
     },
 
     qrBox: {
-        width: "32%",
+        width: 120,
         border: "1px solid #e5e7eb",
         padding: 10,
         borderRadius: 6,
@@ -221,6 +212,7 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#64748b",
     },
+
     watermark: {
         position: "absolute",
         top: "40%",
@@ -245,13 +237,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         alignSelf: "center",
     },
-
-});
-
-/* ================= HELPERS ================= */
-
-const money = (value: number) =>
-    Number(value || 0).toFixed(2);
+})
 
 
 /* ================= DYNAMIC PAGINATION ================= */
@@ -329,7 +315,7 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
                         <View style={styles.header}>
                             {settings?.logoUrl && (
                                 <Image
-                                    src={API_BASE_URL + settings.logoUrl}
+                                    src={'/api' + settings.logoUrl}
                                     style={styles.logo}
                                 />
                             )}
@@ -469,11 +455,11 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
 
                                     <Text style={styles.cellQty}>{r.quantity}</Text>
 
-                                    <Text style={styles.cellRate}>₹ {money(r.rate)}</Text>
+                                    <Text style={styles.cellRate}>{formatMoney(r.rate)}</Text>
 
                                     <Text style={styles.cellDiscPct}>{r.discountPercent}%</Text>
 
-                                    <Text style={styles.cellNet}>₹ {money(r.netAmount)}</Text>
+                                    <Text style={styles.cellNet}>{formatMoney(r.netAmount)}</Text>
                                 </View>
 
                             ))
@@ -500,17 +486,17 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
 
                                         <View style={styles.totalRow}>
                                             <Text>Gross Amount</Text>
-                                            <Text>₹ {money(data.totals.grossAmount)}</Text>
+                                            <Text>{formatMoney(data.totals.grossAmount)}</Text>
                                         </View>
 
                                         <View style={styles.totalRow}>
                                             <Text>Total Discount</Text>
-                                            <Text>- ₹ {money(data.totals.totalDiscount)}</Text>
+                                            <Text>-{formatMoney(data.totals.totalDiscount)}</Text>
                                         </View>
 
                                         <View style={[styles.totalRow, styles.totalBold]}>
                                             <Text>Final Amount</Text>
-                                            <Text>₹ {money(data.totals.netAmount)}</Text>
+                                            <Text>{formatMoney(data.totals.netAmount)}</Text>
                                         </View>
                                     </View>
 
@@ -534,7 +520,7 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
                                         </View>
 
                                         <View style={styles.qrBox}>
-                                            {settings?.qrCodeUrl && <Image src={API_BASE_URL + settings.qrCodeUrl} style={styles.qr} />}
+                                            {settings?.qrCodeUrl && <Image src={'/api' + settings.qrCodeUrl} style={styles.qr} />}
                                         </View>
                                     </View>
 

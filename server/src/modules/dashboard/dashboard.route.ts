@@ -193,9 +193,7 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
 
     const party = qs(req.query.party) as "SCHOOL" | "COMPANY"
 
-    if (!party) {
-        throw new AppError("party is required", 400)
-    }
+    if (!party) throw new AppError("party is required", 400)
 
     const partyId = qs(req.query.partyId)
     const type = qs(req.query.type) ?? "ALL"
@@ -239,6 +237,7 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
     if (type === "ALL") {
         const invoices = await prisma.invoice.findMany({
             where: {
+                kind: { in: [DocumentKind.INVOICE, DocumentKind.CREDIT_NOTE] },
                 ...(dateFilter && { date: dateFilter }),
                 flowGroup: {
                     academicYearId: activeYear.id,
@@ -367,9 +366,7 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
                 p.flowGroup.school?.id ??
                 p.flowGroup.company?.id ??
                 "-",
-            partyType: p.flowGroup.schoolId
-                ? "SCHOOL"
-                : "COMPANY",
+            partyType: p.flowGroup.schoolId ? "SCHOOL" : "COMPANY",
         }))
 
         return res.json({
@@ -434,5 +431,126 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
                 : null,
     })
 }))
+
+router.get("/documents/export", asyncHandler(async (req: Request, res: Response) => {
+    const party = qs(req.query.party) as "SCHOOL" | "COMPANY"
+    if (!party) throw new AppError("party is required", 400)
+
+    const partyId = qs(req.query.partyId)
+    const type = qs(req.query.type) ?? "ALL"
+    const month = qs(req.query.month)
+    const fromStr = qs(req.query.from)
+    const toStr = qs(req.query.to)
+
+    let dateFilter: any
+
+    if (month) {
+        const s = new Date(`${month}-01`)
+        const e = new Date(s)
+        e.setMonth(e.getMonth() + 1)
+        dateFilter = { gte: s, lt: e }
+    }
+
+    if (fromStr && toStr) {
+        dateFilter = {
+            gte: new Date(fromStr),
+            lte: new Date(toStr),
+        }
+    }
+
+    const activeYear = await prisma.academicYear.findFirst({
+        where: { status: "OPEN" },
+    })
+
+    if (!activeYear) throw new AppError("No active academic year found", 400)
+
+    const flowPartyFilter =
+        party === "SCHOOL"
+            ? { schoolId: partyId ?? { not: null } }
+            : { companyId: partyId ?? { not: null } }
+
+    /* ================= ALL ================= */
+
+    const invoices =
+        type === "PAYMENT"
+            ? []
+            : await prisma.invoice.findMany({
+                where: {
+                    ...(type === "INVOICE" && { kind: DocumentKind.INVOICE }),
+                    ...(type === "CREDIT_NOTE" && { kind: DocumentKind.CREDIT_NOTE }),
+                    ...(type === "ALL" && {
+                        kind: { in: [DocumentKind.INVOICE, DocumentKind.CREDIT_NOTE] },
+                    }),
+                    ...(dateFilter && { date: dateFilter }),
+                    flowGroup: {
+                        academicYearId: activeYear.id,
+                        ...flowPartyFilter,
+                    },
+                },
+                include: {
+                    flowGroup: { include: { school: true, company: true } },
+                },
+                orderBy: { date: "asc" },
+            })
+
+    const payments =
+        type === "INVOICE" || type === "CREDIT_NOTE"
+            ? []
+            : await prisma.payment.findMany({
+                where: {
+                    academicYearId: activeYear.id,
+                    ...(dateFilter && { createdAt: dateFilter }),
+                    flowGroup: flowPartyFilter,
+                },
+                include: {
+                    flowGroup: { include: { school: true, company: true } },
+                },
+                orderBy: { createdAt: "asc" },
+            })
+
+    const rows = [
+        ...invoices.map((i) => ({
+            id: i.id,
+            docNo: i.documentNo,
+            kind: i.kind,
+            date: i.date.toISOString(),
+            amount: i.netAmount.toString(),
+            status: i.status,
+            party:
+                i.flowGroup.school?.name ??
+                i.flowGroup.company?.name ??
+                "-",
+            partyId:
+                i.flowGroup.school?.id ??
+                i.flowGroup.company?.id ??
+                "-",
+            partyType: i.flowGroup.schoolId ? "SCHOOL" : "COMPANY",
+        })),
+
+        ...payments.map((p) => ({
+            id: p.id,
+            docNo: p.receiptNo.toString(),
+            kind: "PAYMENT",
+            date: p.createdAt.toISOString(),
+            amount: p.amount.toString(),
+            status: p.status,
+            party:
+                p.flowGroup.school?.name ??
+                p.flowGroup.company?.name ??
+                "-",
+            partyId:
+                p.flowGroup.school?.id ??
+                p.flowGroup.company?.id ??
+                "-",
+            partyType: p.flowGroup.schoolId ? "SCHOOL" : "COMPANY",
+        })),
+    ]
+
+    rows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+    res.json({ items: rows })
+})
+)
+
 
 export default router;

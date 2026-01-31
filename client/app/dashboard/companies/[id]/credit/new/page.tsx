@@ -12,7 +12,6 @@ import { useAuthUser } from "@/lib/queries/auth";
 import { useSettingsInfo } from "@/lib/queries/settings";
 import { useCompanyProfile, useCreateCompanyCreditNote } from "@/lib/queries/company";
 import { numberToWords } from "@/lib/utils/numberToWords";
-import { API_BASE_URL } from "@/lib/constants";
 import { handleApiError } from "@/lib/utils/getApiError";
 import Spinner from "@/components/Spinner";
 

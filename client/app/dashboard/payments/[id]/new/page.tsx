@@ -21,7 +21,6 @@ import {
 import { useNextPaymentNumber } from "@/lib/queries/nextNumber";
 import { useEffect } from "react";
 import { handleApiError } from "@/lib/utils/getApiError";
-import { API_BASE_URL } from "@/lib/constants";
 
 const formatDate = () =>
     new Date().toLocaleDateString("en-GB", {
@@ -167,7 +166,7 @@ export default function NewPaymentPage() {
 
                     {/* Logo */}
                     {company.logoUrl && (
-                        <img
+                        <Image
                             src={'/api' + company.logoUrl}
                             alt="Company Logo"
                             width={90}

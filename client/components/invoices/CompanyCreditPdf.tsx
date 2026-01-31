@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "@/lib/constants";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
 import { CompanyInvoicePdfData } from "@/lib/types/invoice";
+import { formatMoney } from "@/lib/utils/formatters";
 import {
     Document,
     Page,
@@ -14,12 +14,12 @@ import {
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 
 /* ================= STYLES ================= */
 
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
 
@@ -112,11 +112,19 @@ const styles = StyleSheet.create({
     cellDesc: { width: "44%", paddingRight: 6 },
     cellClass: { width: "10%", textAlign: "center" },
     cellQty: { width: "10%", textAlign: "center" },
-    cellRate: { width: "15%", textAlign: "right" },
+    cellRate: {
+        width: "15%",
+        textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
+    },
+
     cellTotal: {
         width: "15%",
         textAlign: "right",
-        fontWeight: 600,
+        fontFamily: "Mono",
+        fontSize: 9,
+        fontWeight: 700,
     },
 
     footerNote: {
@@ -125,6 +133,7 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#64748b",
     },
+
     watermark: {
         position: "absolute",
         top: "40%",
@@ -195,7 +204,7 @@ export default function CompanyCreditNotePdf({
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -312,10 +321,10 @@ export default function CompanyCreditNotePdf({
                         <Text style={styles.cellClass}>{r.class || "-"}</Text>
                         <Text style={styles.cellQty}>{r.quantity}</Text>
                         <Text style={styles.cellRate}>
-                            ₹{Number(r.rate).toFixed(2)}
+                            {formatMoney(r.rate)}
                         </Text>
                         <Text style={styles.cellTotal}>
-                            ₹{Number(r.netAmount).toFixed(2)}
+                            {formatMoney(r.netAmount)}
                         </Text>
                     </View>
                 ))}
@@ -339,8 +348,10 @@ export default function CompanyCreditNotePdf({
                         TOTAL CREDIT
                     </Text>
 
-                    <Text style={{ width: "15%", textAlign: "right" }}>
-                        ₹{Number(data.totals.netAmount).toFixed(2)}
+                    <Text style={{
+                        width: "15%", textAlign: "right", fontSize: 9, fontWeight: 700,
+                    }}>
+                        {formatMoney(data.totals.netAmount)}
                     </Text>
                 </View>
 
@@ -369,8 +380,6 @@ export default function CompanyCreditNotePdf({
                         </View>
                     )}
                 </View>
-
-
 
                 <Text style={styles.footerNote}>
                     This is a computer-generated credit note

@@ -3,12 +3,8 @@
 import { useMemo, useState } from "react"
 import ResponsiveTable, { Column } from "@/components/ResponsiveTable"
 import Pagination from "@/components/Pagination"
-import {
-    DashboardDocument,
-    DocumentType,
-    PartyType,
-} from "@/lib/types/dashboard"
-import { useDashboardDocuments } from "@/lib/queries/dashboard"
+import { DashboardDocument, DocumentType, PartyType, } from "@/lib/types/dashboard"
+import { useDashboardDocuments, useExportDocuments } from "@/lib/queries/dashboard"
 import { useClientPagination } from "@/lib/hooks/useClientPagination"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -26,6 +22,7 @@ import { useSettingsInfo } from "@/lib/queries/settings"
 import TableLoader from "./loaders/TableLoader"
 import { exportToCSV } from "@/lib/utils/exportCsv"
 import { Money } from "./Money"
+import Spinner from "./Spinner"
 
 const PAGE_SIZE = 10
 
@@ -69,10 +66,14 @@ export default function DocumentsDashboardPage() {
     const [type, setType] = useState<DocumentType>("ALL")
     const [month, setMonth] = useState<string>("")
 
+    const [pdfRows, setPdfRows] = useState<DashboardDocument[]>([])
+    const [exportMode, setExportMode] = useState<"PDF" | "CSV" | null>(null)
 
     const { data, fetchNextPage, hasNextPage } = useDashboardDocuments({ party, type, month })
 
     const { data: settings, isLoading } = useSettingsInfo()
+
+    const exportQuery = useExportDocuments({ party, type, month, })
 
     const rows: DashboardDocument[] = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data])
 
@@ -89,6 +90,21 @@ export default function DocumentsDashboardPage() {
         fetchNext: fetchNextPage,
         hasNextPage,
     })
+
+    const handleExport = async (mode: "PDF" | "CSV") => {
+        setExportMode(mode)
+
+        const res = await exportQuery.refetch()
+
+        if (!res.data) return
+
+        if (mode === "PDF") setPdfRows(res.data)
+
+        if (mode === "CSV") {
+            exportToCSV(res.data)
+            setExportMode(null)
+        }
+    }
 
     const columns: Column<DashboardDocument>[] = [
         {
@@ -246,8 +262,7 @@ export default function DocumentsDashboardPage() {
                     {/* RIGHT: ACTIONS */}
                     <div
                         className="
-                            flex
-                            flex-col
+                            flex flex-col
                             sm:flex-row
                             gap-2
                             w-full
@@ -255,42 +270,84 @@ export default function DocumentsDashboardPage() {
                             justify-end
                         "
                     >
-                        <Button
-                            variant="outline"
-                            className="h-10"
-                            onClick={() => setMonth("")}
-                        >
-                            Clear
-                        </Button>
-
-                        <PDFDownloadLink
-                            document={
-                                <DashboardReportPdf
-                                    rows={pageData}
-                                    settings={settings!}
-                                    title="DOCUMENTS REPORT"
-                                />
-                            }
-                            fileName="documents-report.pdf"
-                        >
-                            <Button className="h-10">
-                                Export PDF
+                        {/* PDF */}
+                        {pdfRows.length > 0 ? (
+                            <PDFDownloadLink
+                                document={
+                                    <DashboardReportPdf
+                                        rows={pdfRows}
+                                        settings={settings!}
+                                        title="DOCUMENTS REPORT"
+                                    />
+                                }
+                                fileName="documents-report.pdf"
+                                onClick={() => {
+                                    // reset after download
+                                    setTimeout(() => {
+                                        setPdfRows([])
+                                        setExportMode(null)
+                                    }, 300)
+                                }}
+                            >
+                                <Button
+                                    className="
+                                        h-10
+                                        bg-emerald-600
+                                        hover:bg-emerald-700
+                                        text-white
+                                        animate-bounce
+                                        cursor-pointer
+                                    "
+                                >
+                                    Download PDF
+                                </Button>
+                            </PDFDownloadLink>
+                        ) : (
+                            <Button
+                                className={`h-10 ${exportQuery.isFetching ? 'cursor-not-allowed  opacity-50' : 'cursor-pointer'}`}
+                                disabled={exportQuery.isFetching}
+                                onClick={() => handleExport("PDF")}
+                            >
+                                {exportQuery.isFetching && exportMode === "PDF" ? (
+                                    <span className="flex items-center gap-2">
+                                        <Spinner size={18} /> Preparing…
+                                    </span>
+                                ) : ("Export PDF")}
                             </Button>
-                        </PDFDownloadLink>
+                        )}
 
+                        {/* CSV */}
                         <Button
                             variant="secondary"
-                            className="h-10"
-                            onClick={() => exportToCSV(pageData)}
+                            className={`h-10 ${exportQuery.isFetching ? 'cursor-not-allowed  opacity-50' : 'cursor-pointer'}`}
+                            disabled={exportQuery.isFetching}
+                            onClick={() => handleExport("CSV")}
                         >
-                            Export CSV
+                            {exportQuery.isFetching && exportMode === "CSV" ? (
+                                <span className="flex items-center gap-2">
+                                    <Spinner size={18} /> Preparing…
+                                </span>
+                            ) : ("Export CSV")}
+                        </Button>
+
+                        {/* CLEAR */}
+                        <Button
+                            variant="destructive"
+                            className={`h-10 ${exportQuery.isFetching ? 'cursor-not-allowed  opacity-50' : 'cursor-pointer'}`}
+                            onClick={() => {
+                                setMonth("")
+                                setPdfRows([])
+                                setExportMode(null)
+                                setType('ALL')
+                                setParty('SCHOOL')
+                            }}
+                        >
+                            Reset
                         </Button>
                     </div>
+
                 </div>
             </div>
-
-
-
 
             <ResponsiveTable
                 data={pageData}

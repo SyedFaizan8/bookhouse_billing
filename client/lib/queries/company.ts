@@ -81,6 +81,7 @@ export function useCreateCompanyInvoice() {
 
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["company-invoices"] });
+            qc.invalidateQueries({ queryKey: ["documents-export"] });
         },
     });
 }
@@ -117,6 +118,7 @@ export function useCreateCompanyCreditNote() {
 
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["company-creditNote"] });
+            qc.invalidateQueries({ queryKey: ["documents-export"] });
         },
     });
 }
@@ -129,6 +131,7 @@ export function useCreateCompanyPayment(id: string) {
         onSuccess: () => {
             q.invalidateQueries({ queryKey: ["payments", id] })
             q.invalidateQueries({ queryKey: ["receipt-pdf", id] })
+            q.invalidateQueries({ queryKey: ["documents-export"] });
         }
     });
 }

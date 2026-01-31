@@ -106,7 +106,7 @@ export default function PaymentsPage() {
                 header: "Amount",
                 className:
                     "text-right font-semibold text-green-600",
-                render: (p) => <Money amount={p.amount.toLocaleString('en-IN')} />,
+                render: (p) => <Money amount={p.amount} />,
             },
             {
                 key: "status",

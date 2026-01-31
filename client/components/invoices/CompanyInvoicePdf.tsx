@@ -1,6 +1,6 @@
-import { API_BASE_URL } from "@/lib/constants";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
 import { CompanyInvoicePdfData, Item } from "@/lib/types/invoice";
+import { formatMoney } from "@/lib/utils/formatters";
 import { numberToWords } from "@/lib/utils/numberToWords";
 import {
     Document,
@@ -15,18 +15,13 @@ import {
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        {
-            src: "/fonts/Inter_18pt-Italic.ttf",
-            fontWeight: 400,
-            fontStyle: "italic",
-        },
-        { src: "/fonts/Inter_18pt-Medium.ttf", fontWeight: 500 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400, },
+        { src: "/fonts/JetBrainsMono-Italic.ttf", fontWeight: 400, fontStyle: "italic" },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 
 /* ================= STYLES ================= */
 
@@ -34,7 +29,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
 
@@ -114,9 +109,21 @@ const styles = StyleSheet.create({
     cellDesc: { width: "42%", paddingRight: 6 },
     cellClass: { width: "8%", textAlign: "center" },
     cellQty: { width: "10%", textAlign: "center" },
-    cellRate: { width: "12%", textAlign: "right" },
     cellDisc: { width: "8%", textAlign: "center" },
-    cellTotal: { width: "15%", textAlign: "right", fontWeight: 500 },
+    cellRate: {
+        width: "12%",
+        textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
+    },
+
+    cellTotal: {
+        width: "15%",
+        textAlign: "right",
+        fontFamily: "Mono",
+        fontSize: 9,
+        fontWeight: 700,
+    },
 
     totalsBox: {
         width: "45%",
@@ -188,8 +195,6 @@ const styles = StyleSheet.create({
     },
 });
 
-const money = (v: number) => Number(v || 0).toFixed(2);
-
 /* ================= PDF ================= */
 
 export default function PurchaseInvoicePdf({
@@ -234,7 +239,7 @@ export default function PurchaseInvoicePdf({
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -353,9 +358,9 @@ export default function PurchaseInvoicePdf({
                         <Text style={styles.cellDesc}>{r.description}</Text>
                         <Text style={styles.cellClass}>{r.class || "-"}</Text>
                         <Text style={styles.cellQty}>{r.quantity}</Text>
-                        <Text style={styles.cellRate}>₹ {money(r.rate)}</Text>
+                        <Text style={styles.cellRate}>{formatMoney(r.rate)}</Text>
                         <Text style={styles.cellDisc}>{r.discountPercent}%</Text>
-                        <Text style={styles.cellTotal}>₹ {money(r.netAmount)}</Text>
+                        <Text style={styles.cellTotal}>{formatMoney(r.netAmount)}</Text>
                     </View>
                 ))}
 
@@ -368,17 +373,17 @@ export default function PurchaseInvoicePdf({
 
                     <View style={styles.totalRow}>
                         <Text>Gross</Text>
-                        <Text>₹ {money(data.totals.grossAmount)}</Text>
+                        <Text>{formatMoney(data.totals.grossAmount)}</Text>
                     </View>
 
                     <View style={styles.totalRow}>
                         <Text>Discount</Text>
-                        <Text>- ₹ {money(data.totals.totalDiscount)}</Text>
+                        <Text>- {formatMoney(data.totals.totalDiscount)}</Text>
                     </View>
 
                     <View style={[styles.totalRow, styles.totalBold]}>
                         <Text>Total Payable</Text>
-                        <Text>₹ {money(data.totals.netAmount)}</Text>
+                        <Text>{formatMoney(data.totals.netAmount)}</Text>
                     </View>
                 </View>
 
@@ -408,7 +413,6 @@ export default function PurchaseInvoicePdf({
                         </View>
                     )}
                 </View>
-
 
                 <Text style={styles.footer}>
                     This is a computer-generated purchase invoice

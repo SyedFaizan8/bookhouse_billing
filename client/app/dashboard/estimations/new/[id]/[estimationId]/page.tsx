@@ -8,7 +8,6 @@ import { useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { API_BASE_URL } from "@/lib/constants";
 import { numberToWords } from "@/lib/utils/numberToWords";
 import { handleApiError } from "@/lib/utils/getApiError";
 
@@ -18,6 +17,7 @@ import { useSettingsInfo } from "@/lib/queries/settings";
 import Spinner from "@/components/Spinner";
 import { useInvoicePdf, useUpdateEstimation } from "@/lib/queries/schools";
 import FormLoader from "@/components/loaders/FormLoader";
+import Image from "next/image";
 
 /* ======================================================
    VALIDATION
@@ -233,8 +233,8 @@ export default function EditEstimationPage() {
 
                     {/* Logo */}
                     {company.logoUrl && (
-                        <img
-                            src={'/api' +  company.logoUrl}
+                        <Image
+                            src={'/api' + company.logoUrl}
                             alt="Company Logo"
                             width={90}
                             height={90}
@@ -532,7 +532,7 @@ export default function EditEstimationPage() {
                     {/* QR */}
                     <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
                         <img
-                            src={'/api' +  company.qrCodeUrl}
+                            src={'/api' + company.qrCodeUrl}
                             alt="UPI QR"
                             width={90}
                             height={90}

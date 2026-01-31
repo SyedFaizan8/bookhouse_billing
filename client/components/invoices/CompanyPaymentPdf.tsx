@@ -9,25 +9,24 @@ import {
 } from "@react-pdf/renderer";
 import { CompanyReceiptPdfData } from "@/lib/types/payments";
 import { SettingsInfoResponse } from "@/lib/queries/settings";
-import { API_BASE_URL } from "@/lib/constants";
+import { formatMoney } from "@/lib/utils/formatters";
 
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Inter",
+    family: "Mono",
     fonts: [
-        { src: "/fonts/Inter_18pt-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/Inter_18pt-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
 });
-
 /* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Inter",
+        fontFamily: "Mono",
         color: "#0f172a",
     },
     bold: {
@@ -107,6 +106,8 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 700,
         color: "#991b1b",
+        fontFamily: "Mono",
+        letterSpacing: 0.3,
     },
 
     footerRight: {
@@ -191,7 +192,7 @@ export default function CompanyPaymentPdf({
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={API_BASE_URL + settings.logoUrl}
+                            src={'/api' + settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
@@ -313,7 +314,17 @@ export default function CompanyPaymentPdf({
                 <View style={styles.amountBox}>
                     <Text>Amount Paid</Text>
                     <Text style={styles.amountText}>
-                        ₹ {data.amount.toLocaleString("en-IN")}
+                        {formatMoney(data.amount)}
+                    </Text>
+                    <Text
+                        style={{
+                            textAlign: "center",
+                            fontSize: 8,
+                            color: "#64748b",
+                            marginTop: 4,
+                        }}
+                    >
+                        Amount in INR
                     </Text>
                 </View>
 
