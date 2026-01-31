@@ -10,8 +10,7 @@ const envSchema = z.object({
   FIRST_ADMIN_PHONE: z.string(),
   FIRST_ADMIN_PASSWORD: z.string(),
   FIRST_ADMIN_NAME: z.string(),
-  FIRST_ADMIN_EMAIL: z.string(),
-  CLIENT_URL: z.string()
+  FIRST_ADMIN_EMAIL: z.string()
 });
 
 export const env = envSchema.parse(process.env);

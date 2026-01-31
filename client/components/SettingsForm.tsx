@@ -11,7 +11,6 @@ import {
 } from "@/lib/validators/companyInfo.schema"
 
 import { CompanySettings } from "@/lib/types/settings"
-import { API_BASE_URL } from "@/lib/constants"
 import { useUpdateSettingsInfo } from "@/lib/queries/settings"
 import { handleApiError } from "@/lib/utils/getApiError"
 import Spinner from "./Spinner"
@@ -61,13 +60,13 @@ export default function SettingsForm({
 
     const [logoPreview, setLogoPreview] = useState<string | null>(
         defaultValues.logoUrl
-            ? API_BASE_URL + defaultValues.logoUrl
+            ? '/api' + defaultValues.logoUrl
             : null
     )
 
     const [qrPreview, setQrPreview] = useState<string | null>(
         defaultValues.qrCodeUrl
-            ? API_BASE_URL + defaultValues.qrCodeUrl
+            ? '/api' + defaultValues.qrCodeUrl
             : null
     )
 

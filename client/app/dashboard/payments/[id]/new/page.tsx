@@ -168,7 +168,7 @@ export default function NewPaymentPage() {
                     {/* Logo */}
                     {company.logoUrl && (
                         <img
-                            src={API_BASE_URL + company.logoUrl}
+                            src={'/api' + company.logoUrl}
                             alt="Company Logo"
                             width={90}
                             height={90}

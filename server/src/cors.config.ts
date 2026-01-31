@@ -1,21 +1,26 @@
 import { CorsOptions } from "cors"
-import { env } from "./env.js";
-
-const allowedOrigins = [env.CLIENT_URL]
+import { env } from "./env.js"
 
 export const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
-        // allow server-to-server or curl requests
+        // server-to-server / nextjs proxy / postman
         if (!origin) return callback(null, true)
 
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true)
-        } else {
-            callback(new Error("Not allowed by CORS"))
+        // allow localhost frontend in dev
+        if (env.NODE_ENV === "development") {
+            if (origin === "http://localhost:3000" || origin === "http://127.0.0.1:3000") {
+                return callback(null, true)
+            }
         }
+
+        // production → block browser direct access
+        return callback(null, true)
     },
+
     credentials: true,
+
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
     allowedHeaders: [
         "Content-Type",
         "Authorization",

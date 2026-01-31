@@ -258,7 +258,7 @@ export default function EstimationPage() {
                     {/* Logo */}
                     {company.logoUrl && (
                         <img
-                            src={API_BASE_URL + company.logoUrl}
+                            src={'/api' + company.logoUrl}
                             alt="Company Logo"
                             width={90}
                             height={90}
@@ -558,7 +558,7 @@ export default function EstimationPage() {
                     {/* QR */}
                     <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
                         <img
-                            src={API_BASE_URL + company.qrCodeUrl}
+                            src={'/api' + company.qrCodeUrl}
                             alt="UPI QR"
                             width={90}
                             height={90}
