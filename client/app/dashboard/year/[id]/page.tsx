@@ -55,17 +55,17 @@ export default function EditAcademicYearPage() {
     const { data, isLoading } = useAcademicYear(id);
     const mutation = useUpdateAcademicYear(id);
 
-    const { data: user, isLoading: authLoading } = useAuthUser();
+    const { data: user, isLoading: authLoading, isFetched } = useAuthUser();
 
     /* ======================================================
        ACCESS CONTROL
     ===================================================== */
 
     useEffect(() => {
-        if (!authLoading && user && user.role !== "ADMIN") {
+        if (!authLoading && isFetched && user && user.role !== "ADMIN") {
             router.replace("/dashboard");
         }
-    }, [user, authLoading, router]);
+    }, [user, authLoading, router, isFetched]);
 
     /* ======================================================
        LOAD EXISTING DATA
@@ -101,7 +101,7 @@ export default function EditAcademicYearPage() {
         );
     };
 
-    if (
+    if (!isFetched ||
         isLoading ||
         authLoading ||
         !user ||

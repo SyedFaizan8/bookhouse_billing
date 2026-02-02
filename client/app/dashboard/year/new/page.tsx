@@ -47,13 +47,13 @@ export default function CreateAcademicYearPage() {
     const router = useRouter()
     const mutation = useCreateAcademicYear()
 
-    const { data: user, isLoading } = useAuthUser();
+    const { data: user, isLoading, isFetched } = useAuthUser();
 
     useEffect(() => {
-        if (!isLoading && user && user.role !== "ADMIN") {
+        if (!isLoading && isFetched && user && user.role !== "ADMIN") {
             router.replace("/dashboard");
         }
-    }, [user, isLoading, router]);
+    }, [user, isLoading, router, isFetched]);
 
     const onSubmit = (data: FormData) => {
         mutation.mutate({
@@ -68,7 +68,7 @@ export default function CreateAcademicYearPage() {
         })
     }
 
-    if (isLoading || !user || user.role !== "ADMIN") return <PageLoader />;
+    if (!isFetched || isLoading || !user || user.role !== "ADMIN") return <PageLoader />;
 
     return (
         <div className="space-y-6 max-w-2xl">

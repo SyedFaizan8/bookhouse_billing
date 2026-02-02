@@ -11,6 +11,6 @@ export function signToken(user: {
             role: user.role,
         },
         env.JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "7y" }
     );
 }

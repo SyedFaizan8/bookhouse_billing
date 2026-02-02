@@ -1,24 +1,33 @@
-"use client"
+"use client";
 
-import SideBar from "@/components/SideBar"
-import { useAuthUser } from "@/lib/queries/auth"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import LayoutLoader from "@/components/loaders/LayoutLoader";
+import SideBar from "@/components/SideBar";
+import { useAuthUser } from "@/lib/queries/auth";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function DashboardLayout({ children }: {
-    children: React.ReactNode
+export default function DashboardLayout({
+    children,
+}: {
+    children: React.ReactNode;
 }) {
     const router = useRouter();
-    const { data: user, isLoading } = useAuthUser();
+
+    const {
+        data: user,
+        isLoading,
+        isFetched,
+    } = useAuthUser();
 
     useEffect(() => {
-        if (!isLoading && !user) {
+        if (!isFetched || isLoading) return;
+
+        if (!user) {
             router.replace("/login");
         }
-    }, [user, isLoading, router]);
+    }, [isFetched, user, router, isLoading]);
 
-    if (isLoading) return null;
-    if (!user) return null;
+    if (!isFetched || isLoading || !user) return <LayoutLoader />;
 
-    return <SideBar>{children}</SideBar>
+    return <SideBar>{children}</SideBar>;
 }

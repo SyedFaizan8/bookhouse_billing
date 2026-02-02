@@ -1,21 +1,29 @@
 "use client";
 
+import LayoutLoader from "@/components/loaders/LayoutLoader";
 import { useAuthUser } from "@/lib/queries/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function AdminLayout({ children, }: { children: React.ReactNode; }) {
     const router = useRouter();
-    const { data: user, isLoading } = useAuthUser();
+
+    const { data: user, isLoading, isFetched, } = useAuthUser();
 
     useEffect(() => {
-        if (!isLoading && user && user.role !== "ADMIN") {
+        if (!isFetched || isLoading) return;
+
+        if (!user) {
+            router.replace("/login");
+            return;
+        }
+
+        if (user.role !== "ADMIN") {
             router.replace("/dashboard");
         }
-    }, [user, isLoading, router]);
+    }, [isFetched, user, router, isLoading]);
 
-    if (isLoading) return null;
-    if (!user || user.role !== "ADMIN") return null;
+    if (!isFetched || isLoading || !user || user.role !== "ADMIN") return <LayoutLoader />;
 
     return <>{children}</>;
 }
