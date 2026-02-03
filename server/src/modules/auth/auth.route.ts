@@ -22,25 +22,46 @@ const cookieOptions = {
     maxAge: 60 * 60 * 24 * 365 * 1000,
 };
 
-router.post("/login", validate(loginSchema), asyncHandler(async (req: Request, res: Response) => {
-    const { phone, password } = req.body
-    const user = await prisma.user.findUnique({
-        where: { phone },
-    });
+// router.post("/login", validate(loginSchema), asyncHandler(async (req: Request, res: Response) => {
+//     const { phone, password } = req.body
+//     const user = await prisma.user.findUnique({
+//         where: { phone },
+//     });
 
-    if (!user) throw new AppError('User not exist', 404)
+//     if (!user) throw new AppError('User not exist', 404)
 
-    const ok = await bcrypt.compare(password, user.password)
-    if (!ok) throw new AppError('Invalid credentials', 404)
+//     const ok = await bcrypt.compare(password, user.password)
+//     if (!ok) throw new AppError('Invalid credentials', 404)
 
-    const token = signToken({
-        id: user.id,
-        role: user.role,
-    });
+//     const token = signToken({
+//         id: user.id,
+//         role: user.role,
+//     });
 
-    res.cookie(env.COOKIE_NAME, token, cookieOptions);
-    res.json({ message: "Logged in" });
+//     res.cookie(env.COOKIE_NAME, token, cookieOptions);
+//     res.json({ message: "Logged in" });
+// }));
+
+router.post("/login", asyncHandler(async (req: Request, res: Response) => {
+    console.log("BODY:", req.body);
+
+    const { phone, password } = req.body;
+
+    console.log("DB lookup");
+
+    const user = await prisma.user.findUnique({ where: { phone } });
+
+    if (!user) { console.log("user not found"); throw new AppError('User not exist', 404) }
+
+    console.log("USER:", user);
+
+    const ok = await bcrypt.compare(password, user?.password);
+
+    console.log("COMPARE OK");
+
+    res.json({ ok: true });
 }));
+
 
 
 router.post("/logout", requireAuth, asyncHandler(async (_req: Request, res: Response) => {
