@@ -12,7 +12,7 @@ export interface CreatePayload {
     schoolId: string;
     billedByUserId: string;
     notes?: string;
-    documentNo: string
+    documentNo?: string
 
     items: EstimationItemPayload[];
 }
