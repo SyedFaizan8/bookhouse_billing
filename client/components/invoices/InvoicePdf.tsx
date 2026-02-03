@@ -315,7 +315,7 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
                         <View style={styles.header}>
                             {settings?.logoUrl && (
                                 <Image
-                                    src={'/api' + settings.logoUrl}
+                                    src={settings.logoUrl}
                                     style={styles.logo}
                                 />
                             )}
@@ -520,7 +520,7 @@ export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, s
                                         </View>
 
                                         <View style={styles.qrBox}>
-                                            {settings?.qrCodeUrl && <Image src={'/api' + settings.qrCodeUrl} style={styles.qr} />}
+                                            {settings?.qrCodeUrl && <Image src={settings.qrCodeUrl} style={styles.qr} />}
                                         </View>
                                     </View>
 

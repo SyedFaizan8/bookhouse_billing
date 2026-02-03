@@ -236,8 +236,8 @@ export default function EstimationPage() {
 
                     {/* Logo */}
                     {company.logoUrl && (
-                        <img
-                            src={'/api' + company.logoUrl}
+                        <Image
+                            src={company.logoUrl}
                             alt="Company Logo"
                             width={90}
                             height={90}

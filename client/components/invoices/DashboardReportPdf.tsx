@@ -199,7 +199,7 @@ export default function DashboardReportPdf({
                 <View style={styles.header}>
                     {settings.logoUrl && (
                         <Image
-                            src={'/api' + settings.logoUrl}
+                            src={settings.logoUrl}
                             style={styles.logo}
                         />
                     )}

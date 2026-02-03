@@ -213,8 +213,8 @@ export default function CreditNotePage() {
 
                     {/* Logo */}
                     {company.logoUrl && (
-                        <img
-                            src={'/api' + company.logoUrl}
+                        <Image
+                            src={company.logoUrl}
                             alt="Company Logo"
                             width={90}
                             height={90}
@@ -512,7 +512,7 @@ export default function CreditNotePage() {
                     {/* QR */}
                     <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
                         <img
-                            src={'/api' + company.qrCodeUrl}
+                            src={company.qrCodeUrl}
                             alt="UPI QR"
                             width={90}
                             height={90}

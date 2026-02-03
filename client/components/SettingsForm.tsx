@@ -60,13 +60,13 @@ export default function SettingsForm({
 
     const [logoPreview, setLogoPreview] = useState<string | null>(
         defaultValues.logoUrl
-            ? '/api' + defaultValues.logoUrl
+            ? defaultValues.logoUrl
             : null
     )
 
     const [qrPreview, setQrPreview] = useState<string | null>(
         defaultValues.qrCodeUrl
-            ? '/api' + defaultValues.qrCodeUrl
+            ? defaultValues.qrCodeUrl
             : null
     )
 

@@ -183,7 +183,7 @@ export default function CompanyStatementPdf({
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={'/api' + settings.logoUrl}
+                            src={settings.logoUrl}
                             style={styles.logo}
                         />
                     )}

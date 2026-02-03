@@ -524,7 +524,7 @@ export default function InvoicePage() {
                     {/* QR */}
                     <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
                         <img
-                            src={'/api' + company.qrCodeUrl}
+                            src={company.qrCodeUrl}
                             alt="UPI QR"
                             width={90}
                             height={90}

@@ -242,7 +242,7 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
                 <View style={styles.header}>
                     {settings?.logoUrl && (
                         <Image
-                            src={'/api' + settings.logoUrl}
+                            src={settings.logoUrl}
                             style={styles.logo}
                         />
                     )}
