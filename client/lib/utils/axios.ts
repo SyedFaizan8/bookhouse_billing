@@ -1,8 +1,8 @@
 import axios from "axios";
-import { API_BASE_URL, isProduction } from "../constants";
+import { API_BASE_URL } from "../constants";
 
 const api = axios.create({
-    baseURL: isProduction ? "/backend" : API_BASE_URL + '/api',
+    baseURL: API_BASE_URL + '/api',
     withCredentials: true,
 });
 
