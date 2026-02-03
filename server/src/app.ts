@@ -11,6 +11,8 @@ import { notFoundMiddleware } from "./middlewares/notfound.middleware.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 (async () => await createInitialAdmin())()
 
 app.use(helmet({
