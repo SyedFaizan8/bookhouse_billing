@@ -29,6 +29,7 @@ const ItemSchema = z.object({
 
 const Schema = z.object({
     items: z.array(ItemSchema).min(1),
+    documentNo: z.string().trim().min(1, "Document number required"),
     notes: z.string().optional(),
 });
 
@@ -51,6 +52,7 @@ export default function PurchaseCreditNotePage() {
     const form = useForm<Form>({
         resolver: zodResolver(Schema),
         defaultValues: {
+            documentNo: "",
             items: [
                 {
                     description: "",
@@ -132,6 +134,7 @@ export default function PurchaseCreditNotePage() {
             {
                 companyId: id,
                 billedByUserId: user.id,
+                documentNo: data.documentNo,
                 notes: data.notes,
                 items: data.items.map((i) => ({
                     description: i.description.trim(),
@@ -179,6 +182,53 @@ export default function PurchaseCreditNotePage() {
                         Credit issued against company invoice
                     </p>
                 </div>
+
+                {/* META */}
+                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border-b">
+
+                    <div>
+                        <label className="text-xs font-medium text-slate-600">
+                            Credit Note No
+                        </label>
+
+                        <input
+                            {...form.register("documentNo")}
+                            placeholder="Enter credit note number"
+                            className="
+                                    mt-1
+                                    w-full
+                                    border
+                                    rounded-md
+                                    px-3 py-2
+                                    text-sm
+                                    focus:ring-2 focus:ring-rose-500
+                                    outline-none
+                                "
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-medium text-slate-600">
+                            Date
+                        </label>
+
+                        <input
+                            type="date"
+                            defaultValue={new Date().toISOString().split("T")[0]}
+                            className="
+                                mt-1
+                                w-full
+                                border
+                                rounded-md
+                                px-3 py-2
+                                text-sm
+                            "
+                            readOnly
+                        />
+                    </div>
+
+                </div>
+
 
                 {/* COMPANY */}
                 <div className="p-5 border-b">

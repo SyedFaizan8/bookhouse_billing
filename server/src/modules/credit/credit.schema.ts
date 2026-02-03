@@ -14,6 +14,7 @@ export const CreateCreditNoteItemDTO = z.object({
 export const CreateCreditNoteDTO = z.object({
     schoolId: z.string().uuid(),
     billedByUserId: z.string().uuid(),
+    documentNo: z.string(),
 
     notes: z.string().optional().nullable(),
 
@@ -25,6 +26,7 @@ export type CreateCreditNoteDTOType = z.infer<typeof CreateCreditNoteDTO>;
 export const CreateCompanyCreditNoteDTO = z.object({
     companyId: z.string().uuid(),
     billedByUserId: z.string().uuid(),
+    documentNo: z.string(),
 
     notes: z.string().optional().nullable(),
 

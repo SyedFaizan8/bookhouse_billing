@@ -145,13 +145,15 @@ const styles = StyleSheet.create({
     },
 
     statusPill: {
-        paddingVertical: 2,
-        paddingHorizontal: 8,
-        borderRadius: 12,
-        fontSize: 8,
-        fontWeight: 700,
-        textAlign: "center",
-        minWidth: 52,
+        fontSize: 7,
+        minWidth: 40,
+        paddingVertical: 1,
+        paddingHorizontal: 6,
+        borderRadius: 10,
+
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
     },
 
 
@@ -275,14 +277,14 @@ export default function DashboardReportPdf({
                         </Text>
 
                         <View style={styles.cellStatus}>
-                            <Text
+                            <View
                                 style={[
                                     styles.statusPill,
                                     statusPillMap[r.status] || {},
                                 ]}
                             >
-                                {r.status}
-                            </Text>
+                                <Text>{r.status}</Text>
+                            </View>
                         </View>
 
                     </View>

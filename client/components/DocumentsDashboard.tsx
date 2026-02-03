@@ -16,7 +16,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-import { PDFDownloadLink } from "@react-pdf/renderer"
+import { pdf } from "@react-pdf/renderer"
 import DashboardReportPdf from "./invoices/DashboardReportPdf"
 import { useSettingsInfo } from "@/lib/queries/settings"
 import TableLoader from "./loaders/TableLoader"
@@ -66,8 +66,9 @@ export default function DocumentsDashboardPage() {
     const [type, setType] = useState<DocumentType>("ALL")
     const [month, setMonth] = useState<string>("")
 
-    const [pdfRows, setPdfRows] = useState<DashboardDocument[]>([])
     const [exportMode, setExportMode] = useState<"PDF" | "CSV" | null>(null)
+
+    const [loading, setLoading] = useState(false)
 
     const { data, fetchNextPage, hasNextPage } = useDashboardDocuments({ party, type, month })
 
@@ -91,20 +92,51 @@ export default function DocumentsDashboardPage() {
         hasNextPage,
     })
 
-    const handleExport = async (mode: "PDF" | "CSV") => {
+    const handleExport = async (mode: "PDF" | "CSV"): Promise<DashboardDocument[]> => {
         setExportMode(mode)
 
         const res = await exportQuery.refetch()
 
-        if (!res.data) return
-
-        if (mode === "PDF") setPdfRows(res.data)
+        const rows = res.data ?? []
 
         if (mode === "CSV") {
-            exportToCSV(res.data)
+            exportToCSV(rows)
             setExportMode(null)
         }
+
+        return rows
     }
+
+
+    const handlePdfDownload = async () => {
+        if (loading) return
+
+        try {
+            setLoading(true)
+
+            const rows = await handleExport("PDF")
+
+            const blob = await pdf(
+                <DashboardReportPdf
+                    rows={rows}
+                    settings={settings!}
+                    title="DOCUMENTS REPORT"
+                />
+            ).toBlob()
+
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = "documents-report.pdf"
+            a.click()
+            URL.revokeObjectURL(url)
+
+        } finally {
+            setExportMode(null)
+            setLoading(false)
+        }
+    }
+
 
     const columns: Column<DashboardDocument>[] = [
         {
@@ -271,50 +303,21 @@ export default function DocumentsDashboardPage() {
                         "
                     >
                         {/* PDF */}
-                        {pdfRows.length > 0 ? (
-                            <PDFDownloadLink
-                                document={
-                                    <DashboardReportPdf
-                                        rows={pdfRows}
-                                        settings={settings!}
-                                        title="DOCUMENTS REPORT"
-                                    />
-                                }
-                                fileName="documents-report.pdf"
-                                onClick={() => {
-                                    // reset after download
-                                    setTimeout(() => {
-                                        setPdfRows([])
-                                        setExportMode(null)
-                                    }, 300)
-                                }}
-                            >
-                                <Button
-                                    className="
-                                        h-10
-                                        bg-emerald-600
-                                        hover:bg-emerald-700
-                                        text-white
-                                        animate-bounce
-                                        cursor-pointer
-                                    "
-                                >
-                                    Download PDF
-                                </Button>
-                            </PDFDownloadLink>
-                        ) : (
-                            <Button
-                                className={`h-10 ${exportQuery.isFetching ? 'cursor-not-allowed  opacity-50' : 'cursor-pointer'}`}
-                                disabled={exportQuery.isFetching}
-                                onClick={() => handleExport("PDF")}
-                            >
-                                {exportQuery.isFetching && exportMode === "PDF" ? (
-                                    <span className="flex items-center gap-2">
-                                        <Spinner size={18} /> Preparing…
-                                    </span>
-                                ) : ("Export PDF")}
-                            </Button>
-                        )}
+                        <Button
+                            onClick={handlePdfDownload}
+                            disabled={loading}
+                            className={`
+                                h-10 text-white
+                                ${loading
+                                    ? "opacity-60 cursor-not-allowed"
+                                    : "bg-emerald-600 hover:bg-emerald-700"}
+                            `}
+                        >
+                            <span className="flex items-center gap-2">
+                                {loading && <Spinner size={18} />}
+                                {loading ? "Preparing PDF…" : "Export PDF"}
+                            </span>
+                        </Button>
 
                         {/* CSV */}
                         <Button
@@ -336,7 +339,6 @@ export default function DocumentsDashboardPage() {
                             className={`h-10 ${exportQuery.isFetching ? 'cursor-not-allowed  opacity-50' : 'cursor-pointer'}`}
                             onClick={() => {
                                 setMonth("")
-                                setPdfRows([])
                                 setExportMode(null)
                                 setType('ALL')
                                 setParty('SCHOOL')

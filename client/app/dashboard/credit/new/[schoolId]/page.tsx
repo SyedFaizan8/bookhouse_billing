@@ -4,7 +4,7 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -34,6 +34,7 @@ const ItemSchema = z.object({
 });
 
 const Schema = z.object({
+    documentNo: z.string().trim().min(1, "Credit note number required"), //updated
     items: z.array(ItemSchema).min(1, "At least one item required"),
     notes: z.string().optional(),
 });
@@ -69,6 +70,7 @@ export default function CreditNotePage() {
     const form = useForm<Form>({
         resolver: zodResolver(Schema),
         defaultValues: {
+            documentNo: "", //updated
             items: [
                 {
                     description: "",
@@ -88,6 +90,15 @@ export default function CreditNotePage() {
     });
 
     const items = useWatch({ control: form.control, name: "items" }) || [];
+
+    useEffect(() => {
+        if (invoiceNumberData?.nextNumber) {
+            form.setValue(
+                "documentNo",
+                invoiceNumberData.nextNumber.toString()
+            );
+        }
+    }, [invoiceNumberData, form]);
 
     /* ======================================================
        CALCULATIONS (SAFE)
@@ -162,7 +173,7 @@ export default function CreditNotePage() {
                 schoolId,
                 billedByUserId: user!.id,
                 notes: data.notes,
-
+                documentNo: data.documentNo, // updated one
                 items: data.items.map((i) => ({
                     description: i.description.trim(),
                     class: i.class?.trim() || null,
@@ -204,12 +215,42 @@ export default function CreditNotePage() {
 
                 {/* HEADER */}
                 <div className="text-center">
-                    <div className="flex justify-between text-sm text-slate-600">
-                        {invoiceNumberData && (
-                            <span>Credit Note #{invoiceNumberData.nextNumber}</span>
-                        )}
-                        <span>{formatDate()}</span>
+
+                    <div
+                        className="
+                            flex
+                            flex-col sm:flex-row
+                            sm:items-center
+                            justify-between
+                            gap-3
+                            text-sm text-slate-600
+                        "
+                    >
+                        {/* LEFT */}
+                        <div className="flex items-center gap-2">
+
+                            <span className="font-medium whitespace-nowrap">
+                                Credit Note #
+                            </span>
+
+                            <input
+                                {...form.register("documentNo")}
+                                className="
+                                    w-26
+                                    border rounded
+                                    py-0.5
+                                    text-sm text-center font-semibold
+                                    focus:ring-2 focus:ring-indigo-500
+                                "
+                            />
+                        </div>
+
+                        {/* RIGHT */}
+                        <span className="text-slate-500">
+                            {formatDate()}
+                        </span>
                     </div>
+
 
                     {/* Logo */}
                     {company.logoUrl && (
@@ -510,18 +551,18 @@ export default function CreditNotePage() {
                     </div>
 
                     {/* QR */}
-                    <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
-                        <img
+                    {company.qrCodeUrl && <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
+                        <Image
                             src={company.qrCodeUrl}
                             alt="UPI QR"
-                            width={90}
-                            height={90}
+                            width={100}
+                            height={100}
                             className="object-contain"
                         />
                         <p className="text-xs text-slate-500 mt-2">
                             Scan to pay
                         </p>
-                    </div>
+                    </div>}
                 </div>
 
                 {/* SIGNATURE */}

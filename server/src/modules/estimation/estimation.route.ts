@@ -40,66 +40,52 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
                 academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.ESTIMATION,
-                    scope: SequenceScope.SCHOOL
+                    scope: SequenceScope.SCHOOL,
                 },
             },
         });
 
-        let finalNumber: number;
+        const lastNumber = seq?.lastNumber ?? 0;
+        const userNo = Number(userDocumentNo);
 
-        if (userDocumentNo) {
-            const userNo = Number(userDocumentNo);
+        if (!userNo || userNo <= 0) throw new AppError("Invalid estimation number", 409);
 
-            if (Number.isNaN(userNo) || userNo <= 0) {
-                throw new Error("Invalid estimation number");
+        /* ✅ 1. check duplicate */
+        const exists = await tx.invoice.findFirst({
+            where: {
+                flowGroup: {
+                    schoolId,
+                    academicYearId: academicYear.id,
+                },
+                kind: DocumentKind.ESTIMATION,
+                documentNo: String(userNo)
             }
+        });
 
-            // 🔥 KEY LOGIC
-            finalNumber = Math.max(seq?.lastNumber ?? 0, userNo);
+        if (exists) throw new AppError(`Estimation #${userNo} already exists`, 409);
 
-            await tx.documentSequence.upsert({
-                where: {
-                    academicYearId_type_scope: {
-                        academicYearId: academicYear.id,
-                        type: DocumentKind.ESTIMATION,
-                        scope: SequenceScope.SCHOOL
-                    },
-                },
-                update: {
-                    lastNumber: finalNumber,
-                },
-                create: {
+        /* ✅ 2. enforce forward only */
+        if (userNo <= lastNumber) throw new AppError(`Number must be greater than ${lastNumber}`, 409);
+
+        /* ✅ 3. update sequence */
+        await tx.documentSequence.upsert({
+            where: {
+                academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.ESTIMATION,
                     scope: SequenceScope.SCHOOL,
-                    lastNumber: finalNumber
                 },
-            });
-
-        } else {
-            // auto increment
-            finalNumber = (seq?.lastNumber ?? 0) + 1;
-
-            await tx.documentSequence.upsert({
-                where: {
-                    academicYearId_type_scope: {
-                        academicYearId: academicYear.id,
-                        type: DocumentKind.ESTIMATION,
-                        scope: SequenceScope.SCHOOL
-                    },
-                },
-                update: {
-                    lastNumber: finalNumber,
-                },
-                create: {
-                    academicYearId: academicYear.id,
-                    type: DocumentKind.ESTIMATION,
-                    lastNumber: finalNumber,
-                    scope: SequenceScope.SCHOOL
-                },
-            });
-        }
-
+            },
+            update: {
+                lastNumber: userNo,
+            },
+            create: {
+                academicYearId: academicYear.id,
+                type: DocumentKind.ESTIMATION,
+                scope: SequenceScope.SCHOOL,
+                lastNumber: userNo,
+            },
+        });
 
         /* ======================================================
            3. FLOW GROUP (CUSTOMER LEDGER GROUP)
@@ -168,7 +154,7 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
 
         const estimation = await tx.invoice.create({
             data: {
-                documentNo: String(finalNumber),
+                documentNo: String(userNo),
                 date: new Date(),
                 kind: DocumentKind.ESTIMATION,
 

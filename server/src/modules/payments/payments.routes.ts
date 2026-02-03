@@ -178,70 +178,58 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
                 academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.PAYMENT,
-                    scope: SequenceScope.SCHOOL
+                    scope: SequenceScope.SCHOOL,
                 },
-            }
+            },
         });
-        let finalReceiptNo: number;
 
-        if (userReceiptNo) {
-            const userNo = Number(userReceiptNo);
+        const lastNumber = seq?.lastNumber ?? 0;
+        const userNo = Number(userReceiptNo);
 
-            if (Number.isNaN(userNo) || userNo <= 0) {
-                throw new Error("Invalid receipt number");
+        if (!userNo || userNo <= 0) throw new AppError("Invalid receipt number", 409);
+
+        /* ✅ 1. check duplicate */
+        const exists = await tx.payment.findFirst({
+            where: {
+                flowGroup: {
+                    schoolId,
+                    academicYearId: academicYear.id,
+                },
+                receiptNo: String(userNo),
             }
+        })
 
-            finalReceiptNo = Math.max(seq?.lastNumber ?? 0, userNo);
+        if (exists) throw new AppError(`Receipt No #${userNo} already exists`, 409);
 
-            await tx.documentSequence.upsert({
-                where: {
-                    academicYearId_type_scope: {
-                        academicYearId: academicYear.id,
-                        type: DocumentKind.PAYMENT,
-                        scope: SequenceScope.SCHOOL
-                    },
-                },
-                update: {
-                    lastNumber: finalReceiptNo,
-                },
-                create: {
+        /* ✅ 2. enforce forward only */
+        if (userNo <= lastNumber) throw new AppError(`Number must be greater than ${lastNumber}`, 409);
+
+        /* ✅ 3. update sequence */
+        await tx.documentSequence.upsert({
+            where: {
+                academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.PAYMENT,
                     scope: SequenceScope.SCHOOL,
-                    lastNumber: finalReceiptNo,
                 },
-            });
-
-        } else {
-            finalReceiptNo = (seq?.lastNumber ?? 0) + 1;
-
-            await tx.documentSequence.upsert({
-                where: {
-                    academicYearId_type_scope: {
-                        academicYearId: academicYear.id,
-                        type: DocumentKind.PAYMENT,
-                        scope: SequenceScope.SCHOOL
-                    },
-                },
-                update: {
-                    lastNumber: finalReceiptNo,
-                },
-                create: {
-                    academicYearId: academicYear.id,
-                    type: DocumentKind.PAYMENT,
-                    scope: SequenceScope.SCHOOL,
-                    lastNumber: finalReceiptNo
-                },
-            });
-        }
-
+            },
+            update: {
+                lastNumber: userNo,
+            },
+            create: {
+                academicYearId: academicYear.id,
+                type: DocumentKind.PAYMENT,
+                scope: SequenceScope.SCHOOL,
+                lastNumber: userNo,
+            },
+        });
 
         /* 4. CREATE PAYMENT */
         return tx.payment.create({
             data: {
                 academicYearId: academicYear.id,
                 flowGroupId: flowGroup.id,
-                receiptNo: finalReceiptNo,
+                receiptNo: userNo,
                 amount,
                 mode,
                 note:

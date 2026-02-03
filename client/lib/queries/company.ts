@@ -45,7 +45,6 @@ export const useCreateCompany = () => {
     return useMutation({
         mutationFn: async (data: CompanyFormValues) => (await api.post('/company/new', data)).data,
         onSuccess: (e) => {
-            console.log(e)
             qc.invalidateQueries({ queryKey: ["companies"] })
         },
     })
@@ -111,10 +110,7 @@ export function useCreateCompanyCreditNote() {
 
     return useMutation({
         mutationFn: async (payload: CreateCompanyPayload) =>
-            (await api.post(
-                "/credit/company/new",
-                payload
-            )).data,
+            (await api.post("/credit/company/new", payload)).data,
 
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["company-creditNote"] });

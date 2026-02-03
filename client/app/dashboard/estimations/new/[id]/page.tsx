@@ -257,7 +257,7 @@ export default function EstimationPage() {
                     {/* Logo */}
                     {company.logoUrl && (
                         <Image
-                            src={'/api' + company.logoUrl}
+                            src={company.logoUrl}
                             alt="Company Logo"
                             width={90}
                             height={90}
@@ -555,18 +555,18 @@ export default function EstimationPage() {
                     </div>
 
                     {/* QR */}
-                    <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
-                        <img
+                    {company.qrCodeUrl && <div className="w-full sm:w-[32%] border rounded-md p-4 flex flex-col items-center justify-center">
+                        <Image
                             src={company.qrCodeUrl}
                             alt="UPI QR"
-                            width={90}
-                            height={90}
+                            width={100}
+                            height={100}
                             className="object-contain"
                         />
                         <p className="text-xs text-slate-500 mt-2">
                             Scan to pay
                         </p>
-                    </div>
+                    </div>}
                 </div>
 
                 {/* SIGNATURE */}

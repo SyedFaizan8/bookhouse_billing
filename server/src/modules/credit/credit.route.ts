@@ -13,7 +13,7 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
 
     if (parsed.error) throw new AppError('Invalid request data', 400)
 
-    const { items, billedByUserId, schoolId, notes } = parsed.data
+    const { items, billedByUserId, schoolId, documentNo: userDocumentNo, notes } = parsed.data
 
     if (!items.length) throw new AppError('At least one item is required', 400)
 
@@ -58,26 +58,57 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
            3. DOCUMENT NUMBER (CREDIT NOTE)
         ====================================================== */
 
-        const seq = await tx.documentSequence.upsert({
+        const seq = await tx.documentSequence.findUnique({
             where: {
                 academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.CREDIT_NOTE,
-                    scope: SequenceScope.SCHOOL
+                    scope: SequenceScope.SCHOOL,
+                },
+            },
+        });
+
+        const lastNumber = seq?.lastNumber ?? 0;
+        const userNo = Number(userDocumentNo);
+
+        if (!userNo || userNo <= 0) throw new AppError("Invalid credit note number", 409);
+
+        /* ✅ 1. check duplicate */
+        const exists = await tx.invoice.findFirst({
+            where: {
+                flowGroup: {
+                    schoolId,
+                    academicYearId: academicYear.id,
+                },
+                kind: DocumentKind.CREDIT_NOTE,
+                documentNo: String(userNo)
+            }
+        });
+
+        if (exists) throw new AppError(`Credit note #${userNo} already exists`, 409);
+
+        /* ✅ 2. enforce forward only */
+        if (userNo <= lastNumber) throw new AppError(`Number must be greater than ${lastNumber}`, 409);
+
+        /* ✅ 3. update sequence */
+        await tx.documentSequence.upsert({
+            where: {
+                academicYearId_type_scope: {
+                    academicYearId: academicYear.id,
+                    type: DocumentKind.CREDIT_NOTE,
+                    scope: SequenceScope.SCHOOL,
                 },
             },
             update: {
-                lastNumber: { increment: 1 },
+                lastNumber: userNo,
             },
             create: {
                 academicYearId: academicYear.id,
                 type: DocumentKind.CREDIT_NOTE,
-                lastNumber: 1,
-                scope: SequenceScope.SCHOOL
+                scope: SequenceScope.SCHOOL,
+                lastNumber: userNo,
             },
         });
-
-        const documentNo = String(seq.lastNumber);
 
         /* ======================================================
            4. CALCULATIONS (SERVER = SOURCE OF TRUTH)
@@ -126,7 +157,7 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
 
         const creditNote = await tx.invoice.create({
             data: {
-                documentNo,
+                documentNo: String(userNo),
                 date: new Date(),
                 kind: DocumentKind.CREDIT_NOTE,
 
@@ -169,7 +200,7 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
 
     if (!parsed.success) throw new AppError('Invalid request data', 400)
 
-    const { companyId, billedByUserId, notes, items } = parsed.data;
+    const { companyId, billedByUserId, documentNo: userDocumentNo, notes, items } = parsed.data;
 
     if (!items.length) throw new AppError('At least one item is required', 400)
 
@@ -213,26 +244,30 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
            3. DOCUMENT NUMBER (CREDIT NOTE)
         ====================================================== */
 
-        const seq = await tx.documentSequence.upsert({
+        const userNo = Number(userDocumentNo);
+
+        if (!userNo || userNo <= 0) throw new AppError("Invalid credit note number", 409);
+
+        /* ✅ 3. update sequence */
+        await tx.documentSequence.upsert({
             where: {
                 academicYearId_type_scope: {
                     academicYearId: academicYear.id,
                     type: DocumentKind.CREDIT_NOTE,
-                    scope: SequenceScope.COMPANY
+                    scope: SequenceScope.SCHOOL,
                 },
             },
             update: {
-                lastNumber: { increment: 1 },
+                lastNumber: userNo,
             },
             create: {
                 academicYearId: academicYear.id,
                 type: DocumentKind.CREDIT_NOTE,
-                lastNumber: 1,
-                scope: SequenceScope.COMPANY
+                scope: SequenceScope.SCHOOL,
+                lastNumber: userNo,
             },
         });
 
-        const documentNo = String(seq.lastNumber);
 
         /* ======================================================
            4. CALCULATIONS (SERVER = SOURCE OF TRUTH)
@@ -280,7 +315,7 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
 
         const creditNote = await tx.invoice.create({
             data: {
-                documentNo,
+                documentNo: String(userNo),
                 date: new Date(),
                 kind: DocumentKind.CREDIT_NOTE,
 

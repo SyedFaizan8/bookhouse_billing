@@ -6,7 +6,6 @@ import { InvoicePdfData } from "../types/invoice";
 import { PaymentRow } from "../types/payments";
 import { SchoolStatement } from "../types/school";
 import { CustomerFormValues } from "../validators/customer.schema";
-import { toast } from "sonner";
 
 
 // GET LIST OF SCHOOLS
@@ -48,9 +47,7 @@ export const useCreateSchool = () => {
         mutationFn: async (data: CustomerFormValues) => (await api.post('/schools/new', data)).data,
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["schools"] })
-            toast.success("School created successfully")
-        },
-        onError: (e) => toast.error(e.message)
+        }
 
     })
 }
