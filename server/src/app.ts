@@ -31,6 +31,15 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api", routes);
 
+// health check
+app.use("/api/health", (_req, res) => {
+    res.status(200).json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        message: "Backend is running"
+    })
+});
+
 app.use(notFoundMiddleware)
 app.use(errorMiddleware);
 
