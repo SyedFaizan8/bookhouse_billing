@@ -27,3 +27,10 @@ export function useLogout() {
         },
     });
 }
+
+
+export function useLogin() {
+    return useMutation({
+        mutationFn: async (data: { phone: string; password: string }) => (await api.post('/auth/login', data)).data
+    });
+}

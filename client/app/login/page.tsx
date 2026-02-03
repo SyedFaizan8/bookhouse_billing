@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, Phone, Lock } from "lucide-react";
-import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { API_BASE_URL } from "@/lib/constants";
+import { useLogin } from "@/lib/queries/auth";
+import { handleApiError } from "@/lib/utils/getApiError";
+import Spinner from "@/components/Spinner";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -14,7 +15,8 @@ export default function LoginPage() {
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [show, setShow] = useState(false);
-    const [loading, setLoading] = useState(false);
+
+    const loginMutation = useLogin();
 
     const submit = async () => {
         if (!phone || !password) {
@@ -27,24 +29,13 @@ export default function LoginPage() {
             return;
         }
 
-        try {
-            setLoading(true);
-
-            await axios.post(
-                `${API_BASE_URL}/api/auth/login`,
-                { phone, password },
-                { withCredentials: true }
-            );
-
-            toast.success("Welcome back 👋");
-            router.replace("/dashboard/year");
-        } catch (err: any) {
-            toast.error(
-                err?.response?.data?.message || "Invalid phone or password"
-            );
-        } finally {
-            setLoading(false);
-        }
+        loginMutation.mutate({ phone, password }, {
+            onSuccess: () => {
+                toast.success("Welcome back 👋");
+                router.replace("/dashboard/year");
+            },
+            onError: (e) => toast.error(handleApiError(e).message)
+        });
     };
 
     return (
@@ -161,7 +152,7 @@ export default function LoginPage() {
                 {/* BUTTON */}
                 <motion.button
                     whileTap={{ scale: 0.96 }}
-                    disabled={loading}
+                    disabled={loginMutation.isPending}
                     onClick={submit}
                     className="
                         w-full
@@ -180,7 +171,9 @@ export default function LoginPage() {
                         disabled:opacity-60
                     "
                 >
-                    {loading ? "Signing in..." : "Login"}
+                    {loginMutation.isPending ? <span className="flex items-center justify-center gap-2">
+                        <Spinner size={18} /> Logging in...
+                    </span> : "Login"}
                 </motion.button>
 
                 {/* FOOTER */}

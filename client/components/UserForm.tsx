@@ -7,6 +7,7 @@ import { UserFormValues } from "@/lib/validators/user.schema"
 import { handleApiError } from "@/lib/utils/getApiError"
 import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
+import Spinner from "./Spinner"
 
 export default function UserForm({
     defaultValues,
@@ -124,7 +125,9 @@ export default function UserForm({
                     className="rounded-md bg-indigo-600 px-4 py-2 text-white disabled:opacity-50"
                 >
                     {isLoading
-                        ? "Saving..."
+                        ? <span className="flex items-center justify-center gap-2">
+                            <Spinner size={18} /> Saving...
+                        </span>
                         : mode === "create"
                             ? "Save User"
                             : "Update User"}
