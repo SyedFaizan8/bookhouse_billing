@@ -4,8 +4,11 @@ import { NextRequest, NextResponse } from "next/server"
 const BACKEND_URL = isProduction ? "http://127.0.0.1:4000" : "http://localhost:4000"
 
 async function handler(req: NextRequest) {
-    const path = req.nextUrl.pathname.replace("/api", "")
-    const url = BACKEND_URL + path
+    // const path = req.nextUrl.pathname.replace("/api", "")
+    // const url = BACKEND_URL + path
+
+    const path = req.nextUrl.pathname
+    const url = BACKEND_URL + path + req.nextUrl.search
 
     const res = await fetch(url, {
         method: req.method,
