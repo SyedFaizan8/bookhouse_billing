@@ -9,7 +9,7 @@ import {
 
 import { MoreVertical } from "lucide-react"
 
-type Action = {
+export type Action = {
     label: string
     onClick: () => void
     variant?: "default" | "danger" | "warning"
@@ -52,8 +52,7 @@ export default function RowActions({ actions }: Props) {
             >
                 {actions.map((action, idx) => (
                     <div key={idx}>
-                        {/* divider before destructive / warning actions */}
-                        {idx !== 0 && action.variant && (
+                        {idx !== 0 && (
                             <div className="my-1 h-px bg-slate-200" />
                         )}
 

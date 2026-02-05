@@ -29,6 +29,7 @@ router.post("/login", validate(loginSchema), asyncHandler(async (req: Request, r
     });
 
     if (!user) throw new AppError('User not exist', 404)
+    if (!user.active) throw new AppError('User account deactivated', 409)
 
     const ok = await bcrypt.compare(password, user.password)
     if (!ok) throw new AppError('Invalid credentials', 404)

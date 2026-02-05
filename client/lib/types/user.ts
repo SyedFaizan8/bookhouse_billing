@@ -3,7 +3,8 @@ export type User = {
     name: string
     phone: string
     email: string
-    role: "SUPERADMIN" | "ADMIN" | "STAFF"
+    role: "ADMIN" | "STAFF"
+    active: boolean
     createdAt: string
 }
 

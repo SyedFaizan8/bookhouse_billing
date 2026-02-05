@@ -8,7 +8,6 @@ import { Plus, Search, Users } from "lucide-react"
 import Breadcrumbs from "@/components/Breadcrumbs"
 import ResponsiveTable, { Column } from "@/components/ResponsiveTable"
 import RowActions from "@/components/RowActions"
-import DeleteConfirmModal from "@/components/DeleteConfirmModal"
 import Pagination from "@/components/Pagination"
 import TableLoader from "@/components/loaders/TableLoader"
 import EmptyState from "@/components/EmptyState"
@@ -90,6 +89,22 @@ export default function UsersPage() {
             render: (u) => (
                 <span className={`rounded-full ${u.role === 'STAFF' ? "bg-slate-100" : u.role === 'ADMIN' ? 'bg-green-200' : 'bg-yellow-200'} px-2 py-0.5 text-xs font-medium`}>
                     {u.role}
+                </span>
+            ),
+        },
+        {
+            key: "active",
+            header: "Status",
+            className: "hidden md:table-cell",
+            render: (u) => (
+                <span
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold
+                        ${u.active
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-red-100 text-red-600"
+                        }`}
+                >
+                    {u.active ? "Active" : "Deactivated"}
                 </span>
             ),
         },

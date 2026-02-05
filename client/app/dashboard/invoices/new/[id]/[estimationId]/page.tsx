@@ -298,7 +298,7 @@ export default function EstimationPage() {
 
                 {/* CUSTOMER */}
                 <div className="border rounded-md p-4 bg-slate-50">
-                    <div className="font-bold text-slate-700">BILL TO</div>
+                    <div className="font-bold text-slate-700 underline">BILL TO</div>
 
                     {/* School name */}
                     <div className="font-semibold text-slate-900">

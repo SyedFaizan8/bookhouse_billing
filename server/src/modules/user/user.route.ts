@@ -1,12 +1,8 @@
 import { Router } from "express";
 import { validate } from "../../middlewares/validate.middleware.js";
-import {
-    createUserSchema,
-    updateUserSchema,
-} from "./user.schema.js";
+import { updateUserSchema, } from "./user.schema.js";
 
 import type { Request, Response } from "express";
-
 
 import bcrypt from "bcryptjs";
 import { prisma } from "../../prisma.js";
@@ -23,6 +19,7 @@ router.get("/", asyncHandler(async (_req: Request, res: Response) => {
             name: true,
             phone: true,
             role: true,
+            active: true,
             createdAt: true,
         },
         orderBy: {
@@ -110,6 +107,7 @@ router.get("/:id/edit", asyncHandler(async (req: Request, res: Response) => {
             phone: true,
             role: true,
             email: true,
+            active: true,
             createdAt: true,
             modifiedAt: true,
         },

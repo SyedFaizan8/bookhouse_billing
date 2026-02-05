@@ -319,7 +319,7 @@ export default function EstimationPage() {
 
                 {/* School */}
                 <div className="border rounded-md p-4 bg-slate-50">
-                    <div className="font-bold text-slate-700">TO</div>
+                    <div className="font-bold text-slate-700 underline">TO</div>
 
                     {/* School name */}
                     <div className="font-semibold text-slate-900">

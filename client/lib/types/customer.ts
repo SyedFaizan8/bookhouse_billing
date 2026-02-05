@@ -48,6 +48,7 @@ export type InvoiceRow = {
     documentNo: string;
     date: string;
     totalQty: number;
+    pending?: number;
     amount: number;
     createdAt: string;
     status: "ISSUED" | "VOIDED";

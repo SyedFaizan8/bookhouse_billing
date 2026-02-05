@@ -13,6 +13,7 @@ export const userCreateSchema = z.object({
         ),
     role: z.enum(["ADMIN", "STAFF"]),
     password: z.string().min(6, "Password must be at least 6 characters"),
+    active: z.boolean()
 })
 
 export const userUpdateSchema = userCreateSchema

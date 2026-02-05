@@ -1,3 +1,563 @@
+// import { SettingsInfoResponse } from "@/lib/queries/settings";
+// import { InvoicePdfData, Item } from "@/lib/types/invoice";
+// import { formatMoney } from "@/lib/utils/formatters";
+// import { numberToWords } from "@/lib/utils/numberToWords";
+// import {
+//     Document,
+//     Page,
+//     Text,
+//     View,
+//     StyleSheet,
+//     Image,
+//     Font,
+// } from "@react-pdf/renderer";
+
+// /* ================= FONT REGISTRATION ================= */
+
+// Font.register({
+//     family: "Mono",
+//     fonts: [
+//         { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400, },
+//         { src: "/fonts/JetBrainsMono-Italic.ttf", fontWeight: 400, fontStyle: "italic" },
+//         { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+//     ],
+// })
+
+// /* ================= LAYOUT CONSTANTS ================= */
+
+// const PAGE_HEIGHT = 842; // A4
+// const PAGE_PADDING = 72;
+// const HEADER_HEIGHT = 210;
+// const TABLE_HEADER_HEIGHT = 28;
+// const ROW_HEIGHT = 66;
+// const FOOTER_HEIGHT = 260;
+
+// /* ================= STYLES ================= */
+
+
+// const styles = StyleSheet.create({
+//     page: {
+//         padding: 36,
+//         fontSize: 10,
+//         fontFamily: "Mono",
+//         color: "#0f172a",
+//     },
+
+//     bold: { fontWeight: 700 },
+//     muted: { fontSize: 9, color: "#475569" },
+
+//     rowBetween: {
+//         flexDirection: "row",
+//         justifyContent: "space-between",
+//         marginBottom: 6,
+//     },
+
+//     header: { alignItems: "center", marginBottom: 14 },
+//     logo: { height: 56, marginBottom: 6 },
+//     title: { fontSize: 20, fontWeight: 700, color: "#1e3a8a" },
+//     companyInfo: {
+//         textAlign: "center",
+//         fontSize: 9,
+//         color: "#475569",
+//     },
+
+//     badge: {
+//         alignSelf: "center",
+//         backgroundColor: "#eef2ff",
+//         paddingVertical: 5,
+//         paddingHorizontal: 18,
+//         borderRadius: 16,
+//         fontWeight: 700,
+//         marginBottom: 12,
+//     },
+
+//     box: {
+//         border: "1px solid #e5e7eb",
+//         padding: 10,
+//         borderRadius: 6,
+//         marginBottom: 12,
+//         backgroundColor: "#f8fafc",
+//     },
+
+//     sectionTitle: {
+//         fontWeight: 700,
+//         fontSize: 10,
+//         textDecoration: "underline",
+//         marginBottom: 4,
+//     },
+
+//     /* ================= TABLE ================= */
+
+//     tableHeader: {
+//         flexDirection: "row",
+//         backgroundColor: "#f1f5f9",
+//         borderBottom: "1px solid #cbd5f5",
+//         paddingVertical: 6,
+//         fontWeight: 700,
+//     },
+
+//     row: {
+//         flexDirection: "row",
+//         paddingVertical: 6,
+//         borderBottom: "1px solid #e5e7eb",
+//         wrap: false,
+//     },
+
+//     altRow: { backgroundColor: "#fafafa" },
+
+//     cellSl: { width: 28, textAlign: "center" },
+//     cellDesc: { width: 190, paddingRight: 4 },
+//     cellClass: { width: 45, textAlign: "center" },
+//     cellCompany: { width: 110, paddingRight: 4 },
+//     cellQty: { width: 40, textAlign: "center" },
+
+//     cellRate: {
+//         width: 75,
+//         textAlign: "right",
+//         fontFamily: "Mono",
+//         fontSize: 9,
+//         whiteSpace: "nowrap",
+//         fontWeight: 600,
+//     },
+
+//     cellNet: {
+//         width: 90,
+//         textAlign: "right",
+//         fontFamily: "Mono",
+//         fontSize: 9,
+//         whiteSpace: "nowrap",
+//         fontWeight: 600,
+//     },
+
+//     cellDiscPct: {
+//         width: 45,
+//         textAlign: "center",
+//         fontSize: 9,
+//     },
+
+//     continued: {
+//         marginTop: 8,
+//         textAlign: "right",
+//         fontSize: 9,
+//         fontStyle: "italic",
+//         color: "#475569",
+//     },
+
+//     footerBlock: { marginTop: 12 },
+
+//     totalsBox: {
+//         width: 240,
+//         alignSelf: "flex-end",
+//         border: "1px solid #c7d2fe",
+//         padding: 10,
+//         borderRadius: 6,
+//         backgroundColor: "#eef2ff",
+//     },
+
+//     totalRow: {
+//         flexDirection: "row",
+//         justifyContent: "space-between",
+//     },
+
+//     totalBold: {
+//         fontWeight: 700,
+//         borderTop: "1px solid #818cf8",
+//         paddingTop: 6,
+//         marginTop: 6,
+//     },
+
+//     amountWords: {
+//         marginTop: 10,
+//         padding: 8,
+//         border: "1px solid #e5e7eb",
+//         borderRadius: 6,
+//         fontSize: 9,
+//         fontStyle: "italic",
+//         backgroundColor: "#f9fafb",
+//     },
+
+//     twoCol: {
+//         flexDirection: "row",
+//         justifyContent: "space-between",
+//         marginTop: 14,
+//         gap: 10,
+//     },
+
+//     bankBox: {
+//         width: 300,
+//         border: "1px solid #e5e7eb",
+//         padding: 10,
+//         borderRadius: 6,
+//     },
+
+//     qrBox: {
+//         width: 120,
+//         border: "1px solid #e5e7eb",
+//         padding: 10,
+//         borderRadius: 6,
+//         alignItems: "center",
+//     },
+
+//     qr: { width: 90, height: 90, marginTop: 6 },
+
+//     billedBy: {
+//         marginTop: 16,
+//         alignSelf: "flex-end",
+//         textAlign: "right",
+//     },
+
+//     footer: {
+//         marginTop: 16,
+//         textAlign: "center",
+//         fontSize: 9,
+//         color: "#64748b",
+//     },
+
+//     watermark: {
+//         position: "absolute",
+//         top: "40%",
+//         left: "8%",
+//         width: "100%",
+//         textAlign: "center",
+//         fontSize: 90,
+//         fontWeight: 800,
+//         color: "#dc262620",
+//         transform: "rotate(-30deg)",
+//         letterSpacing: 6,
+//     },
+
+//     statusRibbon: {
+//         backgroundColor: "#fee2e2",
+//         color: "#b91c1c",
+//         paddingVertical: 4,
+//         paddingHorizontal: 12,
+//         borderRadius: 4,
+//         fontSize: 10,
+//         fontWeight: 700,
+//         textAlign: "center",
+//         alignSelf: "center",
+//     },
+// })
+
+
+// /* ================= DYNAMIC PAGINATION ================= */
+
+// function paginate(items: Item[]) {
+//     const pages: any[][] = [];
+//     let current: Item[] = [];
+//     let usedHeight = HEADER_HEIGHT + TABLE_HEADER_HEIGHT;
+
+//     items.forEach((item, idx) => {
+//         const isLastItem = idx === items.length - 1;
+//         const footerReserve = isLastItem ? FOOTER_HEIGHT : 0;
+
+//         if (
+//             usedHeight + ROW_HEIGHT + footerReserve >
+//             PAGE_HEIGHT - PAGE_PADDING
+//         ) {
+//             pages.push(current);
+//             current = [];
+//             usedHeight = TABLE_HEADER_HEIGHT;
+//         }
+
+//         current.push(item);
+//         usedHeight += ROW_HEIGHT;
+//     });
+
+//     if (current.length) pages.push(current);
+//     return pages;
+// }
+
+// /* ================= PDF ================= */
+
+// export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, settings: SettingsInfoResponse }) {
+
+//     const pages = paginate(data.items);
+//     const totalPages = pages.length;
+
+//     return (
+//         <Document>
+//             {pages.map((pageRows, pageIndex) => {
+//                 const isLast = pageIndex === totalPages - 1;
+
+//                 return (
+//                     <Page key={pageIndex} size="A4" style={styles.page}>
+
+//                         {data.status === "VOIDED" && (
+//                             <Text style={styles.watermark}>
+//                                 VOIDED
+//                             </Text>
+//                         )}
+//                         {/* HEADER */}
+//                         <View style={styles.rowBetween}>
+//                             <Text>{String(data.kind).toLowerCase() + " no: "}{data.documentNo}</Text>
+//                             <View>
+// <Text>{new Date(data.date).toLocaleDateString("en-IN", {
+//     day: "2-digit",
+//     month: "long",
+//     year: "numeric",
+// })}
+// </Text>
+//                                 {totalPages > 1 && <Text>
+//                                     Page {pageIndex + 1} / {totalPages}
+//                                 </Text>}
+
+//                                 {data.status === "VOIDED" && (
+//                                     <View style={{ width: "100%", marginTop: 6 }}>
+//                                         <Text style={styles.statusRibbon}>
+//                                             VOIDED
+//                                         </Text>
+//                                     </View>
+//                                 )}
+//                             </View>
+//                         </View>
+
+//                         <View style={styles.header}>
+//                             {settings?.logoUrl && (
+//                                 <Image
+//                                     src={settings.logoUrl}
+//                                     style={styles.logo}
+//                                 />
+//                             )}
+
+//                             <Text style={styles.title}>
+//                                 {settings?.name?.toUpperCase()}
+//                             </Text>
+
+//                             {/* Address */}
+//                             {(settings?.street ||
+//                                 settings?.town ||
+//                                 settings?.district ||
+//                                 settings?.state ||
+//                                 settings?.pincode) && (
+//                                     <Text style={styles.companyInfo}>
+//                                         {[
+//                                             settings.street,
+//                                             settings.town,
+//                                             settings.district,
+//                                             settings.state,
+//                                             settings.pincode,
+//                                         ]
+//                                             .filter(Boolean)
+//                                             .join(", ")}
+//                                     </Text>
+//                                 )}
+
+//                             {/* Contact */}
+//                             <Text style={styles.companyInfo}>
+//                                 Phone: {settings?.phone}
+//                                 {settings?.phoneSecondary && `, ${settings.phoneSecondary}`}
+//                                 {settings?.phoneTertiary && `, ${settings.phoneTertiary}`}
+//                             </Text>
+
+//                             {/* Email */}
+//                             {settings?.email && (
+//                                 <Text style={styles.companyInfo}>
+//                                     Email: {settings.email}
+//                                 </Text>
+//                             )}
+
+//                             {/* GST */}
+//                             {settings?.gst && (
+//                                 <Text style={styles.companyInfo}>
+//                                     GSTIN: {settings.gst}
+//                                 </Text>
+//                             )}
+//                         </View>
+
+
+
+//                         <Text style={styles.badge}>{String(data.kind) === "INVOICE" ? "BILL OF SUPPLY" : data.kind}</Text>
+
+//                         {pageIndex === 0 && (
+//                             <View style={styles.box}>
+//                                 <Text style={styles.sectionTitle}>
+//                                     {String(data.kind) === "INVOICE" ? "BILL TO" : "TO"}
+//                                 </Text>
+
+//                                 <Text style={styles.bold}>
+//                                     {data.school.name}
+//                                 </Text>
+
+//                                 {data.school.contactPerson && (
+//                                     <Text>
+//                                         Attn: {data.school.contactPerson}
+//                                     </Text>
+//                                 )}
+
+//                                 {(data.school.street ||
+//                                     data.school.town ||
+//                                     data.school.district ||
+//                                     data.school.state ||
+//                                     data.school.pincode) && (
+//                                         <Text>
+//                                             {[
+//                                                 data.school.street,
+//                                                 data.school.town,
+//                                                 data.school.district,
+//                                                 data.school.state,
+//                                                 data.school.pincode,
+//                                             ]
+//                                                 .filter(Boolean)
+//                                                 .join(", ")}
+//                                         </Text>
+//                                     )}
+
+//                                 <Text>
+//                                     Phone: {data.school.phone}
+//                                 </Text>
+
+//                                 {data.school.email && (
+//                                     <Text>
+//                                         Email: {data.school.email}
+//                                     </Text>
+//                                 )}
+
+//                                 {data.school.gst && (
+//                                     <Text>
+//                                         GSTIN: {data.school.gst}
+//                                     </Text>
+//                                 )}
+//                             </View>
+//                         )}
+
+
+//                         {/* TABLE HEADER */}
+//                         <View style={styles.tableHeader}>
+//                             <Text style={styles.cellSl}>#</Text>
+//                             <Text style={styles.cellDesc}>Description</Text>
+//                             <Text style={styles.cellClass}>Class</Text>
+//                             <Text style={styles.cellCompany}>Company</Text>
+//                             <Text style={styles.cellQty}>Qty</Text>
+//                             <Text style={styles.cellRate}>Rate</Text>
+//                             <Text style={styles.cellDiscPct}>Disc%</Text>
+//                             <Text style={styles.cellNet}>Total</Text>
+//                         </View>
+
+
+
+//                         {/* ROWS */}
+//                         {
+//                             pageRows.map((r, idx) => (
+//                                 <View
+//                                     key={idx}
+//                                     style={idx % 2 ? [styles.row, styles.altRow] : styles.row} // change to {}
+//                                 >
+//                                     <Text style={styles.cellSl}>
+//                                         {pageIndex * 100 + idx + 1}
+//                                     </Text>
+
+//                                     <Text style={styles.cellDesc}>{r.description}</Text>
+
+//                                     <Text style={styles.cellClass}>{r.class || "-"}</Text>
+
+//                                     <Text style={styles.cellCompany}>{r.company || "-"}</Text>
+
+//                                     <Text style={styles.cellQty}>{r.quantity}</Text>
+
+//                                     <Text style={styles.cellRate}>{formatMoney(r.rate)}</Text>
+
+//                                     <Text style={styles.cellDiscPct}>{r.discountPercent}%</Text>
+
+//                                     <Text style={styles.cellNet}>{formatMoney(r.netAmount)}</Text>
+//                                 </View>
+
+//                             ))
+//                         }
+
+//                         {/* CONTINUED */}
+//                         {
+//                             !isLast && (
+//                                 <Text style={styles.continued}>
+//                                     Continued on next page →
+//                                 </Text>
+//                             )
+//                         }
+
+//                         {/* FOOTER (ATOMIC) */}
+//                         {
+//                             isLast && (
+//                                 <View wrap={false} style={styles.footerBlock}>
+//                                     <View style={styles.totalsBox}>
+//                                         <View style={styles.totalRow}>
+//                                             <Text>Total Quantity</Text>
+//                                             <Text>{data.totals.totalQuantity}</Text>
+//                                         </View>
+
+//                                         <View style={styles.totalRow}>
+//                                             <Text>Gross Amount</Text>
+//                                             <Text>{formatMoney(data.totals.grossAmount)}</Text>
+//                                         </View>
+
+//                                         <View style={styles.totalRow}>
+//                                             <Text>Total Discount</Text>
+//                                             <Text>-{formatMoney(data.totals.totalDiscount)}</Text>
+//                                         </View>
+
+//                                         <View style={[styles.totalRow, styles.totalBold]}>
+//                                             <Text>Final Amount</Text>
+//                                             <Text>{formatMoney(data.totals.netAmount)}</Text>
+//                                         </View>
+//                                     </View>
+
+
+//                                     <View style={styles.amountWords}>
+//                                         <Text>
+//                                             Amount Chargeable (in words):{" "}
+//                                             <Text style={{ fontWeight: 700 }}>
+//                                                 {numberToWords(data.totals.netAmount)}
+//                                             </Text>
+//                                         </Text>
+//                                     </View>
+
+//                                     <View style={styles.twoCol}>
+//                                         <View style={styles.bankBox}>
+//                                             {settings?.name && <Text>Account: {settings.name}</Text>}
+//                                             {settings?.bankName && <Text>Bank: {settings.bankName}</Text>}
+//                                             {settings?.accountNo && <Text>A/C No: {settings.accountNo}</Text>}
+//                                             {settings?.ifsc && <Text>IFSC: {settings.ifsc}</Text>}
+//                                             {settings?.upi && <Text>UPI: {settings.upi}</Text>}
+//                                         </View>
+
+//                                         <View style={styles.qrBox}>
+//                                             {settings?.qrCodeUrl && <Image src={settings.qrCodeUrl} style={styles.qr} />}
+//                                         </View>
+//                                     </View>
+
+//                                     <View style={styles.billedBy}>
+//                                         <Text>For {settings?.name}</Text>
+//                                         <Text style={{ fontWeight: 700, marginTop: 12 }}>
+//                                             Authorized Signatory
+//                                         </Text>
+//                                         <Text>Recorded By: {data.billedBy}</Text>
+
+//                                         {data.status === "VOIDED" && (
+//                                             <View style={{ marginTop: 6 }}>
+//                                                 <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+//                                                     Voided By: {data.voidedBy}
+//                                                 </Text>
+//                                                 <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+//                                                     Voided At:{" "}
+//                                                     {new Date(data.voidedAt!).toLocaleString("en-IN")}
+//                                                 </Text>
+//                                             </View>
+//                                         )}
+
+//                                     </View>
+//                                     <Text style={styles.footer}>
+//                                         This is a computer-generated invoice
+//                                     </Text>
+//                                 </View>
+//                             )
+//                         }
+
+//                     </Page >
+//                 );
+//             })}
+//         </Document >
+//     );
+// }
+
 import { SettingsInfoResponse } from "@/lib/queries/settings";
 import { InvoicePdfData, Item } from "@/lib/types/invoice";
 import { formatMoney } from "@/lib/utils/formatters";
@@ -12,52 +572,66 @@ import {
     Font,
 } from "@react-pdf/renderer";
 
-/* ================= FONT REGISTRATION ================= */
+/* ================= FONT ================= */
 
 Font.register({
     family: "Mono",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400, },
-        { src: "/fonts/JetBrainsMono-Italic.ttf", fontWeight: 400, fontStyle: "italic" },
+        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
         { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
     ],
-})
-
-/* ================= LAYOUT CONSTANTS ================= */
-
-const PAGE_HEIGHT = 842; // A4
-const PAGE_PADDING = 72;
-const HEADER_HEIGHT = 210;
-const TABLE_HEADER_HEIGHT = 28;
-const ROW_HEIGHT = 66;
-const FOOTER_HEIGHT = 260;
+});
 
 /* ================= STYLES ================= */
 
-
 const styles = StyleSheet.create({
     page: {
-        padding: 36,
-        fontSize: 10,
+        padding: 32,
         fontFamily: "Mono",
+        fontSize: 6,
         color: "#0f172a",
     },
 
-    bold: { fontWeight: 700 },
-    muted: { fontSize: 9, color: "#475569" },
+    /* HEADER */
 
-    rowBetween: {
+    topRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 6,
+        fontSize: 8,
+        marginBottom: 4,
     },
 
-    header: { alignItems: "center", marginBottom: 14 },
-    logo: { height: 56, marginBottom: 6 },
-    title: { fontSize: 20, fontWeight: 700, color: "#1e3a8a" },
-    companyInfo: {
+    gstHeader: {
+        fontWeight: 700
+    },
+
+    companyName: {
+        fontSize: 28,
+        fontWeight: 900,
         textAlign: "center",
-        fontSize: 9,
+        letterSpacing: 0.8,
+        color: "#1e3a8a",
+    },
+
+
+    logoRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+
+
+    logo: { height: 46, width: 110 },
+
+    qr: {
+        width: 60,
+        height: 60,
+    },
+
+    centerInfo: {
+        textAlign: "center",
+        fontSize: 8.5,
+        lineHeight: 1.2,
         color: "#475569",
     },
 
@@ -68,149 +642,144 @@ const styles = StyleSheet.create({
         paddingHorizontal: 18,
         borderRadius: 16,
         fontWeight: 700,
-        marginBottom: 12,
+        marginBottom: 6,
+        fontSize: 9
     },
 
-    box: {
+    billBox: {
         border: "1px solid #e5e7eb",
-        padding: 10,
-        borderRadius: 6,
-        marginBottom: 12,
-        backgroundColor: "#f8fafc",
+        padding: 6,
+        marginBottom: 6,
     },
 
-    sectionTitle: {
-        fontWeight: 700,
-        fontSize: 10,
-        textDecoration: "underline",
-        marginBottom: 4,
-    },
+    /* ================= TABLE (true grid) ================= */
 
-    /* ================= TABLE ================= */
-
-    tableHeader: {
-        flexDirection: "row",
-        backgroundColor: "#f1f5f9",
-        borderBottom: "1px solid #cbd5f5",
-        paddingVertical: 6,
-        fontWeight: 700,
+    table: {
+        border: "1px solid #94a3b8",
     },
 
     row: {
         flexDirection: "row",
-        paddingVertical: 6,
-        borderBottom: "1px solid #e5e7eb",
-        wrap: false,
     },
 
-    altRow: { backgroundColor: "#fafafa" },
+    cell: {
+        borderRight: "1px solid #cbd5e1",
+        borderBottom: "1px solid #cbd5e1",
+        paddingVertical: 4,
+        paddingHorizontal: 4,
+    },
 
-    cellSl: { width: 28, textAlign: "center" },
-    cellDesc: { width: 190, paddingRight: 4 },
-    cellClass: { width: 45, textAlign: "center" },
-    cellCompany: { width: 110, paddingRight: 4 },
-    cellQty: { width: 40, textAlign: "center" },
+    headerCell: {
+        backgroundColor: "#f1f5f9",
+        fontWeight: 800,
+        fontSize: 7,
+        borderTop: "1px solid #94a3b8",
+    },
 
-    cellRate: {
-        width: 75,
+    num: {
         textAlign: "right",
         fontFamily: "Mono",
-        fontSize: 9,
-        whiteSpace: "nowrap",
-        fontWeight: 600,
     },
 
-    cellNet: {
-        width: 90,
-        textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
-        whiteSpace: "nowrap",
-        fontWeight: 600,
+    center: { textAlign: "center" },
+
+    /* column widths */
+    c1: {
+        width: 20,
+        borderLeft: "1px solid #cbd5e1",
+    },
+    c2: { width: 150 }, // description wraps
+    c3: { width: 32 },
+    c4: { width: 80 },
+    c5: { width: 40 },
+    c6: { width: 60 },
+    c7: { width: 75 }, // gross
+    c8: { width: 38 },
+    c9: { width: 60 },
+    c10: { width: 75 },
+
+    totalsRow: {
+        backgroundColor: "#f8fafc",
+        fontWeight: 900,
     },
 
-    cellDiscPct: {
-        width: 45,
-        textAlign: "center",
-        fontSize: 9,
-    },
+    /* BANK */
 
-    continued: {
+    bankWrap: {
+        flexDirection: "row",
+        justifyContent: "space-between",
         marginTop: 8,
-        textAlign: "right",
-        fontSize: 9,
-        fontStyle: "italic",
-        color: "#475569",
-    },
-
-    footerBlock: { marginTop: 12 },
-
-    totalsBox: {
-        width: 240,
-        alignSelf: "flex-end",
-        border: "1px solid #c7d2fe",
-        padding: 10,
-        borderRadius: 6,
-        backgroundColor: "#eef2ff",
-    },
-
-    totalRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-
-    totalBold: {
-        fontWeight: 700,
-        borderTop: "1px solid #818cf8",
-        paddingTop: 6,
-        marginTop: 6,
-    },
-
-    amountWords: {
-        marginTop: 10,
-        padding: 8,
-        border: "1px solid #e5e7eb",
-        borderRadius: 6,
-        fontSize: 9,
-        fontStyle: "italic",
-        backgroundColor: "#f9fafb",
-    },
-
-    twoCol: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 14,
-        gap: 10,
     },
 
     bankBox: {
-        width: 300,
-        border: "1px solid #e5e7eb",
-        padding: 10,
-        borderRadius: 6,
+        width: "60%",
+        backgroundColor: "#f0fdf4",
+        borderLeft: "4px solid #16a34a",
+        padding: 6,
+        fontSize: 7.5,
     },
 
-    qrBox: {
+    signBox: {
+        width: "35%",
+        alignItems: "flex-end",
+        fontSize: 7.5,
+    },
+
+    signLine: {
+        marginTop: 26,
+        borderTop: "1px solid #000",
         width: 120,
-        border: "1px solid #e5e7eb",
-        padding: 10,
-        borderRadius: 6,
-        alignItems: "center",
-    },
-
-    qr: { width: 90, height: 90, marginTop: 6 },
-
-    billedBy: {
-        marginTop: 16,
-        alignSelf: "flex-end",
-        textAlign: "right",
+        textAlign: "center",
+        paddingTop: 3,
     },
 
     footer: {
-        marginTop: 16,
+        marginTop: 8,
         textAlign: "center",
-        fontSize: 9,
-        color: "#64748b",
+        fontSize: 7,
+    },
+
+    qrWrap: {
+        width: "25%",
+        alignItems: "flex-end",
+    },
+
+    qrText: {
+        fontSize: 7,
+        fontWeight: 800,
+        textAlign: "center",
+        marginBottom: 4,
+    },
+
+    billTitle: {
+        fontWeight: 800,
+        fontSize: 8,
+        marginBottom: 2,
+        textDecoration: "underline",
+    },
+
+    billText: {
+        fontSize: 7.5,
+    },
+
+    logoCol: {
+        width: "25%",
+        alignItems: "flex-start",
+    },
+
+    infoCol: {
+        width: "50%",
+        alignItems: "center",
+    },
+
+    qrBox: {
+        border: "1px solid #e5e7eb",
+        borderRadius: 6,
+        paddingVertical: 4,
+        paddingHorizontal: 2,
+        alignItems: "center",
+        justifyContent: "center",
+        width: 90,
     },
 
     watermark: {
@@ -237,323 +806,250 @@ const styles = StyleSheet.create({
         textAlign: "center",
         alignSelf: "center",
     },
-})
+
+});
+
+/* ================= HELPERS ================= */
+
+const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+/* ================= COMPONENT ================= */
+
+export default function InvoicePdf({
+    data,
+    settings,
+}: {
+    data: InvoicePdfData;
+    settings: SettingsInfoResponse;
+}) {
 
 
-/* ================= DYNAMIC PAGINATION ================= */
+    const items: Item[] = data.items || [];
 
-function paginate(items: Item[]) {
-    const pages: any[][] = [];
-    let current: Item[] = [];
-    let usedHeight = HEADER_HEIGHT + TABLE_HEADER_HEIGHT;
+    /* ===== CALCULATIONS (FIXED LOGIC) ===== */
 
-    items.forEach((item, idx) => {
-        const isLastItem = idx === items.length - 1;
-        const footerReserve = isLastItem ? FOOTER_HEIGHT : 0;
+    const computed = items.map((i) => {
+        const qty = Number(i.quantity) || 0;
+        const rate = Number(i.rate) || 0;
 
-        if (
-            usedHeight + ROW_HEIGHT + footerReserve >
-            PAGE_HEIGHT - PAGE_PADDING
-        ) {
-            pages.push(current);
-            current = [];
-            usedHeight = TABLE_HEADER_HEIGHT;
-        }
+        const gross = r2(qty * rate);
 
-        current.push(item);
-        usedHeight += ROW_HEIGHT;
+        const net =
+            i.netAmount != null
+                ? Number(i.netAmount)
+                : r2(gross - gross * ((Number(i.discountPercent) || 0) / 100));
+
+        const discAmt = r2(gross - net);
+
+        return { ...i, qty, rate, gross, discAmt, net };
     });
 
-    if (current.length) pages.push(current);
-    return pages;
-}
-
-/* ================= PDF ================= */
-
-export default function InvoicePdf({ data, settings }: { data: InvoicePdfData, settings: SettingsInfoResponse }) {
-
-    const pages = paginate(data.items);
-    const totalPages = pages.length;
+    const totals = computed.reduce(
+        (a, b) => ({
+            qty: a.qty + b.qty,
+            gross: r2(a.gross + b.gross),
+            disc: r2(a.disc + b.discAmt),
+            net: r2(a.net + b.net),
+        }),
+        { qty: 0, gross: 0, disc: 0, net: 0 }
+    );
 
     return (
         <Document>
-            {pages.map((pageRows, pageIndex) => {
-                const isLast = pageIndex === totalPages - 1;
+            <Page size="A4" style={styles.page}>
 
-                return (
-                    <Page key={pageIndex} size="A4" style={styles.page}>
-
+                {data.status === "VOIDED" && (
+                    <Text style={styles.watermark}>
+                        VOIDED
+                    </Text>
+                )}
+                {/* Top line */}
+                <View style={styles.topRow}>
+                    <Text>{String(data.kind).toLowerCase() + " no: "}{data.documentNo}</Text>
+                    {settings.gst && <Text style={styles.gstHeader}>{`GSTIN: ${settings.gst}`}</Text>}
+                    <View>
+                        <Text>{new Date(data.date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                        })}
+                        </Text>
                         {data.status === "VOIDED" && (
-                            <Text style={styles.watermark}>
-                                VOIDED
-                            </Text>
-                        )}
-                        {/* HEADER */}
-                        <View style={styles.rowBetween}>
-                            <Text>{String(data.kind).toLowerCase() + " no: "}{data.documentNo}</Text>
-                            <View>
-                                <Text>{new Date(data.date).toLocaleDateString("en-IN", {
-                                    day: "2-digit",
-                                    month: "long",
-                                    year: "numeric",
-                                })}
+                            <View style={{ width: "100%", marginTop: 6 }}>
+                                <Text style={styles.statusRibbon}>
+                                    VOIDED
                                 </Text>
-                                {totalPages > 1 && <Text>
-                                    Page {pageIndex + 1} / {totalPages}
-                                </Text>}
-
-                                {data.status === "VOIDED" && (
-                                    <View style={{ width: "100%", marginTop: 6 }}>
-                                        <Text style={styles.statusRibbon}>
-                                            VOIDED
-                                        </Text>
-                                    </View>
-                                )}
-                            </View>
-                        </View>
-
-                        <View style={styles.header}>
-                            {settings?.logoUrl && (
-                                <Image
-                                    src={settings.logoUrl}
-                                    style={styles.logo}
-                                />
-                            )}
-
-                            <Text style={styles.title}>
-                                {settings?.name?.toUpperCase()}
-                            </Text>
-
-                            {/* Address */}
-                            {(settings?.street ||
-                                settings?.town ||
-                                settings?.district ||
-                                settings?.state ||
-                                settings?.pincode) && (
-                                    <Text style={styles.companyInfo}>
-                                        {[
-                                            settings.street,
-                                            settings.town,
-                                            settings.district,
-                                            settings.state,
-                                            settings.pincode,
-                                        ]
-                                            .filter(Boolean)
-                                            .join(", ")}
-                                    </Text>
-                                )}
-
-                            {/* Contact */}
-                            <Text style={styles.companyInfo}>
-                                Phone: {settings?.phone}
-                                {settings?.phoneSecondary && `, ${settings.phoneSecondary}`}
-                                {settings?.phoneTertiary && `, ${settings.phoneTertiary}`}
-                            </Text>
-
-                            {/* Email */}
-                            {settings?.email && (
-                                <Text style={styles.companyInfo}>
-                                    Email: {settings.email}
-                                </Text>
-                            )}
-
-                            {/* GST */}
-                            {settings?.gst && (
-                                <Text style={styles.companyInfo}>
-                                    GSTIN: {settings.gst}
-                                </Text>
-                            )}
-                        </View>
-
-
-
-                        <Text style={styles.badge}>{String(data.kind) === "INVOICE" ? "BILL OF SUPPLY" : data.kind}</Text>
-
-                        {pageIndex === 0 && (
-                            <View style={styles.box}>
-                                <Text style={styles.sectionTitle}>
-                                    {String(data.kind) === "INVOICE" ? "BILL TO" : "TO"}
-                                </Text>
-
-                                <Text style={styles.bold}>
-                                    {data.school.name}
-                                </Text>
-
-                                {data.school.contactPerson && (
-                                    <Text>
-                                        Attn: {data.school.contactPerson}
-                                    </Text>
-                                )}
-
-                                {(data.school.street ||
-                                    data.school.town ||
-                                    data.school.district ||
-                                    data.school.state ||
-                                    data.school.pincode) && (
-                                        <Text>
-                                            {[
-                                                data.school.street,
-                                                data.school.town,
-                                                data.school.district,
-                                                data.school.state,
-                                                data.school.pincode,
-                                            ]
-                                                .filter(Boolean)
-                                                .join(", ")}
-                                        </Text>
-                                    )}
-
-                                <Text>
-                                    Phone: {data.school.phone}
-                                </Text>
-
-                                {data.school.email && (
-                                    <Text>
-                                        Email: {data.school.email}
-                                    </Text>
-                                )}
-
-                                {data.school.gst && (
-                                    <Text>
-                                        GSTIN: {data.school.gst}
-                                    </Text>
-                                )}
                             </View>
                         )}
+                    </View>
+                </View>
 
+                {/* Company name */}
+                <Text style={styles.companyName}>{settings?.name?.toUpperCase()}</Text>
 
-                        {/* TABLE HEADER */}
-                        <View style={styles.tableHeader}>
-                            <Text style={styles.cellSl}>#</Text>
-                            <Text style={styles.cellDesc}>Description</Text>
-                            <Text style={styles.cellClass}>Class</Text>
-                            <Text style={styles.cellCompany}>Company</Text>
-                            <Text style={styles.cellQty}>Qty</Text>
-                            <Text style={styles.cellRate}>Rate</Text>
-                            <Text style={styles.cellDiscPct}>Disc%</Text>
-                            <Text style={styles.cellNet}>Total</Text>
-                        </View>
+                {/* logo | info | qr */}
+                <View style={styles.logoRow}>
+                    {/* LEFT — Logo */}
+                    <View style={styles.logoCol}>
+                        {settings?.logoUrl && (
+                            <Image src={settings.logoUrl} style={styles.logo} />
+                        )}
+                    </View>
 
+                    {/* CENTER — Perfectly centered info */}
+                    <View style={styles.infoCol}>
+                        <Text style={styles.centerInfo}>
+                            {settings.street && `${settings.street} \n`}
+                            {[settings.town, settings.district, settings.state, settings.pincode]
+                                .filter(Boolean)
+                                .join(", ")}
 
+                            {"\n"}
 
-                        {/* ROWS */}
-                        {
-                            pageRows.map((r, idx) => (
-                                <View
-                                    key={idx}
-                                    style={idx % 2 ? [styles.row, styles.altRow] : styles.row} // change to {}
-                                >
-                                    <Text style={styles.cellSl}>
-                                        {pageIndex * 100 + idx + 1}
-                                    </Text>
+                            Phone: {settings.phone}
+                            {settings.phoneSecondary && `, ${settings.phoneSecondary}`}
+                            {settings.phoneTertiary && `, ${settings.phoneTertiary}`}
+                            {settings.email && `\nEmail: ${settings.email}`}
+                        </Text>
+                    </View>
 
-                                    <Text style={styles.cellDesc}>{r.description}</Text>
+                    {/* RIGHT — QR */}
+                    <View style={styles.qrWrap}>
+                        {settings?.qrCodeUrl && (
+                            <View style={styles.qrBox}>
+                                <Text style={styles.qrText}>Scan & Pay</Text>
+                                <Image src={settings.qrCodeUrl} style={styles.qr} />
+                            </View>
+                        )}
+                    </View>
 
-                                    <Text style={styles.cellClass}>{r.class || "-"}</Text>
+                </View>
 
-                                    <Text style={styles.cellCompany}>{r.company || "-"}</Text>
+                <Text style={styles.badge}>{String(data.kind) === "INVOICE" ? "BILL OF SUPPLY" : data.kind}</Text>
 
-                                    <Text style={styles.cellQty}>{r.quantity}</Text>
+                {/* BILL TO */}
+                <View style={styles.billBox}>
+                    <Text style={styles.billTitle}>{String(data.kind) === "INVOICE" ? "BILL TO" : "TO"}</Text>
 
-                                    <Text style={styles.cellRate}>{formatMoney(r.rate)}</Text>
+                    <Text style={{ fontWeight: 700, ...styles.billText }}>
+                        {data.school?.name}
+                    </Text>
 
-                                    <Text style={styles.cellDiscPct}>{r.discountPercent}%</Text>
+                    {data.school?.contactPerson && (
+                        <Text style={styles.billText}>
+                            Attn: {data.school.contactPerson}
+                        </Text>
+                    )}
 
-                                    <Text style={styles.cellNet}>{formatMoney(r.netAmount)}</Text>
-                                </View>
+                    <Text style={styles.billText}>
+                        {[data.school?.street, data.school?.town, data.school?.district, data.school?.state, data.school?.pincode]
+                            .filter(Boolean)
+                            .join(", ")}
+                    </Text>
 
-                            ))
-                        }
+                    {data.school?.phone && (
+                        <Text style={styles.billText}>Phone: {data.school.phone}</Text>
+                    )}
 
-                        {/* CONTINUED */}
-                        {
-                            !isLast && (
-                                <Text style={styles.continued}>
-                                    Continued on next page →
+                    {data.school?.email && (
+                        <Text style={styles.billText}>Email: {data.school.email}</Text>
+                    )}
+
+                    {data.school?.gst && (
+                        <Text style={styles.billText}>GSTIN: {data.school.gst}</Text>
+                    )}
+                </View>
+
+                {/* ================= TABLE ================= */}
+
+                {/* <View style={styles.table}> */}
+                {/* Header */}
+                <View style={styles.row} fixed>
+                    {[
+                        styles.c1,
+                        styles.c2,
+                        styles.c3,
+                        styles.c4,
+                        styles.c5,
+                        styles.c6,
+                        styles.c7,
+                        styles.c8,
+                        styles.c9,
+                        styles.c10,
+                    ].map((colStyle, idx) => (
+                        <Text key={idx} style={[styles.cell, styles.headerCell, colStyle]}>
+                            {["#", "Description", "Cls", "Company", "Qty", "Rate", "Gross", "Disc%", "Disc Amt", "Total"][idx]}
+                        </Text>
+                    ))}
+                </View>
+
+                {/* Rows */}
+                {computed.map((r, i) => (
+                    <View key={i} style={styles.row} wrap={false}>
+                        <Text style={[styles.cell, styles.c1]}>{i + 1}</Text>
+                        <Text style={[styles.cell, styles.c2]}>{r.description}</Text>
+                        <Text style={[styles.cell, styles.c3, styles.center]}>{r.class || "-"}</Text>
+                        <Text style={[styles.cell, styles.c4]}>{r.company || "-"}</Text>
+                        <Text style={[styles.cell, styles.c5, styles.center]}>{r.qty}</Text>
+                        <Text style={[styles.cell, styles.c6, styles.num]}>{formatMoney(r.rate)}</Text>
+                        <Text style={[styles.cell, styles.c7, styles.num]}>{formatMoney(r.gross)}</Text>
+                        <Text style={[styles.cell, styles.c8, styles.center]}>{r.discountPercent || 0}%</Text>
+                        <Text style={[styles.cell, styles.c9, styles.num]}>{formatMoney(r.discAmt)}</Text>
+                        <Text style={[styles.cell, styles.c10, styles.num]}>{formatMoney(r.net)}</Text>
+                    </View>
+                ))}
+
+                {/* Totals */}
+                <View style={[styles.row, styles.totalsRow]} wrap={false}>
+                    <Text style={[styles.cell, styles.c1]} />
+                    <Text style={[styles.cell, styles.c2]}>Totals</Text>
+                    <Text style={[styles.cell, styles.c3]} />
+                    <Text style={[styles.cell, styles.c4]} />
+                    <Text style={[styles.cell, styles.c5, styles.center]}>{totals.qty}</Text>
+                    <Text style={[styles.cell, styles.c6]} /> {/* rate not summed */}
+                    <Text style={[styles.cell, styles.c7, styles.num]}>{formatMoney(totals.gross)}</Text>
+                    <Text style={[styles.cell, styles.c8]} />
+                    <Text style={[styles.cell, styles.c9, styles.num]}>{formatMoney(totals.disc)}</Text>
+                    <Text style={[styles.cell, styles.c10, styles.num]}>{formatMoney(totals.net)}</Text>
+                </View>
+                {/* </View> */}
+
+                {/* Words */}
+                <Text style={{ marginTop: 6 }}>
+                    Amount in words: {numberToWords(totals.net)}
+                </Text>
+
+                {/* Bank + sign */}
+                <View style={styles.bankWrap}>
+                    <View style={styles.bankBox}>
+                        <Text style={{ fontWeight: 800 }}>Bank Details</Text>
+                        <Text>Account: {settings?.name}</Text>
+                        <Text>Bank: {settings?.bankName}</Text>
+                        <Text>A/C: {settings?.accountNo}</Text>
+                        <Text>IFSC: {settings?.ifsc}</Text>
+                        <Text>UPI: {settings?.upi}</Text>
+                    </View>
+
+                    <View style={styles.signBox}>
+                        <Text>For {settings?.name}</Text>
+                        <Text style={styles.signLine}>Authorized Signatory</Text>
+                        <Text>Recorded By: {data.billedBy}</Text>
+                        {data.status === "VOIDED" && (
+                            <View style={{ marginTop: 6 }}>
+                                <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                    Voided By: {data.voidedBy}
                                 </Text>
-                            )
-                        }
+                                <Text style={{ fontSize: 9, color: "#b91c1c" }}>
+                                    Voided At:{" "}
+                                    {new Date(data.voidedAt!).toLocaleString("en-IN")}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
 
-                        {/* FOOTER (ATOMIC) */}
-                        {
-                            isLast && (
-                                <View wrap={false} style={styles.footerBlock}>
-                                    <View style={styles.totalsBox}>
-                                        <View style={styles.totalRow}>
-                                            <Text>Total Quantity</Text>
-                                            <Text>{data.totals.totalQuantity}</Text>
-                                        </View>
-
-                                        <View style={styles.totalRow}>
-                                            <Text>Gross Amount</Text>
-                                            <Text>{formatMoney(data.totals.grossAmount)}</Text>
-                                        </View>
-
-                                        <View style={styles.totalRow}>
-                                            <Text>Total Discount</Text>
-                                            <Text>-{formatMoney(data.totals.totalDiscount)}</Text>
-                                        </View>
-
-                                        <View style={[styles.totalRow, styles.totalBold]}>
-                                            <Text>Final Amount</Text>
-                                            <Text>{formatMoney(data.totals.netAmount)}</Text>
-                                        </View>
-                                    </View>
-
-
-                                    <View style={styles.amountWords}>
-                                        <Text>
-                                            Amount Chargeable (in words):{" "}
-                                            <Text style={{ fontWeight: 700 }}>
-                                                {numberToWords(data.totals.netAmount)}
-                                            </Text>
-                                        </Text>
-                                    </View>
-
-                                    <View style={styles.twoCol}>
-                                        <View style={styles.bankBox}>
-                                            {settings?.name && <Text>Account: {settings.name}</Text>}
-                                            {settings?.bankName && <Text>Bank: {settings.bankName}</Text>}
-                                            {settings?.accountNo && <Text>A/C No: {settings.accountNo}</Text>}
-                                            {settings?.ifsc && <Text>IFSC: {settings.ifsc}</Text>}
-                                            {settings?.upi && <Text>UPI: {settings.upi}</Text>}
-                                        </View>
-
-                                        <View style={styles.qrBox}>
-                                            {settings?.qrCodeUrl && <Image src={settings.qrCodeUrl} style={styles.qr} />}
-                                        </View>
-                                    </View>
-
-                                    <View style={styles.billedBy}>
-                                        <Text>For {settings?.name}</Text>
-                                        <Text style={{ fontWeight: 700, marginTop: 12 }}>
-                                            Authorized Signatory
-                                        </Text>
-                                        <Text>Recorded By: {data.billedBy}</Text>
-
-                                        {data.status === "VOIDED" && (
-                                            <View style={{ marginTop: 6 }}>
-                                                <Text style={{ fontSize: 9, color: "#b91c1c" }}>
-                                                    Voided By: {data.voidedBy}
-                                                </Text>
-                                                <Text style={{ fontSize: 9, color: "#b91c1c" }}>
-                                                    Voided At:{" "}
-                                                    {new Date(data.voidedAt!).toLocaleString("en-IN")}
-                                                </Text>
-                                            </View>
-                                        )}
-
-                                    </View>
-                                    <Text style={styles.footer}>
-                                        This is a computer-generated invoice
-                                    </Text>
-                                </View>
-                            )
-                        }
-
-                    </Page >
-                );
-            })}
+                <Text style={styles.footer}>Computer generated invoice</Text>
+            </Page>
         </Document >
     );
 }

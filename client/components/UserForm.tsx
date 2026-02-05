@@ -23,7 +23,9 @@ export default function UserForm({
         handleSubmit,
         formState: { isSubmitting, errors },
         reset,
-        setError
+        setError,
+        watch,
+        setValue
     } = useForm<UserFormValues>({ defaultValues })
 
     const createMutation = useCreateUser()
@@ -118,6 +120,69 @@ export default function UserForm({
                     { label: "Staff", value: "STAFF" },
                 ]}
             />
+
+            {/* ================= STATUS ================= */}
+            {mode === "edit" && (
+                <div className="md:col-span-2">
+                    <div className="
+                        rounded-xl border bg-slate-50
+                        p-4
+                        flex flex-col sm:flex-row
+                        sm:items-center sm:justify-between
+                        gap-4
+                    ">
+                        {/* LEFT */}
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-slate-700">
+                                Account Status
+                            </p>
+
+                            <div className="flex items-center gap-2">
+                                <span
+                                    className={`text-xs font-semibold px-3 py-1 rounded-full
+                                        ${watch("active")
+                                            ? "bg-emerald-100 text-emerald-700"
+                                            : "bg-red-100 text-red-600"
+                                        }`}
+                                >
+                                    {watch("active") ? "Active" : "Deactivated"}
+                                </span>
+
+                                <span className="text-xs text-slate-500">
+                                    {watch("active")
+                                        ? "User can login"
+                                        : "User cannot login"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* RIGHT — SWITCH */}
+                        <button
+                            type="button"
+                            onClick={() => setValue("active", !watch("active"))}
+                            className={`
+                                relative inline-flex items-center
+                                w-14 h-7
+                                rounded-full
+                                transition-colors duration-300
+                                ${watch("active") ? "bg-emerald-500" : "bg-red-400"}
+                                focus:outline-none focus:ring-2 focus:ring-indigo-500
+                            `}
+                        >
+                            <span
+                                className={`
+                                    absolute
+                                    h-5 w-5
+                                    rounded-full bg-white shadow
+                                    transition-all duration-300
+                                    ${watch("active") ? "left-[32px]" : "left-[4px]"}
+                                `}
+                            />
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
             <div className="md:col-span-2 flex justify-end">
                 <button

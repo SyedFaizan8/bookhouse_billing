@@ -33,6 +33,7 @@ enum DocumentKind {
   INVOICE
   ESTIMATION
   CREDIT_NOTE
+  PACKAGE_NOTE
   PAYMENT
 }
 
@@ -59,6 +60,7 @@ model Settings {
   email String?
   gst   String?
 
+  street   String?
   town     String?
   district String?
   state    String?
@@ -91,6 +93,9 @@ model User {
 
   createdAt  DateTime @default(now())
   modifiedAt DateTime @updatedAt
+
+  active        Boolean   @default(true)
+  deactivatedAt DateTime?
 
   billedInvoices Invoice[] @relation(name: "UserBilledInvoices")
   voidedInvoices Invoice[] @relation(name: "UserVoidedInvoices")
@@ -269,6 +274,7 @@ model Item {
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   quantity Int
+  pending  Int @default(0)
 
   unitPrice Decimal @db.Decimal(10, 2)
 

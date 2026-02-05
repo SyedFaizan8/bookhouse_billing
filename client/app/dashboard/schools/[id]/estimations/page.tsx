@@ -13,7 +13,6 @@ import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { deleteEstimation, useSchoolEstimations } from "@/lib/queries/schools";
 import RowActions from "@/components/RowActions";
 import { InvoiceRow } from "@/lib/types/customer";
-import { useAuthUser } from "@/lib/queries/auth";
 import { EstimationDeleteDialog } from "@/components/alertBox/EstimationDeleteDialog";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/utils/getApiError";
@@ -88,11 +87,11 @@ export default function CustomerInvoicesPage() {
                     actions={
                         [
                             {
-                                label: "Package Note",
-                                onClick: () => router.replace(`/dashboard/package/${u.id}`)
+                                label: "Convert Package Note",
+                                onClick: () => router.replace(`/dashboard/package/migrate/${id}/${u.id}`)
                             },
                             {
-                                label: "Convert To Invoice",
+                                label: "Convert Invoice",
                                 onClick: () => router.replace(`/dashboard/invoices/new/${id}/${u.id}`),
                                 variant: 'warning'
                             },

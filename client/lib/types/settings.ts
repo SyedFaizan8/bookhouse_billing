@@ -4,6 +4,7 @@ export type CompanySettings = {
     email?: string
     gst?: string
 
+    street?: string
     town?: string
     district?: string
     state?: string

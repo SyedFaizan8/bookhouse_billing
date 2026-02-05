@@ -91,6 +91,7 @@ export function useInvoicePdf(id: string) {
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 }
+
 // INVOICES
 export const useSchoolInvoices = (schoolId: string) =>
     useQuery({
@@ -104,10 +105,7 @@ export function useCreateInvoice() {
 
     return useMutation({
         mutationFn: async (payload: CreatePayload) =>
-            (await api.post(
-                "/invoice/school/new",
-                payload
-            )).data,
+            (await api.post("/invoice/school/new", payload)).data,
 
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["school-invoices"] });
@@ -146,18 +144,10 @@ export const useUpdateEstimation = (id: string) => {
     return useMutation({
         mutationFn: async (data: any) => (await api.patch(`/estimation/${id}`, data)).data,
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["school-estimations", id] });
+            qc.invalidateQueries({ queryKey: ["school-estimations"] });
         },
     });
 };
-
-// PACKAGE NOTE
-export const useSchoolPackage = (schoolId: string) =>
-    useQuery({
-        queryKey: ["school-estimations", schoolId],
-        queryFn: async () =>
-            (await api.get<InvoiceRow[]>(`/package/${schoolId}`)).data,
-    });
 
 // CREDIT NOTE
 export const useSchoolCreditNote = (schoolId: string) =>
@@ -258,3 +248,55 @@ export const deleteEstimation = () => {
         }
     });
 }
+
+// PACKAGE NOTE
+export const useSchoolPackage = (schoolId: string) =>
+    useQuery({
+        queryKey: ["school-estimations", schoolId],
+        queryFn: async () =>
+            (await api.get<InvoiceRow[]>(`/package/${schoolId}`)).data,
+    });
+
+export function useCreatePackage() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload: CreatePayload) => (await api.post("/package/new", payload)).data,
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["school-packages"] })
+    });
+}
+
+// UPDATE PENDING
+export const useUpdatePending = (id: string) => {
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (items: { id: string; pending: number }[]) => (await api.patch(`/package/${id}/pending`, { items })).data,
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["invoice-pdf", id] });
+            qc.invalidateQueries({ queryKey: ["school-packages"] });
+        },
+    });
+};
+
+// DELETE PACKAGE
+export const deletePackage = () => {
+    const q = useQueryClient()
+    return useMutation({
+        mutationFn: async (id: string) => (await api.post(`/package/delete/${id}`)).data,
+        onSuccess: () => {
+            q.invalidateQueries({ queryKey: ["school-packages"] })
+        }
+    });
+}
+
+export const useUpdatePackage = (id: string) => {
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: any) => (await api.patch(`/package/${id}`, data)).data,
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["school-packages"] })
+            qc.invalidateQueries({ queryKey: ["invoice-pdf", id] });
+        }
+    });
+};

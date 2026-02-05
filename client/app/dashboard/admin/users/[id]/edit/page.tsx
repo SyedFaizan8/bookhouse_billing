@@ -34,6 +34,7 @@ export default function EditUserPage() {
                     phone: data.phone,
                     email: data.email ?? "",
                     role: data.role,
+                    active: data.active,
                 }}
             />
         </div>

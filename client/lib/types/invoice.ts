@@ -37,15 +37,17 @@ type Information = {
 };
 
 export type Item = {
+    id: string
     description: string;
     class: string;
     company: string;
     quantity: number;
     rate: number;
     discountPercent: number;
-    discountAmount: number,
-    grossAmount: number,
+    discountAmount: number
+    grossAmount: number
     netAmount: number
+    pending: number
 }
 
 export type DocumentKind = ["INVOICE", "ESTIMATION", "CREDIT_NOTE"]

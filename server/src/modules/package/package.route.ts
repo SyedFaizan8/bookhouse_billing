@@ -1,13 +1,96 @@
 import { Router } from "express";
-import { Response, Request } from "express";
+import type { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
 import { AcademicYearStatus, DocumentKind, FlowStatus, SequenceScope } from "../../generated/prisma/enums.js";
-import { CreateEstimationDTO, UpdateEstimationDTO } from "./estimation.schema.js";
-import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
+import { asyncHandler } from "../../utils/async.js";
+import { CreateEstimationDTO, UpdateEstimationDTO } from "../estimation/estimation.schema.js";
 
-const router = Router()
+const router = Router();
 
+router.patch("/:id/pending", asyncHandler(async (req: Request, res: Response) => {
+    const { items } = req.body;
+
+
+    const academicYear = await prisma.academicYear.findFirst({
+        where: { status: FlowStatus.OPEN },
+    });
+
+    if (!academicYear) throw new AppError("No open academic year found", 404);
+
+
+    await prisma.$transaction(
+        items.map((i: any) =>
+            prisma.item.update({
+                where: { id: i.id },
+                data: { pending: i.pending },
+            })
+        )
+    );
+
+    res.json({ success: true });
+}));
+
+// GET ALL PACKAGES
+router.get("/:id", asyncHandler(async (req: Request, res: Response) => {
+
+    const schoolId = req.params.id;
+
+    // 🔹 get open academic year
+    const academicYear = await prisma.academicYear.findFirst({
+        where: { status: "OPEN" },
+        select: { id: true },
+    });
+
+    if (!academicYear) throw new AppError('open academic year first', 401)
+
+    // 🔹 get invoices directly using relation filter
+    const packageNote = await prisma.invoice.findMany({
+        where: {
+            flowGroup: {
+                schoolId,
+                academicYearId: academicYear.id,
+            },
+            kind: DocumentKind.PACKAGE_NOTE
+        },
+        orderBy: {
+            date: "desc",
+        },
+        select: {
+            id: true,
+            documentNo: true,
+            date: true,
+            totalQuantity: true,
+            netAmount: true,
+            createdAt: true,
+            items: {
+                select: {
+                    pending: true
+                }
+            }
+        },
+    });
+
+    if (!packageNote) throw new AppError('No Packages found', 401)
+
+    return res.json(
+        packageNote.map((pkg) => {
+            const totalPending = pkg.items.reduce((sum, i) => sum + (i.pending || 0), 0);
+
+            return {
+                id: pkg.id,
+                documentNo: pkg.documentNo,
+                date: pkg.date,
+                totalQty: pkg.totalQuantity,
+                amount: pkg.netAmount.toNumber(),
+                pending: totalPending,
+                createdAt: pkg.createdAt,
+            };
+        })
+    );
+}))
+
+// CREATE PACKAGE
 router.post("/new", asyncHandler(async (req: Request, res: Response) => {
     const parsed = CreateEstimationDTO.safeParse(req.body);
 
@@ -39,7 +122,7 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
             where: {
                 academicYearId_type_scope: {
                     academicYearId: academicYear.id,
-                    type: DocumentKind.ESTIMATION,
+                    type: DocumentKind.PACKAGE_NOTE,
                     scope: SequenceScope.SCHOOL,
                 },
             },
@@ -48,7 +131,7 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
         const lastNumber = seq?.lastNumber ?? 0;
         const userNo = Number(userDocumentNo);
 
-        if (!userNo || userNo <= 0) throw new AppError("Invalid estimation number", 409);
+        if (!userNo || userNo <= 0) throw new AppError("Invalid Package number", 409);
 
         /* ✅ 1. check duplicate */
         const exists = await tx.invoice.findFirst({
@@ -57,12 +140,12 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
                     schoolId,
                     academicYearId: academicYear.id,
                 },
-                kind: DocumentKind.ESTIMATION,
+                kind: DocumentKind.PACKAGE_NOTE,
                 documentNo: String(userNo)
             }
         });
 
-        if (exists) throw new AppError(`Estimation #${userNo} already exists`, 409);
+        if (exists) throw new AppError(`Package #${userNo} already exists`, 409);
 
         /* ✅ 2. enforce forward only */
         if (userNo <= lastNumber) throw new AppError(`Number must be greater than ${lastNumber}`, 409);
@@ -72,7 +155,7 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
             where: {
                 academicYearId_type_scope: {
                     academicYearId: academicYear.id,
-                    type: DocumentKind.ESTIMATION,
+                    type: DocumentKind.PACKAGE_NOTE,
                     scope: SequenceScope.SCHOOL,
                 },
             },
@@ -81,7 +164,7 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
             },
             create: {
                 academicYearId: academicYear.id,
-                type: DocumentKind.ESTIMATION,
+                type: DocumentKind.PACKAGE_NOTE,
                 scope: SequenceScope.SCHOOL,
                 lastNumber: userNo,
             },
@@ -150,14 +233,14 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
         if (netAmount <= 0) throw new AppError("Total amount must be greater than zero", 409);
 
         /* ======================================================
-           5. CREATE ESTIMATION DOCUMENT
+           5. CREATE PACKAGE DOCUMENT
         ====================================================== */
 
-        const estimation = await tx.invoice.create({
+        const packageNote = await tx.invoice.create({
             data: {
                 documentNo: String(userNo),
                 date: new Date(),
-                kind: DocumentKind.ESTIMATION,
+                kind: DocumentKind.PACKAGE_NOTE,
 
                 flowGroupId: flowGroup.id,
 
@@ -178,11 +261,11 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
         await tx.item.createMany({
             data: calculatedItems.map((i) => ({
                 ...i,
-                invoiceId: estimation.id,
+                invoiceId: packageNote.id,
             })),
         });
 
-        return estimation;
+        return packageNote;
     });
 
     return res.json({
@@ -193,57 +276,8 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
 
 }))
 
-
-router.get("/:id", asyncHandler(async (req: Request, res: Response) => {
-
-    const schoolId = req.params.id;
-
-    // 🔹 get open academic year
-    const academicYear = await prisma.academicYear.findFirst({
-        where: { status: "OPEN" },
-        select: { id: true },
-    });
-
-    if (!academicYear) throw new AppError('open academic year first', 401)
-
-    // 🔹 get invoices directly using relation filter
-    const estimations = await prisma.invoice.findMany({
-        where: {
-            flowGroup: {
-                schoolId,
-                academicYearId: academicYear.id,
-            },
-            kind: DocumentKind.ESTIMATION
-        },
-        orderBy: {
-            date: "desc",
-        },
-        select: {
-            id: true,
-            documentNo: true,
-            date: true,
-            totalQuantity: true,
-            netAmount: true,
-            createdAt: true,
-        },
-    });
-
-    if (!estimations) throw new AppError('No Estimations found', 401)
-
-    return res.json(
-        estimations.map((est) => ({
-            id: est.id,
-            documentNo: est.documentNo,
-            date: est.date,
-            totalQty: est.totalQuantity,
-            amount: est.netAmount.toNumber(),
-            createdAt: est.createdAt,
-        }))
-    );
-}))
-
 router.post('/delete/:id', asyncHandler(async (req: Request, res: Response) => {
-    const estimationId = req.params.id
+    const packageId = req.params.id
 
     const academicYear = await prisma.academicYear.findFirst({
         where: { status: "OPEN" },
@@ -252,10 +286,10 @@ router.post('/delete/:id', asyncHandler(async (req: Request, res: Response) => {
 
     if (!academicYear) throw new AppError('open academic year first', 401)
 
-    const estimation = await prisma.invoice.findFirst({
+    const packageNote = await prisma.invoice.findFirst({
         where: {
-            id: estimationId,
-            kind: DocumentKind.ESTIMATION,
+            id: packageId,
+            kind: DocumentKind.PACKAGE_NOTE,
         },
         include: {
             flowGroup: {
@@ -266,24 +300,23 @@ router.post('/delete/:id', asyncHandler(async (req: Request, res: Response) => {
         },
     })
 
-    if (!estimation)
-        throw new AppError("Estimation not found", 404)
+    if (!packageNote) throw new AppError("Package Note not found", 404)
 
     // 🔒 Academic year lock
-    if (estimation.flowGroup.academicYear.status !== AcademicYearStatus.OPEN)
-        throw new AppError("Academic year is closed. Cannot delete estimation.", 403)
+    if (packageNote.flowGroup.academicYear.status !== AcademicYearStatus.OPEN)
+        throw new AppError("Academic year is closed. Cannot delete Package Note.", 403)
 
     // 🔒 Flow group lock
-    if (estimation.flowGroup.status !== FlowStatus.OPEN)
-        throw new AppError("Flow group is closed. Cannot delete estimation.", 403)
+    if (packageNote.flowGroup.status !== FlowStatus.OPEN)
+        throw new AppError("Flow group is closed. Cannot delete Package Note.", 403)
 
-    await prisma.invoice.delete({ where: { id: estimationId }, })
+    await prisma.invoice.delete({ where: { id: packageId }, })
 
-    res.json({ message: "Estimation deleted successfully", })
+    res.json({ message: "Package Note deleted successfully", })
 }))
 
 router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
-    const estimationId = req.params.id;
+    const packageId = req.params.id;
 
     const academicYear = await prisma.academicYear.findFirst({
         where: { status: "OPEN" },
@@ -299,15 +332,14 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
 
     const round = (n: number) => Number(n.toFixed(2));
 
-    const estimation = await prisma.invoice.findUnique({
-        where: { id: estimationId },
+    const packageNote = await prisma.invoice.findUnique({
+        where: { id: packageId },
         include: { flowGroup: true, },
     });
 
-    if (!estimation) throw new AppError("Estimation not found", 404);
+    if (!packageNote) throw new AppError("Package not found", 404);
 
-    if (estimation.kind !== DocumentKind.ESTIMATION)
-        throw new AppError("Not an estimation document", 400);
+    if (packageNote.kind !== DocumentKind.PACKAGE_NOTE) throw new AppError("Not an package note document", 400);
 
     const result = await prisma.$transaction(async (tx) => {
 
@@ -319,8 +351,7 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
             where: { status: FlowStatus.OPEN },
         });
 
-        if (!academicYear)
-            throw new AppError("No open academic year found", 404);
+        if (!academicYear) throw new AppError("No open academic year found", 404);
 
         /* ======================================================
            2. DOCUMENT SEQUENCE (SAME AS CREATE)
@@ -330,18 +361,18 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
             where: {
                 academicYearId_type_scope: {
                     academicYearId: academicYear.id,
-                    type: DocumentKind.ESTIMATION,
+                    type: DocumentKind.PACKAGE_NOTE,
                     scope: SequenceScope.SCHOOL
                 },
             },
         });
 
-        let finalNumber = Number(estimation.documentNo);
+        let finalNumber = Number(packageNote.documentNo);
 
         if (userDocumentNo) {
             const userNo = Number(userDocumentNo);
 
-            if (Number.isNaN(userNo) || userNo <= 0) throw new AppError("Invalid estimation number", 400);
+            if (Number.isNaN(userNo) || userNo <= 0) throw new AppError("Invalid package note number", 400);
 
             finalNumber = Math.max(seq?.lastNumber ?? 0, userNo);
 
@@ -349,7 +380,7 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
                 where: {
                     academicYearId_type_scope: {
                         academicYearId: academicYear.id,
-                        type: DocumentKind.ESTIMATION,
+                        type: DocumentKind.PACKAGE_NOTE,
                         scope: SequenceScope.SCHOOL
                     },
                 },
@@ -358,7 +389,7 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
                 },
                 create: {
                     academicYearId: academicYear.id,
-                    type: DocumentKind.ESTIMATION,
+                    type: DocumentKind.PACKAGE_NOTE,
                     scope: SequenceScope.SCHOOL,
                     lastNumber: finalNumber,
                 },
@@ -370,7 +401,7 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
         ====================================================== */
 
         await tx.item.deleteMany({
-            where: { invoiceId: estimationId },
+            where: { invoiceId: packageId },
         });
 
         /* ======================================================
@@ -383,21 +414,12 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
 
         const calculatedItems = items.map((item, index) => {
             if (!item.description?.trim())
-                throw new AppError(
-                    `Item ${index + 1}: Description required`,
-                    400
-                );
+                throw new AppError(`Item ${index + 1}: Description required`, 400);
 
             if (item.quantity <= 0)
-                throw new AppError(
-                    `Item ${index + 1}: Quantity must be at least 1`,
-                    400
-                );
+                throw new AppError(`Item ${index + 1}: Quantity must be at least 1`, 400);
 
-            const discountPercent = Math.min(
-                Math.max(item.discountPercent, 0),
-                99
-            );
+            const discountPercent = Math.min(Math.max(item.discountPercent, 0), 99);
 
             const gross = round(item.quantity * item.unitPrice);
             const discount = round((gross * discountPercent) / 100);
@@ -416,16 +438,13 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
                 discountPercent,
                 grossAmount: gross,
                 netAmount: net,
+                pending: item.pending ?? 0
             };
         });
 
         const netAmount = round(grossAmount - totalDiscount);
 
-        if (netAmount <= 0)
-            throw new AppError(
-                "Total amount must be greater than zero",
-                409
-            );
+        if (netAmount <= 0) throw new AppError("Total amount must be greater than zero", 409);
 
         /* ======================================================
            5. RECREATE ITEMS
@@ -434,16 +453,16 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
         await tx.item.createMany({
             data: calculatedItems.map((i) => ({
                 ...i,
-                invoiceId: estimationId,
+                invoiceId: packageId,
             })),
         });
 
         /* ======================================================
-           6. UPDATE ESTIMATION
+           6. UPDATE PACKAGE
         ====================================================== */
 
         const updated = await tx.invoice.update({
-            where: { id: estimationId },
+            where: { id: packageId },
             data: {
                 documentNo: String(finalNumber),
                 totalQuantity,
@@ -465,4 +484,4 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
 })
 );
 
-export default router
+export default router;

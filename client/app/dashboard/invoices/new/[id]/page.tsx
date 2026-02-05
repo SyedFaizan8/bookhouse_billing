@@ -187,7 +187,7 @@ export default function InvoicePage() {
             {
                 onSuccess: () => {
                     toast.success("Invoice created successfully");
-                    router.back();
+                    router.replace(`/dashboard/schools/${id}/estimations`);
                 },
                 onError: (e) => toast.error(handleApiError(e).message),
             }
@@ -287,7 +287,7 @@ export default function InvoicePage() {
 
                 {/* School */}
                 <div className="border rounded-md p-4 bg-slate-50">
-                    <div className="font-bold text-slate-700">BILL TO</div>
+                    <div className="font-bold text-slate-700 underline">BILL TO</div>
 
                     {/* School name */}
                     <div className="font-semibold text-slate-900">

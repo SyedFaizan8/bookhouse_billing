@@ -301,8 +301,6 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
 }))
 
 
-// router.get("/next-number", getNextInvoiceNumber);
-
 // GET ALL SCHOOL INVOICES
 router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
 
@@ -414,12 +412,14 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
         include: {
             items: {
                 select: {
+                    id: true,
                     unitPrice: true,
                     quantity: true,
                     discountPercent: true,
                     description: true,
                     class: true,
                     company: true,
+                    pending: true
                 }
             },
             flowGroup: {
@@ -448,6 +448,7 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
             (grossAmount * Number(i.discountPercent)) / 100;
 
         return {
+            id: i.id,
             description: i.description,
             class: i.class,
             company: i.company,
@@ -460,6 +461,7 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
 
             grossAmount,
             netAmount: grossAmount - discountAmount,
+            pending: i.pending
         };
     });
 
@@ -514,12 +516,14 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
         include: {
             items: {
                 select: {
+                    id: true,
                     unitPrice: true,
                     quantity: true,
                     discountPercent: true,
                     description: true,
                     class: true,
                     company: true,
+                    pending: true
                 }
             },
             flowGroup: {
@@ -549,6 +553,7 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
             (grossAmount * Number(i.discountPercent)) / 100;
 
         return {
+            id: i.id,
             description: i.description,
             class: i.class,
             company: i.company,
@@ -561,6 +566,7 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
 
             grossAmount,
             netAmount: grossAmount - discountAmount,
+            pending: i.pending
         };
     });
 
@@ -646,5 +652,7 @@ router.post('/void/:id', requireAdmin, asyncHandler(async (req: Request, res: Re
 
     res.json({ message: "Invoice voided successfully" })
 }))
+
+
 
 export default router

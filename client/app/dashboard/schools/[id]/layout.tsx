@@ -20,6 +20,7 @@ export default function DealerLayout({
     const nav = [
         { label: "Overview", href: `/dashboard/schools/${id}` },
         { label: "Estimations", href: `/dashboard/schools/${id}/estimations` },
+        { label: "Package Note", href: `/dashboard/schools/${id}/package` },
         { label: "Invoices", href: `/dashboard/schools/${id}/invoices` },
         { label: "Credit Note", href: `/dashboard/schools/${id}/credit` },
         { label: "Payments", href: `/dashboard/schools/${id}/payments` },

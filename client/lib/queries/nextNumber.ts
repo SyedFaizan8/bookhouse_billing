@@ -36,3 +36,12 @@ export function useNextPaymentNumber() {
         gcTime: 0,
     })
 }
+
+export function useNextPackageNumber() {
+    return useQuery({
+        queryKey: ["next-number", "package"],
+        queryFn: async () => (await api.get<{ nextNumber: string }>('/next-number/package')).data,
+        staleTime: 0,
+        gcTime: 0,
+    })
+}

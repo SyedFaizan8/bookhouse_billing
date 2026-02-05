@@ -16,6 +16,7 @@ const typeMap: Record<string, DocumentKind> = {
     invoice: DocumentKind.INVOICE,
     payment: DocumentKind.PAYMENT,
     credit: DocumentKind.CREDIT_NOTE,
+    package: DocumentKind.PACKAGE_NOTE
 };
 
 /* ============================================

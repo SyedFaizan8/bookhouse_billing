@@ -16,6 +16,7 @@ import statementRoutes from "./modules/statement/statement.route.js";
 import companyRoutes from "./modules/company/company.route.js";
 import dashboardRoutes from "./modules/dashboard/dashboard.route.js";
 import nextNumberRoutes from "./modules/nextNumber/nextNumber.route.js";
+import packageRoutes from "./modules/package/package.route.js";
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use("/statement", requireAuth, statementRoutes)
 router.use("/company", requireAuth, companyRoutes)
 router.use("/dashboard", requireAuth, requireAdmin, dashboardRoutes)
 router.use("/next-number", requireAuth, nextNumberRoutes)
+router.use("/package", requireAuth, packageRoutes)
 
 export default router;

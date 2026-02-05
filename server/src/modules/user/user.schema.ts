@@ -17,5 +17,6 @@ export const updateUserSchema = z.object({
         email: z.string().optional(),
         role: z.enum(["ADMIN", "STAFF"]).optional(),
         password: z.string().min(6).optional(),
+        active: z.boolean()
     }),
 });

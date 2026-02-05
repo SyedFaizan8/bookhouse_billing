@@ -41,6 +41,7 @@ export default function SettingsPage() {
                     phone: data?.phone ?? "",
                     email: data?.email ?? "",
                     gst: data?.gst ?? "",
+                    street: data?.street ?? "",
                     town: data?.town ?? "",
                     district: data?.district ?? "",
                     state: data?.state ?? "",

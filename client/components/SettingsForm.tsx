@@ -5,10 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { useEffect, useState } from "react"
 
-import {
-    settingsInfoSchema,
-    SettingsInfoForm,
-} from "@/lib/validators/companyInfo.schema"
+import { settingsInfoSchema, SettingsInfoForm, } from "@/lib/validators/companyInfo.schema"
 
 import { CompanySettings } from "@/lib/types/settings"
 import { useUpdateSettingsInfo } from "@/lib/queries/settings"
@@ -20,6 +17,7 @@ function sanitizeDefaults(data: CompanySettings): SettingsInfoForm {
         ...data,
         email: data.email ?? undefined,
         gst: data.gst ?? undefined,
+        street: data.street ?? undefined,
         town: data.town ?? undefined,
         district: data.district ?? undefined,
         state: data.state ?? undefined,
@@ -35,11 +33,7 @@ function sanitizeDefaults(data: CompanySettings): SettingsInfoForm {
     }
 }
 
-export default function SettingsForm({
-    defaultValues,
-}: {
-    defaultValues: CompanySettings
-}) {
+export default function SettingsForm({ defaultValues }: { defaultValues: CompanySettings }) {
     const updateCompany = useUpdateSettingsInfo()
 
     const form = useForm<SettingsInfoForm>({
@@ -143,12 +137,18 @@ export default function SettingsForm({
                 <Input label="Primary Phone" required {...register("phone")} />
                 <Input label="Email" {...register("email")} />
 
-                <Input label="GST" {...register("gst")} />
+                <TextArea
+                    label="Street Address"
+                    className="lg:col-span-3 sm:col-span-2"
+                    {...register("street")}
+                />
+
                 <Input label="Town" {...register("town")} />
                 <Input label="District" {...register("district")} />
-
                 <Input label="State" {...register("state")} />
                 <Input label="Pincode" {...register("pincode")} />
+
+                <Input label="GST" {...register("gst")} />
 
                 <Input label="Bank Name" {...register("bankName")} />
                 <Input label="Account No" {...register("accountNo")} />
@@ -293,3 +293,25 @@ function Input({ label, required, ...props }: any) {
         </div>
     )
 }
+
+function TextArea({ label, required, className = "", ...props }: any) {
+    return (
+        <div className={className}>
+            <label className="text-sm text-slate-600">
+                {label}
+                {required && <span className="ml-1 text-red-500">*</span>}
+            </label>
+
+            <textarea
+                rows={2}
+                {...props}
+                className="
+                    mt-1 w-full rounded-md border border-slate-300
+                    px-3 py-2 text-sm resize-none
+                    focus:ring-2 focus:ring-indigo-500 outline-none
+                "
+            />
+        </div>
+    )
+}
+

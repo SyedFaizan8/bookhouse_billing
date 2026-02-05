@@ -569,9 +569,7 @@ export default function EditEstimationPage() {
                         <span className="flex items-center justify-center gap-2">
                             <Spinner size={18} /> Updating...
                         </span>
-                    ) : (
-                        "Update Estimation"
-                    )}
+                    ) : ("Update Estimation")}
                 </button>
 
             </div>

@@ -25,11 +25,6 @@ export function useUpdateSettingsInfo() {
                 },
             });
         },
-
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["settings"],
-            });
-        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["settings"], })
     });
 }

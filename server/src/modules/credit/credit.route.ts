@@ -58,17 +58,6 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
            3. DOCUMENT NUMBER (CREDIT NOTE)
         ====================================================== */
 
-        const seq = await tx.documentSequence.findUnique({
-            where: {
-                academicYearId_type_scope: {
-                    academicYearId: academicYear.id,
-                    type: DocumentKind.CREDIT_NOTE,
-                    scope: SequenceScope.SCHOOL,
-                },
-            },
-        });
-
-        const lastNumber = seq?.lastNumber ?? 0;
         const userNo = Number(userDocumentNo);
 
         if (!userNo || userNo <= 0) throw new AppError("Invalid credit note number", 409);
@@ -87,10 +76,7 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
 
         if (exists) throw new AppError(`Credit note #${userNo} already exists`, 409);
 
-        /* ✅ 2. enforce forward only */
-        if (userNo <= lastNumber) throw new AppError(`Number must be greater than ${lastNumber}`, 409);
-
-        /* ✅ 3. update sequence */
+        /* ✅ 2. update sequence */
         await tx.documentSequence.upsert({
             where: {
                 academicYearId_type_scope: {
@@ -248,7 +234,6 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
 
         if (!userNo || userNo <= 0) throw new AppError("Invalid credit note number", 409);
 
-        /* ✅ 3. update sequence */
         await tx.documentSequence.upsert({
             where: {
                 academicYearId_type_scope: {

@@ -7,6 +7,7 @@ export const companyInfoSchema = z.object({
     email: z.email().optional().nullable(),
     gst: z.string().optional().nullable(),
 
+    street: z.string().optional().nullable(),
     town: z.string().optional().nullable(),
     district: z.string().optional().nullable(),
     state: z.string().optional().nullable(),

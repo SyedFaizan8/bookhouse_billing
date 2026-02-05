@@ -7,6 +7,7 @@ export const CreateEstimationItemDTO = z.object({
 
     quantity: z.number().int().positive(),
     unitPrice: z.number().min(0),
+    pending: z.number().optional().nullable(),
 
     discountPercent: z.number().min(0).max(100),
 });
