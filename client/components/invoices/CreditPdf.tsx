@@ -179,18 +179,15 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#64748b",
     },
-    watermark: {
+    watermarkLogo: {
         position: "absolute",
-        top: "40%",
-        left: "8%",
-        width: "100%",
-        textAlign: "center",
-        fontSize: 90,
-        fontWeight: 800,
-        color: "#dc262620",
-        transform: "rotate(-30deg)",
-        letterSpacing: 6,
+        top: "50%",
+        left: "50%",
+        width: 420,
+        opacity: 0.05,
+        transform: "translate(-190px, -190px)",
     },
+
 
     statusRibbon: {
         backgroundColor: "#fee2e2",
@@ -212,10 +209,12 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
         <Document>
             <Page size="A4" style={styles.page} wrap>
 
-                {data.status === "VOIDED" && (
-                    <Text style={styles.watermark}>
-                        VOIDED
-                    </Text>
+                {settings?.logoUrl && (
+                    <Image
+                        src={settings.logoUrl}
+                        style={styles.watermarkLogo}
+                        fixed
+                    />
                 )}
 
                 {/* HEADER */}

@@ -122,17 +122,13 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#64748b",
     },
-    watermark: {
+    watermarkLogo: {
         position: "absolute",
-        top: "40%",
-        left: 0,
-        right: 0,
-        textAlign: "center",
-        fontSize: 90,
-        fontWeight: 800,
-        color: "#dc262620",
-        transform: "rotate(-30deg)",
-        letterSpacing: 6,
+        top: "50%",
+        left: "50%",
+        width: 420,
+        opacity: 0.05,
+        transform: "translate(-190px, -190px)",
     },
     statusRibbon: {
         backgroundColor: "#fee2e2",
@@ -161,10 +157,13 @@ export default function CompanyPaymentPdf({
         <Document>
             <Page size="A4" style={styles.page}>
 
-                {data.status === "REVERSED" && (
-                    <Text style={styles.watermark}>
-                        REVERSED
-                    </Text>
+
+                {settings?.logoUrl && (
+                    <Image
+                        src={settings.logoUrl}
+                        style={styles.watermarkLogo}
+                        fixed
+                    />
                 )}
 
                 {/* TOP BAR */}

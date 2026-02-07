@@ -153,6 +153,15 @@ const styles = StyleSheet.create({
         fontWeight: 700,
         marginTop: 12,
     },
+
+    watermarkLogo: {
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        width: 420,
+        opacity: 0.05,
+        transform: "translate(-190px, -190px)",
+    },
 });
 
 /* ================= PDF ================= */
@@ -167,6 +176,15 @@ export default function CompanyStatementPdf({
     return (
         <Document>
             <Page size="A4" style={styles.page}>
+
+
+                {settings?.logoUrl && (
+                    <Image
+                        src={settings.logoUrl}
+                        style={styles.watermarkLogo}
+                        fixed
+                    />
+                )}
                 {/* TOP */}
                 <View style={styles.rowBetween}>
                     <Text>Statement of Account</Text>

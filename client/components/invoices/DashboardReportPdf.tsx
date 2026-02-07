@@ -156,12 +156,20 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
 
-
     footer: {
         marginTop: 20,
         textAlign: "center",
         fontSize: 8.5,
         color: "#64748b",
+    },
+
+    watermarkLogo: {
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        width: 420,
+        opacity: 0.05,
+        transform: "translate(-190px, -190px)",
     },
 })
 
@@ -188,6 +196,14 @@ export default function DashboardReportPdf({
     return (
         <Document>
             <Page size="A4" style={styles.page} wrap>
+
+                {settings?.logoUrl && (
+                    <Image
+                        src={settings.logoUrl}
+                        style={styles.watermarkLogo}
+                        fixed
+                    />
+                )}
 
                 {/* TOP */}
                 <View style={styles.rowBetween}>

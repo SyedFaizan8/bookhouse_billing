@@ -160,7 +160,15 @@ const styles = StyleSheet.create({
         textAlign: "center",
         alignSelf: "center",
         marginTop: 6,
-    }
+    },
+    watermarkLogo: {
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        width: 420,
+        opacity: 0.05,
+        transform: "translate(-190px, -190px)",
+    },
 });
 
 /* ================= PDF ================= */
@@ -176,10 +184,12 @@ export default function ReceiptPdf({
         <Document>
             <Page size="A4" style={styles.page}>
 
-                {data.status === "REVERSED" && (
-                    <Text style={styles.watermark}>
-                        REVERSED
-                    </Text>
+                {settings?.logoUrl && (
+                    <Image
+                        src={settings.logoUrl}
+                        style={styles.watermarkLogo}
+                        fixed
+                    />
                 )}
 
                 {/* TOP BAR */}
