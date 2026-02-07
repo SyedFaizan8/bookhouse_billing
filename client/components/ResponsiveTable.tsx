@@ -1,6 +1,7 @@
 "use client"
 
 import { ReactNode, MouseEvent } from "react"
+import Spinner from "./Spinner"
 
 export type Column<T> = {
     key: string
@@ -14,6 +15,7 @@ type Props<T> = {
     columns: Column<T>[]
     onRowClick?: (row: T) => void
     getRowId?: (row: T) => string | number
+    loading?: boolean
 }
 
 export default function ResponsiveTable<T>({
@@ -21,6 +23,7 @@ export default function ResponsiveTable<T>({
     columns,
     onRowClick,
     getRowId,
+    loading
 }: Props<T>) {
     const handleRowClick = (e: MouseEvent, row: T) => {
         const target = e.target as HTMLElement
@@ -45,18 +48,22 @@ export default function ResponsiveTable<T>({
                 </thead>
 
                 <tbody>
-                    {data.length === 0 && (
+                    {loading ? (
                         <tr>
-                            <td
-                                colSpan={columns.length}
-                                className="px-4 py-8 text-center text-slate-500"
-                            >
-                                No records found
+                            <td colSpan={999} className="py-10">
+                                <div className="flex items-center justify-center gap-2 text-slate-500">
+                                    <Spinner size={18} />
+                                    <span className="text-sm">loading...</span>
+                                </div>
                             </td>
                         </tr>
-                    )}
-
-                    {data.map((row, index) => {
+                    ) : data.length === 0 ? (
+                        <tr>
+                            <td colSpan={columns.length} className="text-center py-8 text-slate-400">
+                                No data found
+                            </td>
+                        </tr>
+                    ) : (data.map((row, index) => {
                         const key = getRowId?.(row) ?? (row as any).id
                         return (
                             <tr
@@ -77,7 +84,7 @@ export default function ResponsiveTable<T>({
                                 ))}
                             </tr>
                         )
-                    })}
+                    }))}
                 </tbody>
             </table>
         </div>

@@ -38,6 +38,7 @@ export default function CustomersPage() {
     const {
         data,
         isLoading,
+        isFetching,
         hasNextPage,
         fetchNextPage,
     } = useSchoolsInfinite(sortBy, order, debouncedSearch);
@@ -146,6 +147,7 @@ export default function CustomersPage() {
                 data={pageData}
                 columns={columns}
                 getRowId={(row) => row.id}
+                loading={isLoading || isFetching}
                 onRowClick={(row) => {
                     router.push(`/dashboard/schools/${row.id}`);
                 }}

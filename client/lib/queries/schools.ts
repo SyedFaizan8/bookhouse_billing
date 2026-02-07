@@ -252,7 +252,7 @@ export const deleteEstimation = () => {
 // PACKAGE NOTE
 export const useSchoolPackage = (schoolId: string) =>
     useQuery({
-        queryKey: ["school-estimations", schoolId],
+        queryKey: ["school-packages", schoolId],
         queryFn: async () =>
             (await api.get<InvoiceRow[]>(`/package/${schoolId}`)).data,
     });
