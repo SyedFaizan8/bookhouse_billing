@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 32,
         fontFamily: "Mono",
-        fontSize: 6,
+        fontSize: 7,
         color: "#0f172a",
     },
 
@@ -128,14 +128,14 @@ const styles = StyleSheet.create({
         width: 20,
         borderLeft: "1px solid #cbd5e1",
     },
-    c2: { width: 150 }, // description wraps
+    c2: { width: 140 }, // description wraps
     c3: { width: 32 },
     c4: { width: 80 },
     c5: { width: 40 },
     c6: { width: 60 },
     c7: { width: 75 }, // gross
     c8: { width: 38 },
-    c9: { width: 60 },
+    c9: { width: 70 },
     c10: { width: 75 },
 
     totalsRow: {
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
         top: "50%",
         left: "50%",
         width: 420,
-        opacity: 0.05,
+        opacity: 0.07,
         transform: "translate(-190px, -190px)",
     },
 });

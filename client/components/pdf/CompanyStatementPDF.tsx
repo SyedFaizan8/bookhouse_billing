@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
         top: "50%",
         left: "50%",
         width: 420,
-        opacity: 0.05,
+        opacity: 0.07,
         transform: "translate(-190px, -190px)",
     },
 });
