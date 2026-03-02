@@ -13,12 +13,12 @@ import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { PaymentRow } from "@/lib/types/payments";
 import { useCompanyPayments } from "@/lib/queries/company";
 import { useAuthUser } from "@/lib/queries/auth";
-import { reversePayment } from "@/lib/queries/schools";
-import { CompanyPaymentReverseDialog } from "@/components/alertBox/CompanyPaymentReverseDialog";
+import { deletePayment } from "@/lib/queries/schools";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/utils/getApiError";
 import RowActions from "@/components/RowActions";
 import { Money } from "@/components/Money";
+import { PaymentDeleteDialog } from "@/components/alertBox/PaymentDeleteDialog";
 
 const PAGE_SIZE = 10;
 
@@ -31,9 +31,9 @@ export default function PaymentsPage() {
     const { data = [], isLoading } = useCompanyPayments(id);
     const { data: user, isLoading: authLoading } = useAuthUser()
 
-    const ReversePaymentMutation = reversePayment()
+    const deleteReceipt = deletePayment()
 
-    const [voidTarget, setVoidTarget] = useState<PaymentRow | null>(null)
+    const [target, setTarget] = useState<PaymentRow | null>(null)
 
     const isAdmin = user?.role === "ADMIN"
 
@@ -107,21 +107,6 @@ export default function PaymentsPage() {
                 className:
                     "text-right font-semibold text-green-600",
                 render: (p) => <Money amount={p.amount} />
-            },
-            {
-                key: "status",
-                header: "Status",
-                className: "text-right",
-                render: (i) => (<span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                                            ${i.status === "POSTED"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                                        `}
-                >
-                    {i.status === "POSTED" ? "Posted" : "Reversed"}
-                </span>)
             }
         ];
 
@@ -135,12 +120,16 @@ export default function PaymentsPage() {
                     <RowActions
                         actions={
                             y.status === "POSTED"
-                                ? [
-                                    {
-                                        label: "Reverse",
-                                        onClick: () => setVoidTarget(y),
-                                        variant: "danger",
-                                    },
+                                ? [{
+                                    label: "Edit",
+                                    onClick: () => router.replace(`/dashboard/companies/${id}/payments/${y.id}/edit`),
+                                    variant: "warning",
+                                },
+                                {
+                                    label: "Delete",
+                                    onClick: () => setTarget(y),
+                                    variant: "danger",
+                                },
                                 ] : []
                         }
                     />
@@ -238,16 +227,17 @@ export default function PaymentsPage() {
                 {filtered.length} payments
             </div>
 
-            <CompanyPaymentReverseDialog
-                open={!!voidTarget}
-                payment={voidTarget}
-                loading={ReversePaymentMutation.isPending}
-                onCancel={() => setVoidTarget(null)}
+            <PaymentDeleteDialog
+                type="COMPANY"
+                open={!!target}
+                payment={target}
+                loading={deleteReceipt.isPending}
+                onCancel={() => setTarget(null)}
                 onConfirm={() => {
-                    ReversePaymentMutation.mutate(voidTarget!.id, {
+                    deleteReceipt.mutate(target!.id, {
                         onSuccess: () => {
-                            toast.success("Payment Reversed successfully")
-                            setVoidTarget(null)
+                            toast.success("Payment deleted successfully")
+                            setTarget(null)
                         },
                         onError: (e) => toast.error(handleApiError(e).message),
                     })

@@ -10,13 +10,14 @@ import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { deleteEstimation, useSchoolEstimations } from "@/lib/queries/schools";
+import { deleteInvoice, useSchoolEstimations } from "@/lib/queries/schools";
 import RowActions from "@/components/RowActions";
 import { InvoiceRow } from "@/lib/types/customer";
-import { EstimationDeleteDialog } from "@/components/alertBox/EstimationDeleteDialog";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/utils/getApiError";
 import { Money } from "@/components/Money";
+import { DocumentDeleteDialog } from "@/components/alertBox/DocumentDeleteDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 5;
 
@@ -28,15 +29,14 @@ export default function CustomerInvoicesPage() {
 
     const { data = [], isLoading } = useSchoolEstimations(id);
 
-    const deleteMutation = deleteEstimation()
+    const deleteMutation = deleteInvoice()
+    const queryClient = useQueryClient()
 
     const [target, setTarget] = useState<InvoiceRow | null>(null)
 
     const filtered = useMemo(() => {
         if (!search) return data;
-        return data.filter((i) =>
-            i.documentNo.toLowerCase().includes(search.toLowerCase())
-        );
+        return data.filter((i) => i.documentNo.toLowerCase().includes(search.toLowerCase()));
     }, [data, search]);
 
     const {
@@ -183,15 +183,17 @@ export default function CustomerInvoicesPage() {
                 {filtered.length}
             </div>
 
-            <EstimationDeleteDialog
+            <DocumentDeleteDialog
                 open={!!target}
-                estimation={target}
+                type="ESTIMATION"
+                document={target}
                 loading={deleteMutation.isPending}
                 onCancel={() => setTarget(null)}
                 onConfirm={() => {
                     deleteMutation.mutate(target!.id, {
                         onSuccess: () => {
                             toast.success("Estimation Deleted successfully")
+                            queryClient.invalidateQueries({ queryKey: ["school-estimations"] })
                             setTarget(null)
                         },
                         onError: (e) =>
@@ -199,7 +201,6 @@ export default function CustomerInvoicesPage() {
                     })
                 }}
             />
-
         </div>
     );
 }

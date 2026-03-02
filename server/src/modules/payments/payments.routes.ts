@@ -6,6 +6,7 @@ import { AcademicYearStatus, DocumentKind, FlowStatus, PaymentStatus, SequenceSc
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
 import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
+import { updatePaymentSchema } from "./payments.schema.js";
 
 const router = Router();
 
@@ -217,7 +218,7 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
             data: {
                 academicYearId: academicYear.id,
                 flowGroupId: flowGroup.id,
-                receiptNo: userNo,
+                receiptNo: String(userNo),
                 amount,
                 mode,
                 note:
@@ -471,8 +472,62 @@ router.get("/company/receipt/:id", asyncHandler(async (req: Request, res: Respon
 
 }))
 
+router.patch("/:id", requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
 
-router.post('/reverse/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const { data, error } = updatePaymentSchema.safeParse(req.body);
+    if (error) console.log(error)
+    if (error) throw new AppError("Validation Failed", 409);
+
+    const {
+        amount,
+        mode,
+        referenceNo,
+        note,
+        paymentDate,
+        receiptNo,
+    } = data;
+
+    const result = await prisma.$transaction(async (tx) => {
+
+        /* =============================
+           1. FIND PAYMENT
+        ============================= */
+
+        const payment = await tx.payment.findUnique({
+            where: { id },
+            include: { flowGroup: true },
+        });
+
+        if (!payment) throw new AppError("Payment not found", 404);
+
+        /* =============================
+           2. UPDATE PAYMENT
+        ============================= */
+
+        return tx.payment.update({
+            where: { id },
+            data: {
+                ...(receiptNo !== undefined && { receiptNo }),
+                ...(amount !== undefined && { amount }),
+                ...(mode && { mode }),
+                ...(paymentDate && { createdAt: new Date(paymentDate), }),
+                note: mode === "BANK" && referenceNo
+                    ? `Ref: ${referenceNo}`
+                    : note ?? null,
+            },
+        });
+    });
+
+    return res.json({
+        success: true,
+        paymentId: result.id,
+        receiptNo: result.receiptNo,
+    });
+})
+);
+
+router.post('/delete/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
     const paymentId = req.params.id
     const userId = req.user?.userId
 
@@ -488,28 +543,12 @@ router.post('/reverse/:id', requireAdmin, asyncHandler(async (req: Request, res:
 
     if (!payment) throw new AppError('Payment not found', 404)
 
-    if (payment.status === PaymentStatus.REVERSED) throw new AppError('Payment already reversed', 400)
-
     // 🔒 academic year lock
     if (payment.academicYear.status !== AcademicYearStatus.OPEN) throw new AppError('Academic year is closed. Cannot reverse payment.', 403)
 
-    // 🔒 flow group lock (if linked)
-    if (payment.flowGroup && payment.flowGroup.status !== FlowStatus.OPEN) {
-        throw new AppError('Flow group is closed. Cannot reverse payment.', 403)
-    }
+    await prisma.payment.delete({ where: { id: paymentId }, })
 
-    const updatedPayment = await prisma.payment.update({
-        where: { id: paymentId },
-        data: {
-            status: PaymentStatus.REVERSED,
-            reversedAt: new Date(),
-            reversedByUserId: userId,
-        },
-    })
-
-    if (!updatedPayment) throw new AppError("Unable to reverse the payment", 500)
-
-    return res.json({ message: "Payment reversed successfully" })
+    return res.json({ message: "Payment deleted successfully" })
 
 }))
 

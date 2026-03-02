@@ -160,6 +160,27 @@ const styles = StyleSheet.create({
         opacity: 0.5
     },
 
+    label: {
+        width: 60,                 // SAME WIDTH → Perfect Alignment
+        color: "#ff0000",
+        fontWeight: "600",
+        opacity: 1,
+    },
+
+    value: {
+        flex: 1,
+        color: "#0073ff",          // Soft blue
+        fontWeight: "500",
+        opacity: 1,
+    },
+
+    bankTitle: {
+        fontWeight: "700",
+        fontSize: 10,
+        marginBottom: 2,
+        opacity: 1,
+    },
+
     signBox: {
         width: "35%",
         alignItems: "flex-end",
@@ -460,13 +481,41 @@ export default function InvoicePdf({
 
                 {/* Bank + sign */}
                 <View style={styles.bankWrap}>
-                    <View style={styles.bankBox}>
+                    {/* <View style={styles.bankBox}>
                         <Text style={{ fontWeight: 800, opacity: 1 }}>Bank Details</Text>
-                        <Text style={{ opacity: 1 }}>Account: {settings?.name}</Text>
-                        <Text style={{ opacity: 1 }}>Bank: {settings?.bankName}</Text>
-                        <Text style={{ opacity: 1 }}>A/C: {settings?.accountNo}</Text>
-                        <Text style={{ opacity: 1 }}>IFSC: {settings?.ifsc}</Text>
-                        <Text style={{ opacity: 1 }}>UPI: {settings?.upi}</Text>
+                        <Text style={{ opacity: 1, color: "#b91c1c" }}>Account: <Text style={{ color: "#0061f3" }}> {settings?.name}</Text></Text>
+                        <Text style={{ opacity: 1, color: "#b91c1c" }}>Bank: <Text style={{ color: "#0061f3" }}>{settings?.bankName}</Text></Text>
+                        <Text style={{ opacity: 1, color: "#b91c1c" }}>A/C:  <Text style={{ color: "#0061f3" }}>{settings?.accountNo}</Text></Text>
+                        <Text style={{ opacity: 1, color: "#b91c1c" }}>IFSC:  <Text style={{ color: "#0061f3" }}>{settings?.ifsc}</Text></Text>
+                        <Text style={{ opacity: 1, color: "#b91c1c" }}>UPI:  <Text style={{ color: "#0061f3" }}>{settings?.upi}</Text></Text>
+                    </View> */}
+                    <View style={styles.bankBox}>
+                        <Text style={styles.bankTitle}>Bank Details</Text>
+
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Account</Text>
+                            <Text style={styles.value}>: {settings?.name}</Text>
+                        </View>
+
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Bank</Text>
+                            <Text style={styles.value}>: {settings?.bankName}</Text>
+                        </View>
+
+                        <View style={styles.row}>
+                            <Text style={styles.label}>A/C No</Text>
+                            <Text style={styles.value}>: {settings?.accountNo}</Text>
+                        </View>
+
+                        <View style={styles.row}>
+                            <Text style={styles.label}>IFSC</Text>
+                            <Text style={styles.value}>: {settings?.ifsc}</Text>
+                        </View>
+
+                        <View style={styles.row}>
+                            <Text style={styles.label}>UPI</Text>
+                            <Text style={styles.value}>: {settings?.upi}</Text>
+                        </View>
                     </View>
 
                     <View style={styles.signBox}>

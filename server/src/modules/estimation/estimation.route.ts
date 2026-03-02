@@ -5,6 +5,7 @@ import { AcademicYearStatus, DocumentKind, FlowStatus, SequenceScope } from "../
 import { CreateEstimationDTO, UpdateEstimationDTO } from "./estimation.schema.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
+import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
 
 const router = Router()
 

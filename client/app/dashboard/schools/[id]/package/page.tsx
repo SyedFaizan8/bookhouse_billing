@@ -10,14 +10,15 @@ import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { deletePackage, useSchoolPackage } from "@/lib/queries/schools";
+import { deleteInvoice, useSchoolPackage } from "@/lib/queries/schools";
 import RowActions, { Action } from "@/components/RowActions";
 import { InvoiceRow } from "@/lib/types/customer";
 import { Money } from "@/components/Money";
 import { handleApiError } from "@/lib/utils/getApiError";
 import { toast } from "sonner";
 import { useAuthUser } from "@/lib/queries/auth";
-import { PackageDeleteDialog } from "@/components/alertBox/PackageDeleteDialog";
+import { DocumentDeleteDialog } from "@/components/alertBox/DocumentDeleteDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 8;
 
@@ -34,11 +35,13 @@ export default function CustomerInvoicesPage() {
     const { data = [], isLoading } = useSchoolPackage(id);
     const { data: user, isLoading: authLoading } = useAuthUser()
 
-    const deleteMutation = deletePackage()
+    const deleteMutation = deleteInvoice()
 
     const [target, setTarget] = useState<InvoiceRow | null>(null)
 
     const isAdmin = user?.role === "ADMIN"
+
+    const queryClient = useQueryClient()
 
     /* ======================================================
        FILTER
@@ -239,18 +242,21 @@ export default function CustomerInvoicesPage() {
                 onPageChange={setPage}
             />
 
-            <PackageDeleteDialog
+            <DocumentDeleteDialog
                 open={!!target}
-                pkg={target}
+                type="PACKAGE_NOTE"
+                document={target}
                 loading={deleteMutation.isPending}
                 onCancel={() => setTarget(null)}
                 onConfirm={() => {
                     deleteMutation.mutate(target!.id, {
                         onSuccess: () => {
-                            toast.success("Package Deleted successfully")
+                            toast.success("Package Note Deleted successfully")
                             setTarget(null)
+                            queryClient.invalidateQueries({ queryKey: ["school-packages"] })
                         },
-                        onError: (e) => toast.error(handleApiError(e).message),
+                        onError: (e) =>
+                            toast.error(handleApiError(e).message),
                     })
                 }}
             />

@@ -10,11 +10,11 @@ import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { reversePayment, useSchoolPayments } from "@/lib/queries/schools";
+import { deletePayment, useSchoolPayments } from "@/lib/queries/schools";
 import { PaymentRow } from "@/lib/types/payments";
 import { useAuthUser } from "@/lib/queries/auth";
 import RowActions from "@/components/RowActions";
-import { SchoolPaymentReverseDialog } from "@/components/alertBox/SchoolPaymentReverseDialog";
+import { PaymentDeleteDialog } from "@/components/alertBox/PaymentDeleteDialog";
 import { handleApiError } from "@/lib/utils/getApiError";
 import { toast } from "sonner";
 import { Money } from "@/components/Money";
@@ -30,9 +30,9 @@ export default function PaymentsPage() {
     const { data = [], isLoading } = useSchoolPayments(id);
     const { data: user, isLoading: authLoading } = useAuthUser()
 
-    const ReversePaymentMutation = reversePayment()
+    const deleteReceipt = deletePayment()
 
-    const [voidTarget, setVoidTarget] = useState<PaymentRow | null>(null)
+    const [target, setTarget] = useState<PaymentRow | null>(null)
 
     const isAdmin = user?.role === "ADMIN"
 
@@ -107,21 +107,6 @@ export default function PaymentsPage() {
                 className:
                     "text-right font-semibold text-green-600",
                 render: (p) => <Money amount={p.amount} />,
-            },
-            {
-                key: "status",
-                header: "Status",
-                className: "text-right",
-                render: (i) => (<span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                                    ${i.status === "POSTED"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                                `}
-                >
-                    {i.status === "POSTED" ? "Posted" : "Reversed"}
-                </span>)
             }
         ];
 
@@ -137,8 +122,13 @@ export default function PaymentsPage() {
                             y.status === "POSTED"
                                 ? [
                                     {
-                                        label: "Reverse",
-                                        onClick: () => setVoidTarget(y),
+                                        label: "Edit",
+                                        onClick: () => router.replace(`/dashboard/payments/${y.id}/edit`),
+                                        variant: "warning",
+                                    },
+                                    {
+                                        label: "Delete",
+                                        onClick: () => setTarget(y),
                                         variant: "danger",
                                     },
                                 ] : []
@@ -238,16 +228,17 @@ export default function PaymentsPage() {
                 {filtered.length} payments
             </div>
 
-            <SchoolPaymentReverseDialog
-                open={!!voidTarget}
-                payment={voidTarget}
-                loading={ReversePaymentMutation.isPending}
-                onCancel={() => setVoidTarget(null)}
+            <PaymentDeleteDialog
+                type="SCHOOL"
+                open={!!target}
+                payment={target}
+                loading={deleteReceipt.isPending}
+                onCancel={() => setTarget(null)}
                 onConfirm={() => {
-                    ReversePaymentMutation.mutate(voidTarget!.id, {
+                    deleteReceipt.mutate(target!.id, {
                         onSuccess: () => {
-                            toast.success("Payment Reversed successfully")
-                            setVoidTarget(null)
+                            toast.success("Payment deleted successfully")
+                            setTarget(null)
                         },
                         onError: (e) => toast.error(handleApiError(e).message),
                     })

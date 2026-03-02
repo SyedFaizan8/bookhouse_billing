@@ -10,18 +10,19 @@ import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { useSchoolCreditNote, voidInvoice } from "@/lib/queries/schools";
+import { deleteInvoice, useSchoolCreditNote } from "@/lib/queries/schools";
 import { InvoiceRow } from "@/lib/types/customer";
 import { useAuthUser } from "@/lib/queries/auth";
 import RowActions from "@/components/RowActions";
-import { CreditNoteVoidDialog } from "@/components/alertBox/CreditVoid";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/utils/getApiError";
 import { Money } from "@/components/Money";
+import { DocumentDeleteDialog } from "@/components/alertBox/DocumentDeleteDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 5;
 
-export default function CustomerInvoicesPage() {
+export default function CustomerCreditNotePage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
 
@@ -30,9 +31,7 @@ export default function CustomerInvoicesPage() {
     const { data = [], isLoading } = useSchoolCreditNote(id);
     const { data: user, isLoading: authLoading } = useAuthUser()
 
-    const voidCreditMutation = voidInvoice()
-
-    const [voidTarget, setVoidTarget] = useState<InvoiceRow | null>(null)
+    const [target, setTarget] = useState<InvoiceRow | null>(null)
 
     const isAdmin = user?.role === "ADMIN"
 
@@ -53,6 +52,8 @@ export default function CustomerInvoicesPage() {
         pageSize: PAGE_SIZE,
     });
 
+    const deleteMutation = deleteInvoice()
+    const qc = useQueryClient()
 
     const columns: Column<InvoiceRow>[] = useMemo(() => {
 
@@ -85,21 +86,6 @@ export default function CustomerInvoicesPage() {
                 className: "text-right font-medium",
                 render: (i) => <Money amount={i.amount} />,
             },
-            {
-                key: "status",
-                header: "Status",
-                className: "text-right",
-                render: (i) => (<span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                        ${i.status === "ISSUED"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                    `}
-                >
-                    {i.status === "ISSUED" ? "Issued" : "Voided"}
-                </span>)
-            }
         ];
 
         if (isAdmin) {
@@ -113,8 +99,13 @@ export default function CustomerInvoicesPage() {
                             y.status === "ISSUED"
                                 ? [
                                     {
-                                        label: "VOID",
-                                        onClick: () => setVoidTarget(y),
+                                        label: "Edit",
+                                        onClick: () => router.replace(`/dashboard/credit/${y.id}/edit`),
+                                        variant: "warning",
+                                    },
+                                    {
+                                        label: "Delete",
+                                        onClick: () => setTarget(y),
                                         variant: "danger",
                                     },
                                 ] : []
@@ -199,22 +190,23 @@ export default function CustomerInvoicesPage() {
                 {filtered.length}
             </div>
 
-            <CreditNoteVoidDialog
-                open={!!voidTarget}
-                creditNote={voidTarget}
-                loading={voidCreditMutation.isPending}
-                onCancel={() => setVoidTarget(null)}
+            <DocumentDeleteDialog
+                open={!!target}
+                type="SCHOOL_CREDIT_NOTE"
+                document={target}
+                loading={deleteMutation.isPending}
+                onCancel={() => setTarget(null)}
                 onConfirm={() => {
-                    voidCreditMutation.mutate(voidTarget!.id, {
+                    deleteMutation.mutate(target!.id, {
                         onSuccess: () => {
-                            toast.success("Credit Note Voided successfully")
-                            setVoidTarget(null)
+                            toast.success("Invoice Deleted successfully")
+                            qc.invalidateQueries({ queryKey: ["school-creditNote"] })
+                            setTarget(null)
                         },
                         onError: (e) =>
                             toast.error(handleApiError(e).message),
                     })
                 }}
-
             />
         </div>
     );

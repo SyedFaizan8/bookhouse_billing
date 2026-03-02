@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
-import { AcademicYearStatus, DocumentKind, FlowStatus, InvoiceStatus, SequenceScope } from "../../generated/prisma/enums.js";
-import { CreateCompanyInvoiceDTO, CreateInvoiceDTO } from "./invoice.schema.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus, SequenceScope } from "../../generated/prisma/enums.js";
+import { CreateCompanyInvoiceDTO, CreateInvoiceDTO, UpdateInvoiceDTO } from "./invoice.schema.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
 import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
@@ -612,14 +612,21 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
 
 }))
 
-router.post('/void/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+// DELETE INVOICE
+router.post('/delete/:id', requireAdmin, asyncHandler(async (req: Request, res: Response) => {
     const invoiceId = req.params.id
-    const userId = req.user?.userId
 
-    if (!invoiceId || !userId) throw new AppError('InvoiceId or UserId is required', 401)
+    const academicYear = await prisma.academicYear.findFirst({
+        where: { status: "OPEN" },
+        select: { id: true },
+    });
 
-    const invoice = await prisma.invoice.findUnique({
-        where: { id: invoiceId },
+    if (!academicYear) throw new AppError('open academic year first', 401)
+
+    const invoice = await prisma.invoice.findFirst({
+        where: {
+            id: invoiceId,
+        },
         include: {
             flowGroup: {
                 include: {
@@ -629,30 +636,142 @@ router.post('/void/:id', requireAdmin, asyncHandler(async (req: Request, res: Re
         },
     })
 
-    if (!invoice) throw new AppError('Invoice not found', 404)
-
-    if (invoice.status === InvoiceStatus.VOIDED) throw new AppError('Invoice already voided', 400)
+    if (!invoice)
+        throw new AppError("Invoice not found", 404)
 
     // 🔒 Academic year lock
     if (invoice.flowGroup.academicYear.status !== AcademicYearStatus.OPEN)
-        throw new AppError('Academic year is closed. Cannot void invoice.', 403)
+        throw new AppError("Academic year is closed. Cannot delete.", 403)
 
-    // 🔒 Flow group lock
-    if (invoice.flowGroup.status !== FlowStatus.OPEN)
-        throw new AppError('Flow group is closed. Cannot void invoice.', 403)
+    await prisma.invoice.delete({ where: { id: invoiceId }, })
 
-    await prisma.invoice.update({
-        where: { id: invoiceId },
-        data: {
-            status: InvoiceStatus.VOIDED,
-            voidedAt: new Date(),
-            voidedByUserId: userId,
-        },
-    })
-
-    res.json({ message: "Invoice voided successfully" })
+    res.json({ message: "Deleted successfully", })
 }))
 
+// UPDATE INVOICE
+router.patch("/:id", requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const invoiceId = req.params.id;
 
+    const academicYear = await prisma.academicYear.findFirst({
+        where: { status: "OPEN" },
+        select: { id: true },
+    });
+
+    if (!academicYear) throw new AppError('open academic year first', 401)
+
+    const parsed = UpdateInvoiceDTO.safeParse(req.body);
+    if (!parsed.success) throw new AppError("Invalid request data", 400);
+
+    const { items, date, notes, documentNo: userDocumentNo } = parsed.data;
+
+    const round = (n: number) => Number(n.toFixed(2));
+
+    const invoice = await prisma.invoice.findUnique({
+        where: { id: invoiceId },
+        include: { flowGroup: true, },
+    });
+
+    if (!invoice) throw new AppError("Not found", 404);
+
+    const result = await prisma.$transaction(async (tx) => {
+
+        /* ======================================================
+           1. OPEN ACADEMIC YEAR
+        ====================================================== */
+
+        const academicYear = await tx.academicYear.findFirst({
+            where: { status: FlowStatus.OPEN },
+        });
+
+        if (!academicYear)
+            throw new AppError("No open academic year found", 404);
+
+        /* ======================================================
+           2. DELETE OLD ITEMS
+        ====================================================== */
+
+        await tx.item.deleteMany({
+            where: { invoiceId },
+        });
+
+        /* ======================================================
+           3. RECALCULATE ITEMS
+        ====================================================== */
+
+        let totalQuantity = 0;
+        let grossAmount = 0;
+        let totalDiscount = 0;
+
+        const calculatedItems = items.map((item, index) => {
+            if (!item.description?.trim())
+                throw new AppError(`Item ${index + 1}: Description required`, 400);
+
+            if (item.quantity <= 0)
+                throw new AppError(`Item ${index + 1}: Quantity must be at least 1`, 400);
+
+            const discountPercent = Math.min(Math.max(item.discountPercent, 0), 99);
+
+            const gross = round(item.quantity * item.unitPrice);
+            const discount = round((gross * discountPercent) / 100);
+            const net = round(gross - discount);
+
+            totalQuantity += item.quantity;
+            grossAmount += gross;
+            totalDiscount += discount;
+
+            return {
+                description: item.description.trim(),
+                class: item.class ?? null,
+                company: item.company ?? null,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                discountPercent,
+                grossAmount: gross,
+                netAmount: net,
+            };
+        });
+
+        const netAmount = round(grossAmount - totalDiscount);
+
+        if (netAmount <= 0)
+            throw new AppError("Total amount must be greater than zero", 409);
+
+        /* ======================================================
+           4. RECREATE ITEMS
+        ====================================================== */
+
+        await tx.item.createMany({
+            data: calculatedItems.map((i) => ({
+                ...i,
+                invoiceId,
+            })),
+        });
+
+        /* ======================================================
+           5. UPDATE INVOICE
+        ====================================================== */
+
+        const updated = await tx.invoice.update({
+            where: { id: invoiceId },
+            data: {
+                documentNo: String(userDocumentNo).trim(),
+                totalQuantity,
+                grossAmount: round(grossAmount),
+                totalDiscount: round(totalDiscount),
+                netAmount,
+                notes,
+                ...(date && { date: new Date(date) })
+            },
+        });
+        return updated;
+    });
+
+    res.json({
+        success: true,
+        documentId: result.id,
+        documentNo: result.documentNo,
+    });
+})
+);
 
 export default router

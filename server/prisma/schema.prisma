@@ -299,7 +299,7 @@ model Payment {
   flowGroupId String
   flowGroup   FlowGroup @relation(fields: [flowGroupId], references: [id])
 
-  receiptNo Decimal @db.Decimal(12, 2)
+  receiptNo String
 
   amount Decimal       @db.Decimal(12, 2)
   mode   PaymentMode

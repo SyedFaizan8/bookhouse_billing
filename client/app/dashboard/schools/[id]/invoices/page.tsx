@@ -10,14 +10,15 @@ import EmptyState from "@/components/EmptyState";
 import Pagination from "@/components/Pagination";
 
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { useSchoolInvoices, voidInvoice } from "@/lib/queries/schools";
+import { deleteInvoice, useSchoolInvoices, } from "@/lib/queries/schools";
 import { InvoiceRow } from "@/lib/types/customer";
 import RowActions from "@/components/RowActions";
 import { useAuthUser } from "@/lib/queries/auth";
-import { InvoiceVoidDialog } from "@/components/alertBox/InvoiceVoid";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/utils/getApiError";
 import { Money } from "@/components/Money";
+import { DocumentDeleteDialog } from "@/components/alertBox/DocumentDeleteDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 10;
 
@@ -27,12 +28,10 @@ export default function CustomerInvoicesPage() {
 
     const [search, setSearch] = useState("");
 
+    const [target, setTarget] = useState<InvoiceRow | null>(null)
+
     const { data = [], isLoading } = useSchoolInvoices(id);
     const { data: user, isLoading: authLoading } = useAuthUser()
-
-    const voidInvoiceMutation = voidInvoice()
-
-    const [voidTarget, setVoidTarget] = useState<InvoiceRow | null>(null)
 
     const isAdmin = user?.role === "ADMIN"
 
@@ -52,6 +51,10 @@ export default function CustomerInvoicesPage() {
         data: filtered,
         pageSize: PAGE_SIZE,
     });
+
+
+    const deleteMutation = deleteInvoice()
+    const qc = useQueryClient()
 
     const columns: Column<InvoiceRow>[] = useMemo(() => {
 
@@ -83,21 +86,7 @@ export default function CustomerInvoicesPage() {
                 className: "text-right font-medium",
                 render: (i) => <Money amount={i.amount} />,
             },
-            {
-                key: "status",
-                header: "Status",
-                className: "text-right",
-                render: (i) => (<span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                        ${i.status === "ISSUED"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                    `}
-                >
-                    {i.status === "ISSUED" ? "Issued" : "Voided"}
-                </span>)
-            }
+
         ];
 
 
@@ -112,8 +101,13 @@ export default function CustomerInvoicesPage() {
                             y.status === "ISSUED"
                                 ? [
                                     {
-                                        label: "VOID",
-                                        onClick: () => setVoidTarget(y),
+                                        label: "Edit",
+                                        onClick: () => router.replace(`/dashboard/invoices/${y.id}/edit`),
+                                        variant: "warning",
+                                    },
+                                    {
+                                        label: "Delete",
+                                        onClick: () => setTarget(y),
                                         variant: "danger",
                                     },
                                 ] : []
@@ -198,16 +192,18 @@ export default function CustomerInvoicesPage() {
                 {filtered.length}
             </div>
 
-            <InvoiceVoidDialog
-                open={!!voidTarget}
-                invoice={voidTarget}
-                loading={voidInvoiceMutation.isPending}
-                onCancel={() => setVoidTarget(null)}
+            <DocumentDeleteDialog
+                open={!!target}
+                type="SCHOOL_INVOICE"
+                document={target}
+                loading={deleteMutation.isPending}
+                onCancel={() => setTarget(null)}
                 onConfirm={() => {
-                    voidInvoiceMutation.mutate(voidTarget!.id, {
+                    deleteMutation.mutate(target!.id, {
                         onSuccess: () => {
-                            toast.success("Invoice Voided successfully")
-                            setVoidTarget(null)
+                            qc.invalidateQueries({ queryKey: ["school-invoices"] });
+                            toast.success("Invoice Deleted successfully")
+                            setTarget(null)
                         },
                         onError: (e) =>
                             toast.error(handleApiError(e).message),

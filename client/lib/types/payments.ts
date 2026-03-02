@@ -39,3 +39,12 @@ type data = {
 export type ReceiptPdfData = ReceiptData & { school: data }
 
 export type CompanyReceiptPdfData = ReceiptData & { company: data }
+
+export interface UpdatePaymentInput {
+    amount?: number;
+    mode?: "CASH" | "UPI" | "BANK";
+    referenceNo?: string | null;
+    note?: string | null;
+    receiptNo?: string;
+    paymentDate?: string;
+}

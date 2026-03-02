@@ -276,45 +276,6 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
 
 }))
 
-router.post('/delete/:id', asyncHandler(async (req: Request, res: Response) => {
-    const packageId = req.params.id
-
-    const academicYear = await prisma.academicYear.findFirst({
-        where: { status: "OPEN" },
-        select: { id: true },
-    });
-
-    if (!academicYear) throw new AppError('open academic year first', 401)
-
-    const packageNote = await prisma.invoice.findFirst({
-        where: {
-            id: packageId,
-            kind: DocumentKind.PACKAGE_NOTE,
-        },
-        include: {
-            flowGroup: {
-                include: {
-                    academicYear: true,
-                },
-            },
-        },
-    })
-
-    if (!packageNote) throw new AppError("Package Note not found", 404)
-
-    // 🔒 Academic year lock
-    if (packageNote.flowGroup.academicYear.status !== AcademicYearStatus.OPEN)
-        throw new AppError("Academic year is closed. Cannot delete Package Note.", 403)
-
-    // 🔒 Flow group lock
-    if (packageNote.flowGroup.status !== FlowStatus.OPEN)
-        throw new AppError("Flow group is closed. Cannot delete Package Note.", 403)
-
-    await prisma.invoice.delete({ where: { id: packageId }, })
-
-    res.json({ message: "Package Note deleted successfully", })
-}))
-
 router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
     const packageId = req.params.id;
 

@@ -13,12 +13,13 @@ import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { useCompanyInvoices } from "@/lib/queries/company";
 import { InvoiceRow } from "@/lib/types/customer";
 import { useAuthUser } from "@/lib/queries/auth";
-import { voidInvoice } from "@/lib/queries/schools";
+import { deleteInvoice } from "@/lib/queries/schools";
 import RowActions from "@/components/RowActions";
-import { CompanyInvoiceVoidDialog } from "@/components/alertBox/CompanyInvoiceVoid";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/utils/getApiError";
 import { Money } from "@/components/Money";
+import { DocumentDeleteDialog } from "@/components/alertBox/DocumentDeleteDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 10;
 
@@ -31,9 +32,10 @@ export default function CompanyInvoicesPage() {
     const { data = [], isLoading } = useCompanyInvoices(id);
     const { data: user, isLoading: authLoading } = useAuthUser()
 
-    const voidInvoiceMutation = voidInvoice()
+    const deleteCompanyInvoice = deleteInvoice()
+    const qc = useQueryClient()
 
-    const [voidTarget, setVoidTarget] = useState<InvoiceRow | null>(null)
+    const [target, setTarget] = useState<InvoiceRow | null>(null)
 
     const isAdmin = user?.role === "ADMIN"
 
@@ -84,20 +86,6 @@ export default function CompanyInvoicesPage() {
                 header: "Amount",
                 className: "text-right font-medium",
                 render: (i) => <Money amount={i.amount} />,
-            }, {
-                key: "status",
-                header: "Status",
-                className: "text-right",
-                render: (i) => (<span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                                    ${i.status === "ISSUED"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                                `}
-                >
-                    {i.status === "ISSUED" ? "Issued" : "Voided"}
-                </span>)
             }
         ];
 
@@ -113,8 +101,13 @@ export default function CompanyInvoicesPage() {
                             y.status === "ISSUED"
                                 ? [
                                     {
-                                        label: "VOID",
-                                        onClick: () => setVoidTarget(y),
+                                        label: "Edit",
+                                        onClick: () => router.replace(`/dashboard/companies/${id}/invoices/${y.id}/edit`),
+                                        variant: "warning",
+                                    },
+                                    {
+                                        label: "Delete",
+                                        onClick: () => setTarget(y),
                                         variant: "danger",
                                     },
                                 ] : []
@@ -199,16 +192,18 @@ export default function CompanyInvoicesPage() {
                 {filtered.length}
             </div>
 
-            <CompanyInvoiceVoidDialog
-                open={!!voidTarget}
-                invoice={voidTarget}
-                loading={voidInvoiceMutation.isPending}
-                onCancel={() => setVoidTarget(null)}
+            <DocumentDeleteDialog
+                open={!!target}
+                type="COMPANY_INVOICE"
+                document={target}
+                loading={deleteCompanyInvoice.isPending}
+                onCancel={() => setTarget(null)}
                 onConfirm={() => {
-                    voidInvoiceMutation.mutate(voidTarget!.id, {
+                    deleteCompanyInvoice.mutate(target!.id, {
                         onSuccess: () => {
-                            toast.success("Invoice Voided successfully")
-                            setVoidTarget(null)
+                            qc.invalidateQueries({ queryKey: ["company-invoices"] })
+                            toast.success("Invoice Deleted successfully")
+                            setTarget(null)
                         },
                         onError: (e) =>
                             toast.error(handleApiError(e).message),

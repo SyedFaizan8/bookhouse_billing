@@ -37,3 +37,10 @@ export const CreateCompanyInvoiceDTO = z.object({
 
     items: z.array(CreateInvoiceItemDTO).min(1),
 });
+
+export const UpdateInvoiceDTO = z.object({
+    documentNo: z.string().optional(),
+    date: z.string().optional(),
+    notes: z.string().optional(),
+    items: z.array(CreateInvoiceItemDTO).min(1),
+});

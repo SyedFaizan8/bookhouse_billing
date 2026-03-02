@@ -3,7 +3,7 @@ import api from "../utils/axios";
 import { InvoiceRow, School, SchoolEditResponse, SchoolProfile } from "../types/customer";
 import { CreatePayload } from "../types/estimation";
 import { InvoicePdfData } from "../types/invoice";
-import { PaymentRow } from "../types/payments";
+import { PaymentRow, UpdatePaymentInput } from "../types/payments";
 import { SchoolStatement } from "../types/school";
 import { CustomerFormValues } from "../validators/customer.schema";
 
@@ -115,6 +115,19 @@ export function useCreateInvoice() {
     });
 }
 
+// DELETE INVOICE
+export const deleteInvoice = () => {
+    const q = useQueryClient()
+    return useMutation({
+        mutationFn: async (id: string) => (await api.post(`/invoice/delete/${id}`)).data,
+        onSuccess: () => {
+            q.invalidateQueries({ queryKey: ["statement"] })
+            q.invalidateQueries({ queryKey: ["dashboard-documents"] })
+            q.invalidateQueries({ queryKey: ["documents"] })
+            q.invalidateQueries({ queryKey: ["documents-export"] });
+        }
+    });
+}
 
 // ESTIMATION
 export const useSchoolEstimations = (schoolId: string) =>
@@ -208,43 +221,16 @@ export const useSchoolStatement = (id: string) =>
         queryFn: async () => (await api.get(`/statement/school/${id}`)).data
     });
 
-// VOID INVOICE / CREDIT NOTE
-export const voidInvoice = () => {
+// DELETE PAYMENT
+export const deletePayment = () => {
     const q = useQueryClient()
     return useMutation({
-        mutationFn: async (id: string) => (await api.post(`/invoice/void/${id}`)).data,
-        onSuccess: () => {
-            q.invalidateQueries({ queryKey: ["statement"] })
-            q.invalidateQueries({ queryKey: ["school-invoices"] })
-            q.invalidateQueries({ queryKey: ["company-invoices"] })
-            q.invalidateQueries({ queryKey: ["school-creditNote"] })
-            q.invalidateQueries({ queryKey: ["company-creditNote"] })
-            q.invalidateQueries({ queryKey: ["documents-export"] });
-        }
-    });
-}
-
-// VOID PAYMENT
-export const reversePayment = () => {
-    const q = useQueryClient()
-    return useMutation({
-        mutationFn: async (id: string) => (await api.post(`/payment/reverse/${id}`)).data,
+        mutationFn: async (id: string) => (await api.post(`/payment/delete/${id}`)).data,
         onSuccess: () => {
             q.invalidateQueries({ queryKey: ["statement"] })
             q.invalidateQueries({ queryKey: ["payments"] })
             q.invalidateQueries({ queryKey: ["receipt-pdf"] })
             q.invalidateQueries({ queryKey: ["documents-export"] });
-        }
-    });
-}
-
-// DELETE ESTIMATION
-export const deleteEstimation = () => {
-    const q = useQueryClient()
-    return useMutation({
-        mutationFn: async (id: string) => (await api.post(`/estimation/delete/${id}`)).data,
-        onSuccess: () => {
-            q.invalidateQueries({ queryKey: ["school-estimations"] })
         }
     });
 }
@@ -278,17 +264,7 @@ export const useUpdatePending = (id: string) => {
     });
 };
 
-// DELETE PACKAGE
-export const deletePackage = () => {
-    const q = useQueryClient()
-    return useMutation({
-        mutationFn: async (id: string) => (await api.post(`/package/delete/${id}`)).data,
-        onSuccess: () => {
-            q.invalidateQueries({ queryKey: ["school-packages"] })
-        }
-    });
-}
-
+// UPDATE PACKAGE
 export const useUpdatePackage = (id: string) => {
     const qc = useQueryClient();
 
@@ -300,3 +276,33 @@ export const useUpdatePackage = (id: string) => {
         }
     });
 };
+
+// UPDATE INVOICE / CREDIT NOTE
+export const useUpdateInvoice = (id: string) => {
+    const q = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: any) => (await api.patch(`/invoice/${id}`, data)).data,
+        onSuccess: () => {
+            q.invalidateQueries({ queryKey: ["invoice-pdf"] });
+            q.invalidateQueries({ queryKey: ["school-creditNote"] });
+            q.invalidateQueries({ queryKey: ["school-invoices"] });
+            q.invalidateQueries({ queryKey: ["statement"] })
+            q.invalidateQueries({ queryKey: ["documents-export"] });
+            q.invalidateQueries({ queryKey: ["dashboard-documents"] });
+        },
+    });
+};
+
+// UPDATE PAYMENTS SCHOOL / COMPANY
+export function useUpdatePayment(paymentId: string) {
+    const q = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: UpdatePaymentInput) => ((await api.patch(`/payment/${paymentId}`, data)).data),
+        onSuccess: () => {
+            q.invalidateQueries({ queryKey: ["payments"] })
+            q.invalidateQueries({ queryKey: ["receipt-pdf"] })
+        },
+    });
+}
