@@ -26,6 +26,7 @@ export const paymentSchema = z.object({
     referenceNo: z.string().nullish(),
     note: z.string().nullish(),
     receiptNo: z.string().nullish(),
+    receiptDate: z.string()
 });
 
 export type PaymentFormValues = z.infer<typeof paymentSchema>;

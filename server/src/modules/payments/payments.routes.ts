@@ -140,7 +140,8 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
         referenceNo,
         note,
         receiptNo: userReceiptNo,
-        recordedByUserId
+        recordedByUserId,
+        receiptDate
     } = data
 
     const result = await prisma.$transaction(async (tx) => {
@@ -224,6 +225,7 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
                         ? `Ref: ${referenceNo}`
                         : note ?? null,
                 recordedByUserId,
+                createdAt: new Date(receiptDate)
             },
         });
     });

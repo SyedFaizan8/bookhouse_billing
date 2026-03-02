@@ -12,6 +12,7 @@ export const paymentSchema = z.object({
     note: z.string().optional().or(z.literal("")),
 
     receiptNo: z.string().optional(),
+    receiptDate: z.string().min(1, "Please select Date"),
 });
 
 export type PaymentFormValues = z.infer<typeof paymentSchema>;

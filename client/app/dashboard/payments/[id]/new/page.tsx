@@ -43,6 +43,8 @@ export default function NewPaymentPage() {
 
     const createPayment = useCreateSchoolPayment(id);
 
+    const today = new Date().toISOString().split("T")[0];
+
     const {
         register,
         handleSubmit,
@@ -57,7 +59,8 @@ export default function NewPaymentPage() {
             mode: "CASH",
             referenceNo: "",
             note: "",
-            receiptNo: ""
+            receiptNo: "",
+            receiptDate: today
         },
     });
 
@@ -94,6 +97,7 @@ export default function NewPaymentPage() {
                 referenceNo: data.referenceNo?.trim() || null,
                 note: data.note?.trim() || null,
                 receiptNo: data.receiptNo?.trim() || null,
+                receiptDate: data.receiptDate,
                 recordedByUserId: user!.id,
             },
             {
@@ -160,7 +164,21 @@ export default function NewPaymentPage() {
                             />
                         </div>
 
-                        <span>{formatDate()}</span>
+                        <div>
+                            <div className='flex justify-center items-center space-x-2'>
+                                <span>Dated: </span>
+                                <input
+                                    type="date"
+                                    {...register("receiptDate")}
+                                    className="mt-1 w-full border rounded-md px-3 py-2 text-sm"
+                                />
+                            </div>
+                            {formState.errors.receiptDate && (
+                                <p className="text-xs text-red-600 mt-1">
+                                    {formState.errors.receiptDate.message}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
 

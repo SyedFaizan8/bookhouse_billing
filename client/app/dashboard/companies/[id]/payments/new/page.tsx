@@ -41,14 +41,11 @@ export default function NewCompanyPaymentPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
 
-    const { data: company, isLoading: companyLoading } =
-        useCompanyProfile(id);
+    const { data: company, isLoading: companyLoading } = useCompanyProfile(id);
 
-    const { data: settings, isLoading: settingsLoading } =
-        useSettingsInfo();
+    const { data: settings, isLoading: settingsLoading } = useSettingsInfo();
 
-    const { data: user, isLoading: userLoading } =
-        useAuthUser();
+    const { data: user, isLoading: userLoading } = useAuthUser();
 
     const createPayment = useCreateCompanyPayment(id);
 
