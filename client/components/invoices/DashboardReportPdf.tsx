@@ -138,24 +138,6 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
 
-    cellStatus: {
-        width: "15%",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    statusPill: {
-        fontSize: 7,
-        minWidth: 40,
-        paddingVertical: 1,
-        paddingHorizontal: 6,
-        borderRadius: 10,
-
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
     footer: {
         marginTop: 20,
         textAlign: "center",
@@ -172,15 +154,6 @@ const styles = StyleSheet.create({
         transform: "translate(-190px, -190px)",
     },
 })
-
-/* ===== STATUS COLORS ===== */
-
-const statusPillMap: Record<string, any> = {
-    POSTED: { backgroundColor: "#dcfce7", color: "#166534" },
-    ISSUED: { backgroundColor: "#dbeafe", color: "#1d4ed8" },
-    VOIDED: { backgroundColor: "#fee2e2", color: "#b91c1c" },
-    REVERSED: { backgroundColor: "#ffedd5", color: "#c2410c" },
-}
 
 /* ================= COMPONENT ================= */
 
@@ -269,9 +242,6 @@ export default function DashboardReportPdf({
                     <Text style={styles.cellParty}>Party</Text>
                     <Text style={styles.cellDate}>Date</Text>
                     <Text style={styles.cellAmount}>Amount</Text>
-                    <View style={styles.cellStatus}>
-                        <Text>Status</Text>
-                    </View>
                 </View>
 
                 {/* ROWS */}
@@ -292,16 +262,6 @@ export default function DashboardReportPdf({
                             {formatMoney(Number(r.amount))}
                         </Text>
 
-                        <View style={styles.cellStatus}>
-                            <View
-                                style={[
-                                    styles.statusPill,
-                                    statusPillMap[r.status] || {},
-                                ]}
-                            >
-                                <Text>{r.status}</Text>
-                            </View>
-                        </View>
 
                     </View>
                 ))}

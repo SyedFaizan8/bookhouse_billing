@@ -51,5 +51,4 @@ export type InvoiceRow = {
     pending?: number;
     amount: number;
     createdAt: string;
-    status: "ISSUED" | "VOIDED";
 };

@@ -12,7 +12,6 @@ export type DashboardDocument = {
     kind: "INVOICE" | "CREDIT_NOTE" | "PAYMENT"
     date: string
     amount: string
-    status: string
     party: string
     partyId: string
     partyType: PartyType
@@ -29,7 +28,6 @@ export type DashboardPdfRow = {
     date: string
     party: string
     amount: string
-    status: string
 }
 
 export type DashboardExportResponse = {

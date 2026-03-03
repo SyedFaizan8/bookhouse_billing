@@ -332,7 +332,6 @@ router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
             date: true,
             totalQuantity: true,
             netAmount: true,
-            status: true,
             createdAt: true
         },
     });
@@ -346,7 +345,6 @@ router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
             date: inv.date,
             totalQty: inv.totalQuantity,
             amount: inv.netAmount.toNumber(),
-            status: inv.status,
             createdAt: inv.createdAt
         }))
     );
@@ -383,7 +381,6 @@ router.get("/company/:id", asyncHandler(async (req: Request, res: Response) => {
             date: true,
             totalQuantity: true,
             netAmount: true,
-            status: true,
             createdAt: true
         },
     });
@@ -397,7 +394,6 @@ router.get("/company/:id", asyncHandler(async (req: Request, res: Response) => {
             date: inv.date,
             totalQty: inv.totalQuantity,
             amount: inv.netAmount.toNumber(),
-            status: inv.status,
             createdAt: inv.createdAt
         }))
     );
@@ -430,11 +426,6 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
             billedByUser: {
                 select: {
                     name: true
-                }
-            },
-            voidedByUser: {
-                select: {
-                    name: true,
                 }
             }
         }
@@ -498,10 +489,6 @@ router.get("/school/single/:id", asyncHandler(async (req: Request, res: Response
         billedBy: invoice.billedByUser?.name,
         kind: invoice.kind,
 
-        status: invoice.status,
-        voidedBy: invoice.voidedByUser?.name ?? null,
-        voidedAt: invoice.voidedAt,
-
         notes: invoice.notes ?? null
     }
     )
@@ -536,11 +523,6 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
                     name: true
                 }
             },
-            voidedByUser: {
-                select: {
-                    name: true
-                }
-            }
         },
     });
 
@@ -601,12 +583,6 @@ router.get("/company/single/:id", asyncHandler(async (req: Request, res: Respons
 
         billedBy: invoice.billedByUser?.name,
         kind: invoice.kind,
-
-        status: invoice.status,
-
-        voidedBy: invoice.voidedByUser?.name,
-        voidedAt: invoice.voidedAt,
-
         notes: invoice.notes ?? null
     })
 

@@ -5,7 +5,6 @@ export type PaymentRow = {
     mode: "CASH" | "UPI" | "BANK";
     note?: string;
     date: string;
-    status: "POSTED" | "REVERSED"
 };
 
 type ReceiptData = {
@@ -16,10 +15,6 @@ type ReceiptData = {
     note: string
 
     recordedBy: string,
-
-    status?: "POSTED" | "REVERSED",
-    reversedBy?: string,
-    reversedAt?: string
 }
 
 type data = {

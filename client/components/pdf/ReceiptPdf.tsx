@@ -149,18 +149,6 @@ const styles = StyleSheet.create({
         transform: "rotate(-30deg)",
         letterSpacing: 6,
     },
-    statusRibbon: {
-        backgroundColor: "#fee2e2",
-        color: "#b91c1c",
-        paddingVertical: 4,
-        paddingHorizontal: 12,
-        borderRadius: 4,
-        fontSize: 10,
-        fontWeight: 700,
-        textAlign: "center",
-        alignSelf: "center",
-        marginTop: 6,
-    },
     watermarkLogo: {
         position: "absolute",
         top: "50%",
@@ -203,13 +191,7 @@ export default function ReceiptPdf({
                                 year: "numeric",
                             })}
                         </Text>
-                        {data.status === "REVERSED" && (
-                            <View style={{ width: "100%" }}>
-                                <Text style={styles.statusRibbon}>
-                                    REVERSED
-                                </Text>
-                            </View>
-                        )}
+
                     </View>
                 </View>
 
@@ -355,18 +337,6 @@ export default function ReceiptPdf({
                     <Text style={{ marginTop: 4 }}>
                         Recorded By: {data.recordedBy}
                     </Text>
-
-                    {data.status === "REVERSED" && (
-                        <View style={{ marginTop: 6 }}>
-                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
-                                Reversed By: {data.reversedBy}
-                            </Text>
-                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
-                                Reversed At:{" "}
-                                {new Date(data.reversedAt!).toLocaleString("en-IN")}
-                            </Text>
-                        </View>
-                    )}
                 </View>
 
                 {/* FOOTER */}

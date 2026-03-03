@@ -370,7 +370,6 @@ router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
             totalQuantity: true,
             netAmount: true,
             createdAt: true,
-            status: true
         },
     });
 
@@ -383,7 +382,7 @@ router.get("/school/:id", asyncHandler(async (req: Request, res: Response) => {
             date: crt.date,
             totalQty: crt.totalQuantity,
             amount: crt.netAmount.toNumber(),
-            status: crt.status,
+
             createdAt: crt.createdAt,
         }))
     );
@@ -419,7 +418,6 @@ router.get("/company/:id", asyncHandler(async (req: Request, res: Response) => {
             date: true,
             totalQuantity: true,
             netAmount: true,
-            status: true,
             createdAt: true,
         },
     });
@@ -433,7 +431,6 @@ router.get("/company/:id", asyncHandler(async (req: Request, res: Response) => {
             date: crt.date,
             totalQty: crt.totalQuantity,
             amount: crt.netAmount.toNumber(),
-            status: crt.status,
             createdAt: crt.createdAt,
         }))
     );

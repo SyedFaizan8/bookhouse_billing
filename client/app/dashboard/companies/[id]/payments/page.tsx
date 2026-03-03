@@ -119,18 +119,17 @@ export default function PaymentsPage() {
                 render: (y) => (
                     <RowActions
                         actions={
-                            y.status === "POSTED"
-                                ? [{
-                                    label: "Edit",
-                                    onClick: () => router.replace(`/dashboard/companies/${id}/payments/${y.id}/edit`),
-                                    variant: "warning",
-                                },
-                                {
-                                    label: "Delete",
-                                    onClick: () => setTarget(y),
-                                    variant: "danger",
-                                },
-                                ] : []
+                            [{
+                                label: "Edit",
+                                onClick: () => router.replace(`/dashboard/companies/${id}/payments/${y.id}/edit`),
+                                variant: "warning",
+                            },
+                            {
+                                label: "Delete",
+                                onClick: () => setTarget(y),
+                                variant: "danger",
+                            },
+                            ]
                         }
                     />
                 ),

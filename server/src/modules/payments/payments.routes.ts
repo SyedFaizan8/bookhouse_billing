@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
 import { paymentCompanySchema, paymentSchema } from "../school/school.schema.js";
-import { AcademicYearStatus, DocumentKind, FlowStatus, PaymentStatus, SequenceScope } from "../../generated/prisma/enums.js";
+import { AcademicYearStatus, DocumentKind, SequenceScope } from "../../generated/prisma/enums.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
 import { requireAdmin } from "../../middlewares/requireAdmin.middleware.js";
@@ -61,7 +61,6 @@ router.get("/school/:schoolId", asyncHandler(async (req: Request, res: Response)
         amount: p.amount.toNumber(),
         mode: p.mode,
         note: p.note,
-        status: p.status,
         date: p.createdAt
     })),
     );
@@ -118,7 +117,6 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
         amount: p.amount.toNumber(),
         mode: p.mode,
         note: p.note,
-        status: p.status,
         date: p.createdAt
     })),
     );
@@ -345,9 +343,7 @@ router.get("/school/receipt/:id", asyncHandler(async (req: Request, res: Respons
             recordedByUser: {
                 select: { name: true },
             },
-            reversedByUser: {
-                select: { name: true }
-            }
+
         },
     });
 
@@ -387,9 +383,6 @@ router.get("/school/receipt/:id", asyncHandler(async (req: Request, res: Respons
         recordedBy:
             payment.recordedByUser?.name ?? "System",
 
-        status: payment.status,
-        reversedBy: payment.recordedByUser?.name ?? null,
-        reversedAt: payment.reversedAt
     });
 
 }))
@@ -465,9 +458,6 @@ router.get("/company/receipt/:id", asyncHandler(async (req: Request, res: Respon
 
         recordedBy: payment.recordedByUser?.name ?? "System",
 
-        status: payment.status,
-        reversedBy: payment.recordedByUser?.name ?? null,
-        reversedAt: payment.reversedAt
     });
 
 }))
@@ -544,7 +534,7 @@ router.post('/delete/:id', requireAdmin, asyncHandler(async (req: Request, res: 
     if (!payment) throw new AppError('Payment not found', 404)
 
     // 🔒 academic year lock
-    if (payment.academicYear.status !== AcademicYearStatus.OPEN) throw new AppError('Academic year is closed. Cannot reverse payment.', 403)
+    if (payment.academicYear.status !== AcademicYearStatus.OPEN) throw new AppError('Academic year is closed. Cannot delete payment.', 403)
 
     await prisma.payment.delete({ where: { id: paymentId }, })
 

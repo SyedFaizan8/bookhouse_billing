@@ -13,12 +13,6 @@ export type PdfData = {
 
     billedBy: string;
     kind: DocumentKind
-
-
-    status: "ISSUED" | "VOIDED"
-    voidedBy?: string;
-    voidedAt?: string
-
     notes?: string
 };
 

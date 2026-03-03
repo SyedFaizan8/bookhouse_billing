@@ -3,7 +3,6 @@ import { Router } from "express"
 import { prisma } from "../../prisma.js";
 import { asyncHandler } from "../../utils/async.js";
 import { AppError } from "../../utils/error.js";
-import { InvoiceStatus, PaymentStatus } from "../../generated/prisma/enums.js";
 
 const router = Router();
 
@@ -52,8 +51,7 @@ router.get("/school/:schoolId", asyncHandler(async (req: Request, res: Response)
     const invoices = await prisma.invoice.findMany({
         where: {
             flowGroupId: { in: flowIds },
-            kind: { in: ["INVOICE", "CREDIT_NOTE"] },
-            status: InvoiceStatus.ISSUED
+            kind: { in: ["INVOICE", "CREDIT_NOTE"] }
         },
         select: {
             date: true,
@@ -66,8 +64,7 @@ router.get("/school/:schoolId", asyncHandler(async (req: Request, res: Response)
     const payments = await prisma.payment.findMany({
         where: {
             flowGroupId: { in: flowIds },
-            academicYearId: academicYear.id,
-            status: PaymentStatus.POSTED
+            academicYearId: academicYear.id
         },
         select: {
             createdAt: true,
@@ -208,8 +205,7 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
     const invoices = await prisma.invoice.findMany({
         where: {
             flowGroupId: { in: flowIds },
-            kind: { in: ["INVOICE", "CREDIT_NOTE"] },
-            status: InvoiceStatus.ISSUED
+            kind: { in: ["INVOICE", "CREDIT_NOTE"] }
         },
         select: {
             date: true,
@@ -222,8 +218,7 @@ router.get("/company/:companyId", asyncHandler(async (req: Request, res: Respons
     const payments = await prisma.payment.findMany({
         where: {
             flowGroupId: { in: flowIds },
-            academicYearId: academicYear.id,
-            status: PaymentStatus.POSTED
+            academicYearId: academicYear.id
         },
         select: {
             createdAt: true,

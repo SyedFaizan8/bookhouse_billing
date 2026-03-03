@@ -49,17 +49,6 @@ function kindBadge(kind: DashboardDocument["kind"]) {
     return map[kind]
 }
 
-function statusBadge(status: string) {
-    const map: Record<string, string> = {
-        ISSUED: "bg-indigo-100 text-indigo-700",
-        VOIDED: "bg-red-100 text-red-700",
-        POSTED: "bg-green-100 text-green-700",
-        REVERSED: "bg-rose-100 text-rose-700",
-    }
-
-    return map[status] ?? "bg-slate-100 text-slate-600"
-}
-
 
 export default function DocumentsDashboardPage() {
     const [party, setParty] = useState<PartyType>("SCHOOL")
@@ -188,20 +177,6 @@ export default function DocumentsDashboardPage() {
             header: "Amount",
             className: 'text-right',
             render: (r) => <Money amount={r.amount} />,
-        },
-
-        {
-            key: "status",
-            header: "Status",
-            render: (r) => (
-                <span
-                    className={`inline-flex px-2 py-0.5 rounded-md text-xs font-medium ${statusBadge(
-                        r.status
-                    )}`}
-                >
-                    {r.status}
-                </span>
-            ),
         },
     ]
 

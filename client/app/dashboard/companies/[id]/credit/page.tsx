@@ -99,19 +99,18 @@ export default function CustomerInvoicesPage() {
                 render: (y) => (
                     <RowActions
                         actions={
-                            y.status === "ISSUED"
-                                ? [
-                                    {
-                                        label: "Edit",
-                                        onClick: () => router.replace(`/dashboard/companies/${id}/credit/${y.id}/edit`),
-                                        variant: "warning",
-                                    },
-                                    {
-                                        label: "Delete",
-                                        onClick: () => setTarget(y),
-                                        variant: "danger",
-                                    },
-                                ] : []
+                            [
+                                {
+                                    label: "Edit",
+                                    onClick: () => router.replace(`/dashboard/companies/${id}/credit/${y.id}/edit`),
+                                    variant: "warning",
+                                },
+                                {
+                                    label: "Delete",
+                                    onClick: () => setTarget(y),
+                                    variant: "danger",
+                                },
+                            ]
                         }
                     />
                 ),

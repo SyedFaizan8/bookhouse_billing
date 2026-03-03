@@ -9,7 +9,6 @@ export function exportToCSV(rows: DashboardDocument[]) {
         "Party",
         "Date",
         "Amount",
-        "Status",
     ]
 
     const csvRows = [
@@ -22,7 +21,6 @@ export function exportToCSV(rows: DashboardDocument[]) {
                 `"${r.party}"`,
                 new Date(r.date).toLocaleDateString("en-IN"),
                 r.amount,
-                r.status,
             ].join(",")
         ),
     ]

@@ -89,13 +89,6 @@ export function PaymentDeleteDialog({
                                     </span>
                                 </div>
 
-                                <div className="flex justify-between gap-4">
-                                    <span className="text-slate-500">Status</span>
-                                    <span className="font-medium text-right">
-                                        {payment.status}
-                                    </span>
-                                </div>
-
                             </div>
 
                             <p className="text-red-600 font-medium">

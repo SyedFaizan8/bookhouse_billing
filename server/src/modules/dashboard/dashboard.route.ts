@@ -271,7 +271,7 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
                 kind: i.kind,
                 date: i.date.toISOString(),
                 amount: i.netAmount.toString(),
-                status: i.status,
+
                 party:
                     i.flowGroup.school?.name ??
                     i.flowGroup.company?.name ??
@@ -291,7 +291,7 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
                 kind: "PAYMENT",
                 date: p.createdAt.toISOString(),
                 amount: p.amount.toString(),
-                status: p.status,
+
                 party:
                     p.flowGroup.school?.name ??
                     p.flowGroup.company?.name ??
@@ -357,7 +357,7 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
             kind: "PAYMENT",
             date: p.createdAt.toISOString(),
             amount: p.amount.toString(),
-            status: p.status,
+
             party:
                 p.flowGroup.school?.name ??
                 p.flowGroup.company?.name ??
@@ -409,7 +409,7 @@ router.get("/documents", asyncHandler(async (req: Request, res: Response) => {
         kind: i.kind,
         date: i.date.toISOString(),
         amount: i.netAmount.toString(),
-        status: i.status,
+
         party:
             i.flowGroup.school?.name ??
             i.flowGroup.company?.name ??
@@ -515,7 +515,7 @@ router.get("/documents/export", asyncHandler(async (req: Request, res: Response)
             kind: i.kind,
             date: i.date.toISOString(),
             amount: i.netAmount.toString(),
-            status: i.status,
+
             party:
                 i.flowGroup.school?.name ??
                 i.flowGroup.company?.name ??
@@ -533,7 +533,6 @@ router.get("/documents/export", asyncHandler(async (req: Request, res: Response)
             kind: "PAYMENT",
             date: p.createdAt.toISOString(),
             amount: p.amount.toString(),
-            status: p.status,
             party:
                 p.flowGroup.school?.name ??
                 p.flowGroup.company?.name ??

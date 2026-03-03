@@ -183,19 +183,6 @@ const styles = StyleSheet.create({
         opacity: 0.07,
         transform: "translate(-190px, -190px)",
     },
-
-
-    statusRibbon: {
-        backgroundColor: "#fee2e2",
-        color: "#b91c1c",
-        paddingVertical: 4,
-        paddingHorizontal: 12,
-        borderRadius: 4,
-        fontSize: 10,
-        fontWeight: 700,
-        textAlign: "center",
-        alignSelf: "center",
-    },
 });
 
 
@@ -224,13 +211,7 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
                                 year: "numeric",
                             })}
                         </Text>
-                        {data.status === "VOIDED" && (
-                            <View style={{ width: "100%", marginTop: 6 }}>
-                                <Text style={styles.statusRibbon}>
-                                    VOIDED
-                                </Text>
-                            </View>
-                        )}
+
                     </View>
                 </View>
 
@@ -428,19 +409,7 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
                     >
                         Authorized Signatory
                     </Text>
-                    {data.status === "VOIDED" && (
-                        <View style={{ marginTop: 6 }}>
-                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
-                                Voided By: {data.voidedBy}
-                            </Text>
-                            <Text style={{ fontSize: 9, color: "#b91c1c" }}>
-                                Voided At:{" "}
-                                {new Date(data.voidedAt!).toLocaleString("en-IN")}
-                            </Text>
-                        </View>
-                    )}
                 </View>
-
 
                 <Text style={styles.footerNote}>
                     This is a computer-generated document

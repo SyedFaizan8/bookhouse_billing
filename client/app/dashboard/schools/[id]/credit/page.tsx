@@ -95,20 +95,18 @@ export default function CustomerCreditNotePage() {
                 className: "text-right font-medium",
                 render: (y) => (
                     <RowActions
-                        actions={
-                            y.status === "ISSUED"
-                                ? [
-                                    {
-                                        label: "Edit",
-                                        onClick: () => router.replace(`/dashboard/credit/${y.id}/edit`),
-                                        variant: "warning",
-                                    },
-                                    {
-                                        label: "Delete",
-                                        onClick: () => setTarget(y),
-                                        variant: "danger",
-                                    },
-                                ] : []
+                        actions={[
+                            {
+                                label: "Edit",
+                                onClick: () => router.replace(`/dashboard/credit/${y.id}/edit`),
+                                variant: "warning",
+                            },
+                            {
+                                label: "Delete",
+                                onClick: () => setTarget(y),
+                                variant: "danger",
+                            },
+                        ]
                         }
                     />
                 ),
