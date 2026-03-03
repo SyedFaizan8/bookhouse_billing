@@ -28,8 +28,10 @@ const styles = StyleSheet.create({
     page: {
         padding: 32,
         fontFamily: "Mono",
-        fontSize: 7,
+        // fontSize: 7,
+        fontSize: 8,
         color: "#0f172a",
+        flexShrink: 1, // new added
     },
 
     /* HEADER */
@@ -37,7 +39,8 @@ const styles = StyleSheet.create({
     topRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        fontSize: 8,
+        fontSize: 9,
+        // fontSize: 8,
         marginBottom: 4,
     },
 
@@ -46,7 +49,8 @@ const styles = StyleSheet.create({
     },
 
     companyName: {
-        fontSize: 28,
+        fontSize: 30,
+        // fontSize: 28,
         fontWeight: 900,
         textAlign: "center",
         letterSpacing: 0.8,
@@ -100,43 +104,43 @@ const styles = StyleSheet.create({
 
     row: {
         flexDirection: "row",
+        // allow wrapping so long text breaks; do NOT set wrap:false
     },
 
     cell: {
         borderRight: "1px solid #cbd5e1",
         borderBottom: "1px solid #cbd5e1",
-        paddingVertical: 4,
-        paddingHorizontal: 4,
+        paddingVertical: 3,        // reduced vertical padding
+        paddingHorizontal: 4,      // slight horizontal padding
+        // text wraps by default
     },
 
     headerCell: {
         backgroundColor: "#f1f5f9",
         fontWeight: 800,
-        fontSize: 7,
+        fontSize: 8,               // header slightly bigger
         borderTop: "1px solid #94a3b8",
     },
 
     num: {
         textAlign: "right",
         fontFamily: "Mono",
+        fontSize: 9,
     },
 
     center: { textAlign: "center" },
 
-    /* column widths */
-    c1: {
-        width: 20,
-        borderLeft: "1px solid #cbd5e1",
-    },
-    c2: { width: 140 }, // description wraps
-    c3: { width: 32 },
-    c4: { width: 80 },
-    c5: { width: 40 },
-    c6: { width: 60 },
-    c7: { width: 75 }, // gross
-    c8: { width: 38 },
-    c9: { width: 70 },
-    c10: { width: 75 },
+    /* Flexible column defs with slightly reduced widths but minWidth enforced */
+    c1: { flexBasis: 20, flexShrink: 0, minWidth: 18, borderLeft: "1px solid #cbd5e1" },    // #
+    c2: { flexGrow: 2, flexBasis: 160, minWidth: 90, fontWeight: 900, },     // Description (bigger flexBasis)
+    c3: { flexBasis: 30, flexShrink: 0, minWidth: 28 },    // Class
+    c4: { flexGrow: 1, flexBasis: 80, minWidth: 50 },      // Company
+    c5: { flexBasis: 38, flexShrink: 0, minWidth: 36, fontWeight: 900 },    // Qty
+    c6: { flexBasis: 56, flexShrink: 1, minWidth: 40, maxWidth: 100, fontWeight: 900 },   // Rate
+    c7: { flexBasis: 72, flexShrink: 1, minWidth: 50, maxWidth: 110 },  // Gross
+    c8: { flexBasis: 38, flexShrink: 0, minWidth: 36 },    // Disc %
+    c9: { flexBasis: 64, flexShrink: 1, minWidth: 46, maxWidth: 100, fontWeight: 900 },  // Disc Amt
+    c10: { flexBasis: 76, flexShrink: 1, minWidth: 56, maxWidth: 120, fontWeight: 900 },  // Total
 
     totalsRow: {
         backgroundColor: "#f8fafc",
@@ -298,6 +302,18 @@ export default function InvoicePdf({
         { qty: 0, gross: 0, disc: 0, net: 0 }
     );
 
+    // pick font-size based on formatted string length
+    const numberFontSize = (s: string) => {
+        if (!s) return 8;
+        // count visible characters (including commas and decimals)
+        const len = String(s).length;
+
+        if (len <= 10) return 7.5;
+        if (len <= 13) return 6.5;
+        if (len <= 16) return 5.5;
+        return 5; // very long numbers -> smallest readable size
+    };
+
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -403,20 +419,12 @@ export default function InvoicePdf({
 
                 {/* ================= TABLE ================= */}
 
-                {/* <View style={styles.table}> */}
-                {/* Header */}
+                {/* Header  */}
                 <View style={styles.row} fixed>
                     {[
-                        styles.c1,
-                        styles.c2,
-                        styles.c3,
-                        styles.c4,
-                        styles.c5,
-                        styles.c6,
-                        styles.c7,
-                        styles.c8,
-                        styles.c9,
-                        styles.c10,
+                        styles.c1, styles.c2, styles.c3, styles.c4,
+                        styles.c5, styles.c6, styles.c7, styles.c8,
+                        styles.c9, styles.c10
                     ].map((colStyle, idx) => (
                         <Text key={idx} style={[styles.cell, styles.headerCell, colStyle]}>
                             {["#", "Description", "Cls", "Company", "Qty", "Rate", "Gross", "Disc%", "Disc Amt", "Total"][idx]}
@@ -424,19 +432,27 @@ export default function InvoicePdf({
                     ))}
                 </View>
 
-                {/* Rows */}
+                {/* Data row (allow wrap) */}
                 {computed.map((r, i) => (
-                    <View key={i} style={styles.row} wrap={false}>
+                    <View key={i} style={styles.row} /* no wrap={false} */>
                         <Text style={[styles.cell, styles.c1]}>{i + 1}</Text>
                         <Text style={[styles.cell, styles.c2]}>{r.description}</Text>
                         <Text style={[styles.cell, styles.c3, styles.center]}>{r.class || "-"}</Text>
                         <Text style={[styles.cell, styles.c4]}>{r.company || "-"}</Text>
                         <Text style={[styles.cell, styles.c5, styles.center]}>{r.qty}</Text>
-                        <Text style={[styles.cell, styles.c6, styles.num]}>{formatMoney(r.rate)}</Text>
-                        <Text style={[styles.cell, styles.c7, styles.num]}>{formatMoney(r.gross)}</Text>
+                        <Text style={[styles.cell, styles.c6, styles.num, { fontSize: numberFontSize(formatMoney(r.rate)) }]}>
+                            {formatMoney(r.rate)}
+                        </Text>
+                        <Text style={[styles.cell, styles.c7, styles.num, { fontSize: numberFontSize(formatMoney(r.gross)) }]}>
+                            {formatMoney(r.gross)}
+                        </Text>
                         <Text style={[styles.cell, styles.c8, styles.center]}>{r.discountPercent || 0}%</Text>
-                        <Text style={[styles.cell, styles.c9, styles.num]}>{formatMoney(r.discAmt)}</Text>
-                        <Text style={[styles.cell, styles.c10, styles.num]}>{formatMoney(r.net)}</Text>
+                        <Text style={[styles.cell, styles.c9, styles.num, { fontSize: numberFontSize(formatMoney(r.discAmt)) }]}>
+                            {formatMoney(r.discAmt)}
+                        </Text>
+                        <Text style={[styles.cell, styles.c10, styles.num, { fontSize: numberFontSize(formatMoney(r.net)) }]}>
+                            {formatMoney(r.net)}
+                        </Text>
                     </View>
                 ))}
 
@@ -446,12 +462,12 @@ export default function InvoicePdf({
                     <Text style={[styles.cell, styles.c2]}>Totals</Text>
                     <Text style={[styles.cell, styles.c3]} />
                     <Text style={[styles.cell, styles.c4]} />
-                    <Text style={[styles.cell, styles.c5, styles.center]}>{totals.qty}</Text>
+                    <Text style={[styles.cell, styles.c5, styles.center, { fontSize: numberFontSize(formatMoney(totals.qty)) }]}>{totals.qty}</Text>
                     <Text style={[styles.cell, styles.c6]} /> {/* rate not summed */}
-                    <Text style={[styles.cell, styles.c7, styles.num]}>{formatMoney(totals.gross)}</Text>
+                    <Text style={[styles.cell, styles.c7, styles.num, { fontSize: numberFontSize(formatMoney(totals.gross)) }]}>{formatMoney(totals.gross)}</Text>
                     <Text style={[styles.cell, styles.c8]} />
-                    <Text style={[styles.cell, styles.c9, styles.num]}>{formatMoney(totals.disc)}</Text>
-                    <Text style={[styles.cell, styles.c10, styles.num]}>{formatMoney(totals.net)}</Text>
+                    <Text style={[styles.cell, styles.c9, styles.num, { fontSize: numberFontSize(formatMoney(totals.disc)) }]}>{formatMoney(totals.disc)}</Text>
+                    <Text style={[styles.cell, styles.c10, styles.num, { fontSize: numberFontSize(formatMoney(totals.net)) }]}>{formatMoney(totals.net)}</Text>
                 </View>
                 {/* </View> */}
 
@@ -462,14 +478,7 @@ export default function InvoicePdf({
 
                 {/* Bank + sign */}
                 <View style={styles.bankWrap}>
-                    {/* <View style={styles.bankBox}>
-                        <Text style={{ fontWeight: 800, opacity: 1 }}>Bank Details</Text>
-                        <Text style={{ opacity: 1, color: "#b91c1c" }}>Account: <Text style={{ color: "#0061f3" }}> {settings?.name}</Text></Text>
-                        <Text style={{ opacity: 1, color: "#b91c1c" }}>Bank: <Text style={{ color: "#0061f3" }}>{settings?.bankName}</Text></Text>
-                        <Text style={{ opacity: 1, color: "#b91c1c" }}>A/C:  <Text style={{ color: "#0061f3" }}>{settings?.accountNo}</Text></Text>
-                        <Text style={{ opacity: 1, color: "#b91c1c" }}>IFSC:  <Text style={{ color: "#0061f3" }}>{settings?.ifsc}</Text></Text>
-                        <Text style={{ opacity: 1, color: "#b91c1c" }}>UPI:  <Text style={{ color: "#0061f3" }}>{settings?.upi}</Text></Text>
-                    </View> */}
+
                     <View style={styles.bankBox}>
                         <Text style={styles.bankTitle}>Bank Details</Text>
 

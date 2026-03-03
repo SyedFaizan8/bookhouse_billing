@@ -124,11 +124,11 @@ const styles = StyleSheet.create({
 
     cellDoc: { width: "13%" },
 
-    cellType: { width: "11%" },
+    cellType: { width: "15%" },
 
-    cellParty: { width: "28%" },
+    cellParty: { width: "35%" },
 
-    cellDate: { width: "12%" },
+    cellDate: { width: "14%" },
 
     cellAmount: {
         width: "17%",

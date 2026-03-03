@@ -109,9 +109,9 @@ export const styles = StyleSheet.create({
         backgroundColor: "#fafafa",
     },
 
-    cellDate: { width: "14%" },
+    cellDate: { width: "14%", textAlign: "left", paddingLeft: 6 },
     cellType: { width: "22%" },
-    cellRef: { width: "18%" },
+    cellRef: { width: "15%" },
     cellDebit: {
         width: "15%",
         textAlign: "right",
@@ -129,7 +129,7 @@ export const styles = StyleSheet.create({
     },
 
     cellBal: {
-        width: "16%",
+        width: "17%",
         textAlign: "right",
         fontFamily: "Mono",
         fontSize: 9,
