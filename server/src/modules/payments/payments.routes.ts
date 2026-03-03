@@ -219,10 +219,8 @@ router.post('/school/:schoolId', asyncHandler(async (req: Request, res: Response
                 receiptNo: String(userNo),
                 amount,
                 mode,
-                note:
-                    mode === "BANK" && referenceNo
-                        ? `Ref: ${referenceNo}`
-                        : note ?? null,
+                referenceNo,
+                note,
                 recordedByUserId,
                 createdAt: new Date(receiptDate)
             },
@@ -293,10 +291,8 @@ router.post('/company/:companyId', asyncHandler(async (req: Request, res: Respon
                 receiptNo: paymentNo,
                 amount,
                 mode,
-                note:
-                    mode === "BANK" && referenceNo
-                        ? `Ref: ${referenceNo}`
-                        : note ?? null,
+                referenceNo,
+                note,
                 recordedByUserId,
                 createdAt: new Date(paymentDate)
             },
@@ -366,6 +362,7 @@ router.get("/school/receipt/:id", asyncHandler(async (req: Request, res: Respons
         date: payment.createdAt,
         amount: Number(payment.amount),
         mode: payment.mode,
+        referenceNo: payment.referenceNo,
         note: payment.note,
 
         school: {
@@ -440,6 +437,7 @@ router.get("/company/receipt/:id", asyncHandler(async (req: Request, res: Respon
         date: payment.createdAt,
         amount: Number(payment.amount),
         mode: payment.mode,
+        referenceNo: payment.referenceNo,
         note: payment.note,
 
         company: {
@@ -502,9 +500,8 @@ router.patch("/:id", requireAdmin, asyncHandler(async (req: Request, res: Respon
                 ...(amount !== undefined && { amount }),
                 ...(mode && { mode }),
                 ...(paymentDate && { createdAt: new Date(paymentDate), }),
-                note: mode === "BANK" && referenceNo
-                    ? `Ref: ${referenceNo}`
-                    : note ?? null,
+                ...(referenceNo !== undefined && { referenceNo }),
+                ...(note !== undefined && { note }),
             },
         });
     });

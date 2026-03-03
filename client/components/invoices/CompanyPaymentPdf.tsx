@@ -239,10 +239,10 @@ export default function CompanyPaymentPdf({
                         <Text>{data.mode}</Text>
                     </View>
 
-                    {data.note && (
+                    {data.referenceNo && (
                         <View style={styles.row}>
                             <Text>Reference</Text>
-                            <Text>{data.note}</Text>
+                            <Text>{data.referenceNo}</Text>
                         </View>
                     )}
                 </View>

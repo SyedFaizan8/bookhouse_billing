@@ -12,8 +12,8 @@ type ReceiptData = {
     date: string;
     amount: number;
     mode: string;
-    note: string
-
+    note: string;
+    referenceNo: string;
     recordedBy: string,
 }
 

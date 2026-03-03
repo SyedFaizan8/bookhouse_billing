@@ -264,10 +264,10 @@ export default function ReceiptPdf({
                         <Text>{data.mode}</Text>
                     </View>
 
-                    {data.note && (
+                    {data.referenceNo && (
                         <View style={styles.row}>
                             <Text>Reference No</Text>
-                            <Text>{data.note}</Text>
+                            <Text>{data.referenceNo}</Text>
                         </View>
                     )}
                 </View>

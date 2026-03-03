@@ -66,7 +66,7 @@ export default function EditCompanyPaymentPage() {
         reset({
             amount: Number(payment.amount),
             mode: payment.mode,
-            referenceNo: payment.note ?? "",
+            referenceNo: payment.referenceNo ?? "",
             note: payment.note ?? "",
             receiptNo: payment.receiptNo,
             receiptDate: new Date(payment.date).toISOString().split("T")[0],
