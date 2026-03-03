@@ -14,12 +14,14 @@ import {
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
 })
+
 
 /* ================= STYLES ================= */
 
@@ -27,7 +29,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Mono",
+        fontFamily: "Arial",
         color: "#0f172a",
     },
 
@@ -38,7 +40,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         marginBottom: 8,
-        fontSize: 9,
+        fontSize: 10,
     },
 
     header: {
@@ -52,15 +54,15 @@ const styles = StyleSheet.create({
     },
 
     title: {
-        fontSize: 18,
-        fontWeight: 700,
-        letterSpacing: 0.5,
-        color: "#991b1b",
+        fontSize: 30,
+        fontWeight: 900,
+        letterSpacing: 0.8,
+        color: "#1e3a8a",
     },
 
     companyInfo: {
         textAlign: "center",
-        fontSize: 9,
+        fontSize: 10,
         color: "#475569",
         marginTop: 2,
         lineHeight: 1.4,
@@ -109,28 +111,26 @@ const styles = StyleSheet.create({
     },
 
     cellSl: { width: "6%", textAlign: "center" },
-    cellDesc: { width: "44%", paddingRight: 6 },
+    cellDesc: { width: "42%", paddingRight: 6 },
     cellClass: { width: "10%", textAlign: "center" },
     cellQty: { width: "10%", textAlign: "center" },
     cellRate: {
         width: "15%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
+        fontSize: 10,
     },
 
     cellTotal: {
         width: "15%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: 700,
     },
 
     footerNote: {
         marginTop: 20,
         textAlign: "center",
-        fontSize: 9,
+        fontSize: 10,
         color: "#64748b",
     },
 
@@ -230,7 +230,7 @@ export default function CompanyCreditNotePdf({
 
                     {/* GST */}
                     {settings?.gst && (
-                        <Text style={styles.companyInfo}>
+                        <Text style={[styles.companyInfo, { fontWeight: 900 }]}>
                             GSTIN: {settings.gst}
                         </Text>
                     )}
@@ -315,6 +315,7 @@ export default function CompanyCreditNotePdf({
                         flexDirection: "row",
                         borderTop: "1px solid #000",
                         paddingTop: 6,
+                        paddingRight: 10,
                         fontWeight: 700,
                     }}
                 >
@@ -329,7 +330,7 @@ export default function CompanyCreditNotePdf({
                     </Text>
 
                     <Text style={{
-                        width: "15%", textAlign: "right", fontSize: 9, fontWeight: 700,
+                        width: "15%", textAlign: "right", fontSize: 10, fontWeight: 700,
                     }}>
                         {formatMoney(data.totals.netAmount)}
                     </Text>

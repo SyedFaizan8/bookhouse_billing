@@ -15,20 +15,21 @@ import {
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 
 /* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
     page: {
         padding: 32,
-        fontFamily: "Mono",
-        fontSize: 8,
+        fontFamily: "Arial",
+        fontSize: 9,
         color: "#0f172a",
         flexShrink: 1, // new added
     },
@@ -121,7 +122,6 @@ const styles = StyleSheet.create({
 
     num: {
         textAlign: "right",
-        fontFamily: "Mono",
         fontSize: 9,
     },
 
@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
     c6: { flexBasis: 56, flexShrink: 1, minWidth: 40, maxWidth: 100, fontWeight: 900 },   // Rate
     c7: { flexBasis: 72, flexShrink: 1, minWidth: 50, maxWidth: 110 },  // Gross
     c8: { flexBasis: 38, flexShrink: 0, minWidth: 36 },    // Disc %
-    c9: { flexBasis: 64, flexShrink: 1, minWidth: 46, maxWidth: 100, fontWeight: 900 },  // Disc Amt
-    c10: { flexBasis: 76, flexShrink: 1, minWidth: 56, maxWidth: 120, fontWeight: 900 },  // Total
+    c9: { flexBasis: 64, flexShrink: 1, minWidth: 46, maxWidth: 110, fontWeight: 900 },  // Disc Amt
+    c10: { flexBasis: 76, flexShrink: 1, minWidth: 56, maxWidth: 110, fontWeight: 900 },  // Total
 
     totalsRow: {
         backgroundColor: "#f8fafc",
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#f0fdf4",
         borderLeft: "4px solid #16a34a",
         padding: 6,
-        fontSize: 7.5,
+        fontSize: 8,
         opacity: 0.5
     },
 
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     signBox: {
         width: "35%",
         alignItems: "flex-end",
-        fontSize: 7.5,
+        fontSize: 8,
     },
 
     signLine: {
@@ -216,13 +216,13 @@ const styles = StyleSheet.create({
 
     billTitle: {
         fontWeight: 800,
-        fontSize: 8,
+        fontSize: 9,
         marginBottom: 2,
         textDecoration: "underline",
     },
 
     billText: {
-        fontSize: 7.5,
+        fontSize: 8,
     },
 
     logoCol: {
@@ -301,13 +301,13 @@ export default function InvoicePdf({
 
     // pick font-size based on formatted string length
     const numberFontSize = (s: string) => {
-        if (!s) return 8;
+        if (!s) return 9;
         // count visible characters (including commas and decimals)
         const len = String(s).length;
 
-        if (len <= 10) return 7.5;
-        if (len <= 13) return 6.5;
-        if (len <= 16) return 5.5;
+        if (len <= 10) return 9;
+        if (len <= 13) return 8;
+        if (len <= 16) return 7;
         return 5; // very long numbers -> smallest readable size
     };
 
@@ -417,7 +417,7 @@ export default function InvoicePdf({
                 {/* ================= TABLE ================= */}
 
                 {/* Header  */}
-                <View style={styles.row} fixed>
+                <View style={styles.row} minPresenceAhead={48}>
                     {[
                         styles.c1, styles.c2, styles.c3, styles.c4,
                         styles.c5, styles.c6, styles.c7, styles.c8,
@@ -453,67 +453,69 @@ export default function InvoicePdf({
                     </View>
                 ))}
 
-                {/* Totals */}
+                {/* Totals — keep as a single block (no page split inside) */}
                 <View style={[styles.row, styles.totalsRow]} wrap={false}>
                     <Text style={[styles.cell, styles.c1]} />
                     <Text style={[styles.cell, styles.c2]}>Totals</Text>
                     <Text style={[styles.cell, styles.c3]} />
                     <Text style={[styles.cell, styles.c4]} />
                     <Text style={[styles.cell, styles.c5, styles.center, { fontSize: numberFontSize(formatMoney(totals.qty)) }]}>{totals.qty}</Text>
-                    <Text style={[styles.cell, styles.c6]} /> {/* rate not summed */}
+                    <Text style={[styles.cell, styles.c6]} />
                     <Text style={[styles.cell, styles.c7, styles.num, { fontSize: numberFontSize(formatMoney(totals.gross)) }]}>{formatMoney(totals.gross)}</Text>
                     <Text style={[styles.cell, styles.c8]} />
                     <Text style={[styles.cell, styles.c9, styles.num, { fontSize: numberFontSize(formatMoney(totals.disc)) }]}>{formatMoney(totals.disc)}</Text>
                     <Text style={[styles.cell, styles.c10, styles.num, { fontSize: numberFontSize(formatMoney(totals.net)) }]}>{formatMoney(totals.net)}</Text>
                 </View>
-                {/* </View> */}
 
-                {/* Words */}
-                <Text style={{ marginTop: 6, fontWeight: 900 }}>
-                    Amount in words: {numberToWords(totals.net)}
-                </Text>
-
-                {/* Bank + sign */}
-                <View style={styles.bankWrap}>
-
-                    <View style={styles.bankBox}>
-                        <Text style={styles.bankTitle}>Bank Details</Text>
-
-                        <View style={styles.row}>
-                            <Text style={styles.label}>Account</Text>
-                            <Text style={styles.value}>: {settings?.name}</Text>
-                        </View>
-
-                        <View style={styles.row}>
-                            <Text style={styles.label}>Bank</Text>
-                            <Text style={styles.value}>: {settings?.bankName}</Text>
-                        </View>
-
-                        <View style={styles.row}>
-                            <Text style={styles.label}>A/C No</Text>
-                            <Text style={styles.value}>: {settings?.accountNo}</Text>
-                        </View>
-
-                        <View style={styles.row}>
-                            <Text style={styles.label}>IFSC</Text>
-                            <Text style={styles.value}>: {settings?.ifsc}</Text>
-                        </View>
-
-                        <View style={styles.row}>
-                            <Text style={styles.label}>UPI</Text>
-                            <Text style={styles.value}>: {settings?.upi}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.signBox}>
-                        <Text style={[{ fontWeight: 900 }]}>For {settings?.name}</Text>
-                        <Text style={styles.signLine}>Authorized Signatory</Text>
-                        <Text>Recorded By: {data.billedBy}</Text>
-
-                    </View>
+                {/* Amount in words — keep with totals (optional) */}
+                <View wrap={false}>
+                    <Text style={{ marginTop: 6, fontWeight: 900 }}>
+                        Amount in words: {numberToWords(totals.net)}
+                    </Text>
                 </View>
 
-                <Text style={styles.footer}>Computer generated invoice</Text>
+                {/* Bank + sign */}
+                {/* Bank + sign — keep together on a page (no split)  */}
+                <View wrap={false} style={{ marginTop: 8 }}>
+                    <View style={styles.bankWrap}>
+                        <View style={styles.bankBox}>
+                            <Text style={styles.bankTitle}>Bank Details</Text>
+
+                            <View style={styles.row}>
+                                <Text style={styles.label}>Account</Text>
+                                <Text style={styles.value}>: {settings?.name}</Text>
+                            </View>
+
+                            <View style={styles.row}>
+                                <Text style={styles.label}>Bank</Text>
+                                <Text style={styles.value}>: {settings?.bankName}</Text>
+                            </View>
+
+                            <View style={styles.row}>
+                                <Text style={styles.label}>A/C No</Text>
+                                <Text style={styles.value}>: {settings?.accountNo}</Text>
+                            </View>
+
+                            <View style={styles.row}>
+                                <Text style={styles.label}>IFSC</Text>
+                                <Text style={styles.value}>: {settings?.ifsc}</Text>
+                            </View>
+
+                            <View style={styles.row}>
+                                <Text style={styles.label}>UPI</Text>
+                                <Text style={styles.value}>: {settings?.upi}</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.signBox}>
+                            <Text style={[{ fontWeight: 900 }]}>For {settings?.name}</Text>
+                            <Text style={styles.signLine}>Authorized Signatory</Text>
+                            <Text>Recorded By: {data.billedBy}</Text>
+                        </View>
+                    </View>
+                    <Text style={styles.footer}>Computer generated invoice</Text>
+                </View>
+
             </Page>
         </Document >
     );

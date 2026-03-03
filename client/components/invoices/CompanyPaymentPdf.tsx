@@ -14,19 +14,20 @@ import { formatMoney } from "@/lib/utils/formatters";
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
 /* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Mono",
+        fontFamily: "Arial",
         color: "#0f172a",
     },
     bold: {
@@ -57,9 +58,10 @@ const styles = StyleSheet.create({
     },
 
     title: {
-        fontSize: 20,
-        fontWeight: 700,
-        color: "#991b1b",
+        fontSize: 30,
+        fontWeight: 900,
+        letterSpacing: 0.8,
+        color: "#1e3a8a",
     },
 
     companyInfo: {
@@ -106,7 +108,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 700,
         color: "#991b1b",
-        fontFamily: "Mono",
         letterSpacing: 0.3,
     },
 
@@ -218,7 +219,7 @@ export default function CompanyPaymentPdf({
 
                     {/* GST */}
                     {settings?.gst && (
-                        <Text style={styles.companyInfo}>
+                        <Text style={[styles.companyInfo, { fontWeight: 900 }]}>
                             GSTIN: {settings.gst}
                         </Text>
                     )}

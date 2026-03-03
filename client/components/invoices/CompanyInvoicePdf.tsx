@@ -15,11 +15,11 @@ import {
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400, },
-        { src: "/fonts/JetBrainsMono-Italic.ttf", fontWeight: 400, fontStyle: "italic" },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
 })
 
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Mono",
+        fontFamily: "Arial",
         color: "#0f172a",
     },
 
@@ -51,14 +51,15 @@ const styles = StyleSheet.create({
     logo: { height: 54, marginBottom: 6 },
 
     title: {
-        fontSize: 20,
-        fontWeight: 700,
+        fontSize: 30,
+        fontWeight: 900,
+        letterSpacing: 0.8,
         color: "#1e3a8a",
     },
 
     companyInfo: {
         textAlign: "center",
-        fontSize: 9,
+        fontSize: 10,
         color: "#475569",
         marginTop: 2,
     },
@@ -113,15 +114,13 @@ const styles = StyleSheet.create({
     cellRate: {
         width: "12%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
+        fontSize: 10,
     },
 
     cellTotal: {
         width: "15%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: 700,
     },
 
@@ -152,7 +151,7 @@ const styles = StyleSheet.create({
         padding: 8,
         border: "1px solid #e5e7eb",
         borderRadius: 6,
-        fontSize: 9,
+        fontSize: 10,
         fontStyle: "italic",
         backgroundColor: "#f9fafb",
     },
@@ -262,7 +261,7 @@ export default function PurchaseInvoicePdf({
 
                     {/* GST */}
                     {settings?.gst && (
-                        <Text style={styles.companyInfo}>
+                        <Text style={[styles.companyInfo, { fontWeight: 900 }]}>
                             GSTIN: {settings.gst}
                         </Text>
                     )}

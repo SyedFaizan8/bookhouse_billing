@@ -15,10 +15,11 @@ import { formatMoney } from "@/lib/utils/formatters"
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
 })
 
@@ -27,8 +28,8 @@ Font.register({
 const styles = StyleSheet.create({
     page: {
         padding: 36,
-        fontSize: 9,
-        fontFamily: "Mono",
+        fontSize: 10,
+        fontFamily: "Arial",
         color: "#0f172a",
         backgroundColor: "#ffffff",
     },
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
     bold: { fontWeight: 700 },
 
     muted: {
-        fontSize: 8.5,
+        fontSize: 9,
         color: "#64748b",
     },
 
@@ -56,15 +57,15 @@ const styles = StyleSheet.create({
     logo: { height: 48, marginBottom: 6 },
 
     title: {
-        fontSize: 18,
-        fontWeight: 700,
-        color: "#4f46e5",
-        letterSpacing: 1,
+        fontSize: 30,
+        fontWeight: 900,
+        letterSpacing: 0.8,
+        color: "#1e3a8a",
     },
 
     companyInfo: {
         textAlign: "center",
-        fontSize: 8.8,
+        fontSize: 10,
         color: "#475569",
         lineHeight: 1.5,
     },
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
     },
 
     summaryItem: {
-        fontSize: 9,
+        fontSize: 10,
         color: "#0f172a",
     },
 
@@ -133,15 +134,12 @@ const styles = StyleSheet.create({
     cellAmount: {
         width: "17%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 8.6,
         letterSpacing: 0.2,
     },
 
     footer: {
         marginTop: 20,
         textAlign: "center",
-        fontSize: 8.5,
         color: "#64748b",
     },
 
@@ -224,11 +222,11 @@ export default function DashboardReportPdf({
                         justifyContent: "space-between",
                     }}
                 >
-                    <Text style={{ fontSize: 9 }}>
+                    <Text >
                         Total Records: {rows.length}
                     </Text>
 
-                    <Text style={{ fontSize: 9, color: "#64748b" }}>
+                    <Text style={{ color: "#64748b" }}>
                         Auto generated
                     </Text>
                 </View>
@@ -271,6 +269,6 @@ export default function DashboardReportPdf({
                 </Text>
 
             </Page>
-        </Document>
+        </Document >
     )
 }

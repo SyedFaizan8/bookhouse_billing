@@ -16,12 +16,14 @@ import {
 ====================================================== */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
-});
+})
+
 
 /* ======================================================
    STYLES (INVOICE THEME APPLIED)
@@ -30,8 +32,8 @@ Font.register({
 const styles = StyleSheet.create({
     page: {
         padding: 32,
-        fontFamily: "Mono",
-        fontSize: 7,
+        fontFamily: "Arial",
+        fontSize: 9,
         color: "#0f172a",
     },
 
@@ -40,7 +42,7 @@ const styles = StyleSheet.create({
     topRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        fontSize: 8,
+        fontSize: 9,
         marginBottom: 6,
     },
 
@@ -49,7 +51,7 @@ const styles = StyleSheet.create({
     },
 
     companyName: {
-        fontSize: 24,
+        fontSize: 30,
         fontWeight: 900,
         textAlign: "center",
         letterSpacing: 0.8,
@@ -81,7 +83,7 @@ const styles = StyleSheet.create({
 
     centerInfo: {
         textAlign: "center",
-        fontSize: 8,
+        fontSize: 9,
         lineHeight: 1.3,
         color: "#475569",
     },
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     },
 
     qrText: {
-        fontSize: 7,
+        fontSize: 8,
         fontWeight: 800,
         marginBottom: 4,
     },
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         fontWeight: 700,
         marginBottom: 8,
-        fontSize: 9,
+        fontSize: 10,
     },
 
     /* ================= CUSTOMER ================= */
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
 
     sectionTitle: {
         fontWeight: 700,
-        fontSize: 9,
+        fontSize: 10,
         textDecoration: "underline",
         marginBottom: 4,
     },
@@ -180,7 +182,7 @@ const styles = StyleSheet.create({
     footer: {
         marginTop: 12,
         textAlign: "center",
-        fontSize: 7,
+        fontSize: 8,
         color: "#64748b",
     },
 

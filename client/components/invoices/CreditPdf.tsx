@@ -14,10 +14,11 @@ import {
 /* ================= FONT REGISTRATION ================= */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
 })
 
@@ -26,7 +27,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Mono",
+        fontFamily: "Arial",
         color: "#0f172a",
     },
 
@@ -65,9 +66,9 @@ const styles = StyleSheet.create({
     },
 
     title: {
-        fontSize: 18,
-        fontWeight: 700,
-        letterSpacing: 0.5,
+        fontSize: 30,
+        fontWeight: 900,
+        letterSpacing: 0.8,
         color: "#1e3a8a",
     },
 
@@ -264,7 +265,7 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
 
                     {/* GST */}
                     {settings?.gst && (
-                        <Text style={styles.companyInfo}>
+                        <Text style={[styles.companyInfo, { fontWeight: 900 }]}>
                             GSTIN: {settings.gst}
                         </Text>
                     )}
@@ -383,7 +384,7 @@ export default function CreditPdf({ data, settings }: { data: InvoicePdfData, se
                         style={{
                             width: 100,
                             textAlign: "right",
-                            fontFamily: "Mono",
+                            fontFamily: "Arial",
                             fontWeight: 700,
                         }}
                     >

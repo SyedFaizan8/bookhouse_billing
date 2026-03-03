@@ -10,17 +10,20 @@ import {
     Font,
     Image,
 } from "@react-pdf/renderer";
+import { format } from "date-fns";
 
 
 /* ================= FONT ================= */
 
 Font.register({
-    family: "Mono",
+    family: "Arial",
     fonts: [
-        { src: "/fonts/JetBrainsMono-Regular.ttf", fontWeight: 400 },
-        { src: "/fonts/JetBrainsMono-Bold.ttf", fontWeight: 700 },
+        { src: "/fonts/LiberationSans-Regular.ttf", fontWeight: 400 },
+        { src: "/fonts/LiberationSans-Italic.ttf", fontWeight: 400, fontStyle: 'italic' },
+        { src: "/fonts/LiberationSans-Bold.ttf", fontWeight: 700 },
     ],
 })
+
 
 /* ================= STYLES ================= */
 
@@ -28,7 +31,7 @@ export const styles = StyleSheet.create({
     page: {
         padding: 36,
         fontSize: 10,
-        fontFamily: "Mono",
+        fontFamily: "Arial",
         color: "#0f172a",
     },
 
@@ -53,8 +56,9 @@ export const styles = StyleSheet.create({
     },
 
     title: {
-        fontSize: 20,
-        fontWeight: 700,
+        fontSize: 30,
+        fontWeight: 900,
+        letterSpacing: 0.8,
         color: "#1e3a8a",
     },
 
@@ -115,24 +119,21 @@ export const styles = StyleSheet.create({
     cellDebit: {
         width: "15%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
+        fontSize: 10,
         color: "#dc2626",
     },
 
     cellCredit: {
         width: "15%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
+        fontSize: 10,
         color: "#16a34a",
     },
 
     cellBal: {
         width: "17%",
         textAlign: "right",
-        fontFamily: "Mono",
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: 700,
     },
 
@@ -242,7 +243,7 @@ export default function SchoolStatementPdf({
 
                     {/* GST */}
                     {settings?.gst && (
-                        <Text style={styles.companyInfo}>
+                        <Text style={[styles.companyInfo, { fontWeight: 900 }]}>
                             GSTIN: {settings.gst}
                         </Text>
                     )}
@@ -314,7 +315,7 @@ export default function SchoolStatementPdf({
                         style={i % 2 === 1 ? [styles.row, styles.altRow] : styles.row}
                     >
                         <Text style={styles.cellDate}>
-                            {new Date(r.date).toLocaleDateString("en-IN")}
+                            {format(new Date(r.date), "dd/MM/yyyy")}
                         </Text>
 
                         <Text style={styles.cellType}>{r.type}</Text>
@@ -364,6 +365,6 @@ export default function SchoolStatementPdf({
                     This is a computer-generated customer statement
                 </Text>
             </Page>
-        </Document>
+        </Document >
     );
 }
