@@ -28,7 +28,6 @@ const styles = StyleSheet.create({
     page: {
         padding: 32,
         fontFamily: "Mono",
-        // fontSize: 7,
         fontSize: 8,
         color: "#0f172a",
         flexShrink: 1, // new added
@@ -40,7 +39,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         fontSize: 9,
-        // fontSize: 8,
         marginBottom: 4,
     },
 
@@ -50,7 +48,6 @@ const styles = StyleSheet.create({
 
     companyName: {
         fontSize: 30,
-        // fontSize: 28,
         fontWeight: 900,
         textAlign: "center",
         letterSpacing: 0.8,
@@ -472,7 +469,7 @@ export default function InvoicePdf({
                 {/* </View> */}
 
                 {/* Words */}
-                <Text style={{ marginTop: 6 }}>
+                <Text style={{ marginTop: 6, fontWeight: 900 }}>
                     Amount in words: {numberToWords(totals.net)}
                 </Text>
 
@@ -509,7 +506,7 @@ export default function InvoicePdf({
                     </View>
 
                     <View style={styles.signBox}>
-                        <Text>For {settings?.name}</Text>
+                        <Text style={[{ fontWeight: 900 }]}>For {settings?.name}</Text>
                         <Text style={styles.signLine}>Authorized Signatory</Text>
                         <Text>Recorded By: {data.billedBy}</Text>
 
