@@ -17,6 +17,9 @@ import { useInvoicePdf, useUpdateInvoice } from "@/lib/queries/schools";
 import FormLoader from "@/components/loaders/FormLoader";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { useSortableItems } from "@/lib/hooks/useSortableItems";
+import SortItemsDropdown from "@/components/SortItemsDropdown";
+
 /* ======================================================
    VALIDATION
 ====================================================== */
@@ -59,7 +62,7 @@ export default function EditCompanyCreditNotePage() {
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control: form.control,
         name: "items",
     });
@@ -69,6 +72,8 @@ export default function EditCompanyCreditNotePage() {
         name: "items",
     }) || [];
 
+
+    const { sortItems } = useSortableItems(form, replace);
     /* ======================================================
        LOAD EXISTING DATA
     ===================================================== */
@@ -403,6 +408,30 @@ export default function EditCompanyCreditNotePage() {
                         Company invoice (internal accounting record)
                     </p>
 
+                </div>
+
+                {/* SORT ITEMS */}
+                <div className='flex justify-end pr-2 pt-2' >
+
+                    <SortItemsDropdown
+                        onSort={sortItems}
+                        options={[
+                            { label: "Description A → Z", key: "description", direction: "asc" },
+                            { label: "Description Z → A", key: "description", direction: "desc" },
+
+                            { label: "Company A → Z", key: "company", direction: "asc" },
+                            { label: "Company Z → A", key: "company", direction: "desc" },
+
+                            { label: "Qty Low → High", key: "quantity", direction: "asc" },
+                            { label: "Qty High → Low", key: "quantity", direction: "desc" },
+
+                            { label: "Rate Low → High", key: "rate", direction: "asc" },
+                            { label: "Rate High → Low", key: "rate", direction: "desc" },
+
+                            { label: "Discount Low → High", key: "discountPercent", direction: "asc" },
+                            { label: "Discount High → Low", key: "discountPercent", direction: "desc" },
+                        ]}
+                    />
                 </div>
 
                 {/* ITEMS */}

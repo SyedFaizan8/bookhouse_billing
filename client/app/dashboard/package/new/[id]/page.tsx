@@ -18,6 +18,9 @@ import { handleApiError } from "@/lib/utils/getApiError";
 import Spinner from "@/components/Spinner";
 import FormLoader from "@/components/loaders/FormLoader";
 
+import { useSortableItems } from "@/lib/hooks/useSortableItems";
+import SortItemsDropdown from "@/components/SortItemsDropdown";
+
 /* ======================================================
    VALIDATION (PACKAGE NOTE ONLY)
 ====================================================== */
@@ -69,7 +72,7 @@ export default function PackageCreatePage() {
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control: form.control,
         name: "items",
     });
@@ -79,6 +82,8 @@ export default function PackageCreatePage() {
             form.setValue("documentNo", String(nextNumber.nextNumber));
         }
     }, [nextNumber]);
+
+    const { sortItems } = useSortableItems(form, replace);
 
     /* ======================================================
        SUBMIT
@@ -264,6 +269,26 @@ export default function PackageCreatePage() {
                             GSTIN: {school.gst}
                         </div>
                     )}
+                </div>
+
+                {/* SORT ITEMS */}
+                <div className="flex justify-end mb-3">
+                    <SortItemsDropdown
+                        onSort={sortItems}
+                        options={[
+                            { label: "Description A → Z", key: "description", direction: "asc" },
+                            { label: "Description Z → A", key: "description", direction: "desc" },
+
+                            { label: "Company A → Z", key: "company", direction: "asc" },
+                            { label: "Company Z → A", key: "company", direction: "desc" },
+
+                            { label: "Qty Low → High", key: "quantity", direction: "asc" },
+                            { label: "Qty High → Low", key: "quantity", direction: "desc" },
+
+                            { label: "Rate Low → High", key: "rate", direction: "asc" },
+                            { label: "Rate High → Low", key: "rate", direction: "desc" },
+                        ]}
+                    />
                 </div>
 
                 {/* TABLE */}

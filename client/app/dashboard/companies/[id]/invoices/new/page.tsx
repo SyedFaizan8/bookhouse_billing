@@ -13,6 +13,8 @@ import { useCompanyProfile, useCreateCompanyInvoice } from "@/lib/queries/compan
 import { useSettingsInfo } from "@/lib/queries/settings";
 import { numberToWords } from "@/lib/utils/numberToWords";
 import { handleApiError } from "@/lib/utils/getApiError";
+import { useSortableItems } from "@/lib/hooks/useSortableItems";
+import SortItemsDropdown from "@/components/SortItemsDropdown";
 
 /* ======================================================
    SCHEMA
@@ -85,12 +87,15 @@ export default function PurchaseInvoicePage() {
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control: form.control,
         name: "items",
     });
 
     const items = useWatch({ control: form.control, name: "items" }) || [];
+
+    // SORT ITEMS
+    const { sortItems } = useSortableItems(form, replace);
 
     /* ================= CALCULATIONS ================= */
 
@@ -319,6 +324,29 @@ export default function PurchaseInvoicePage() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* SORT ITEMS */}
+                <div className='flex justify-left items-center pt-2 pl-2'>
+                    <SortItemsDropdown
+                        onSort={sortItems}
+                        options={[
+                            { label: "Description A → Z", key: "description", direction: "asc" },
+                            { label: "Description Z → A", key: "description", direction: "desc" },
+
+                            { label: "Company A → Z", key: "company", direction: "asc" },
+                            { label: "Company Z → A", key: "company", direction: "desc" },
+
+                            { label: "Qty Low → High", key: "quantity", direction: "asc" },
+                            { label: "Qty High → Low", key: "quantity", direction: "desc" },
+
+                            { label: "Rate Low → High", key: "unitPrice", direction: "asc" },
+                            { label: "Rate High → Low", key: "unitPrice", direction: "desc" },
+
+                            { label: "Discount Low → High", key: "discountPercent", direction: "asc" },
+                            { label: "Discount High → Low", key: "discountPercent", direction: "desc" },
+                        ]}
+                    />
                 </div>
 
 

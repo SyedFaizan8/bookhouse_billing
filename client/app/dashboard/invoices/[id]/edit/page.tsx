@@ -19,6 +19,9 @@ import { useInvoicePdf, useUpdateInvoice } from "@/lib/queries/schools";
 import FormLoader from "@/components/loaders/FormLoader";
 import Image from "next/image";
 
+import { useSortableItems } from "@/lib/hooks/useSortableItems";
+import SortItemsDropdown from "@/components/SortItemsDropdown";
+
 /* ======================================================
    VALIDATION
 ====================================================== */
@@ -75,6 +78,7 @@ export default function EditPage() {
         name: "items",
     }) || [];
 
+    const { sortItems } = useSortableItems(form, replace);
     /* ======================================================
        LOAD EXISTING DATA
     ===================================================== */
@@ -354,6 +358,30 @@ export default function EditPage() {
                     )}
                 </div>
 
+                {/* SORT ITEMS */}
+                <div className="flex justify-end mb-4">
+                    <SortItemsDropdown
+                        onSort={sortItems}
+                        options={[
+                            { label: "Description A → Z", key: "description", direction: "asc" },
+                            { label: "Description Z → A", key: "description", direction: "desc" },
+
+                            { label: "Company A → Z", key: "company", direction: "asc" },
+                            { label: "Company Z → A", key: "company", direction: "desc" },
+
+                            { label: "Qty Low → High", key: "quantity", direction: "asc" },
+                            { label: "Qty High → Low", key: "quantity", direction: "desc" },
+
+                            { label: "Rate Low → High", key: "rate", direction: "asc" },
+                            { label: "Rate High → Low", key: "rate", direction: "desc" },
+
+                            { label: "Discount Low → High", key: "discountPercent", direction: "asc" },
+                            { label: "Discount High → Low", key: "discountPercent", direction: "desc" },
+                        ]}
+                    />
+                </div>
+
+                {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="min-w-[1100px] w-full text-sm border">
                         <thead className="bg-indigo-50 text-xs font-bold text-slate-700">

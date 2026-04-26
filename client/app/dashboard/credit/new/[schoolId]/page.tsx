@@ -17,6 +17,9 @@ import { useNextCreditNumber } from "@/lib/queries/nextNumber";
 import { handleApiError } from "@/lib/utils/getApiError";
 import Spinner from "@/components/Spinner";
 
+import { useSortableItems } from "@/lib/hooks/useSortableItems";
+import SortItemsDropdown from "@/components/SortItemsDropdown";
+
 /* ======================================================
    VALIDATION SCHEMA
 ====================================================== */
@@ -84,7 +87,7 @@ export default function CreditNotePage() {
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control: form.control,
         name: "items",
     });
@@ -99,6 +102,8 @@ export default function CreditNotePage() {
             );
         }
     }, [invoiceNumberData, form]);
+
+    const { sortItems } = useSortableItems(form, replace);
 
     /* ======================================================
        CALCULATIONS (SAFE)
@@ -367,6 +372,29 @@ export default function CreditNotePage() {
                             GSTIN: {customer.gst}
                         </div>
                     )}
+                </div>
+
+                {/* SORT ITEMS */}
+                <div className="flex justify-end mb-4">
+                    <SortItemsDropdown
+                        onSort={sortItems}
+                        options={[
+                            { label: "Description A → Z", key: "description", direction: "asc" },
+                            { label: "Description Z → A", key: "description", direction: "desc" },
+
+                            { label: "Company A → Z", key: "company", direction: "asc" },
+                            { label: "Company Z → A", key: "company", direction: "desc" },
+
+                            { label: "Qty Low → High", key: "quantity", direction: "asc" },
+                            { label: "Qty High → Low", key: "quantity", direction: "desc" },
+
+                            { label: "Rate Low → High", key: "rate", direction: "asc" },
+                            { label: "Rate High → Low", key: "rate", direction: "desc" },
+
+                            { label: "Discount Low → High", key: "discountPercent", direction: "asc" },
+                            { label: "Discount High → Low", key: "discountPercent", direction: "desc" },
+                        ]}
+                    />
                 </div>
 
                 {/* TABLE */}
