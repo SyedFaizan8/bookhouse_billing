@@ -327,7 +327,7 @@ export default function PurchaseInvoicePage() {
                 </div>
 
                 {/* SORT ITEMS */}
-                <div className='flex justify-left items-center pt-2 pl-2'>
+                <div className='flex justify-end pr-2 pt-2'>
                     <SortItemsDropdown
                         onSort={sortItems}
                         options={[
