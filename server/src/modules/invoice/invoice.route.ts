@@ -29,7 +29,7 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
         ====================================================== */
 
         const academicYear = await tx.academicYear.findFirst({
-            where: { status: FlowStatus.OPEN },
+            where: { status: AcademicYearStatus.OPEN }, //FlowStatus.OPEN
         });
 
         if (!academicYear) throw new AppError('No open academic year found', 404)
@@ -187,7 +187,7 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
         ====================================================== */
 
         const academicYear = await tx.academicYear.findFirst({
-            where: { status: FlowStatus.OPEN },
+            where: { status: AcademicYearStatus.OPEN }, //FlowStatus.OPEN
         });
 
         if (!academicYear) throw new AppError("No open academic year found", 404);
@@ -656,7 +656,7 @@ router.patch("/:id", requireAdmin, asyncHandler(async (req: Request, res: Respon
         ====================================================== */
 
         const academicYear = await tx.academicYear.findFirst({
-            where: { status: FlowStatus.OPEN },
+            where: { status: AcademicYearStatus.OPEN }, //FlowStatus.OPEN
         });
 
         if (!academicYear)

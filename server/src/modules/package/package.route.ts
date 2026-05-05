@@ -11,9 +11,8 @@ const router = Router();
 router.patch("/:id/pending", asyncHandler(async (req: Request, res: Response) => {
     const { items } = req.body;
 
-
     const academicYear = await prisma.academicYear.findFirst({
-        where: { status: FlowStatus.OPEN },
+        where: { status: AcademicYearStatus.OPEN },   //FlowStatus.OPEN
     });
 
     if (!academicYear) throw new AppError("No open academic year found", 404);
@@ -23,7 +22,7 @@ router.patch("/:id/pending", asyncHandler(async (req: Request, res: Response) =>
         items.map((i: any) =>
             prisma.item.update({
                 where: { id: i.id },
-                data: { pending: i.pending },
+                data: { pending: parseInt(i.pending, 10) },
             })
         )
     );
@@ -109,7 +108,7 @@ router.post("/new", asyncHandler(async (req: Request, res: Response) => {
         ====================================================== */
 
         const academicYear = await tx.academicYear.findFirst({
-            where: { status: FlowStatus.OPEN },
+            where: { status: AcademicYearStatus.OPEN }, //FlowStatus.OPEN
         });
 
         if (!academicYear) throw new AppError('No open academic year found', 404)
@@ -309,7 +308,7 @@ router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
         ====================================================== */
 
         const academicYear = await tx.academicYear.findFirst({
-            where: { status: FlowStatus.OPEN },
+            where: { status: AcademicYearStatus.OPEN }, //FlowStatus.OPEN
         });
 
         if (!academicYear) throw new AppError("No open academic year found", 404);

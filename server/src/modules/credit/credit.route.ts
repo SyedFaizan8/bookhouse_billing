@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Response, Request } from "express";
 import { prisma } from "../../prisma.js";
-import { DocumentKind, FlowStatus, SequenceScope } from "../../generated/prisma/enums.js";
+import { AcademicYearStatus, DocumentKind, FlowStatus, SequenceScope } from "../../generated/prisma/enums.js";
 import { CreateCompanyCreditNoteDTO, CreateCreditNoteDTO } from "./credit.schema.js";
 import { AppError } from "../../utils/error.js";
 import { asyncHandler } from "../../utils/async.js";
@@ -26,7 +26,7 @@ router.post("/school/new", asyncHandler(async (req: Request, res: Response) => {
         ====================================================== */
 
         const academicYear = await tx.academicYear.findFirst({
-            where: { status: FlowStatus.OPEN },
+            where: { status: AcademicYearStatus.OPEN }, //FlowStatus.OPEN
         });
 
         if (!academicYear) throw new AppError("No open academic year found", 401);
@@ -199,7 +199,7 @@ router.post("/company/new", asyncHandler(async (req: Request, res: Response) => 
         ====================================================== */
 
         const academicYear = await tx.academicYear.findFirst({
-            where: { status: FlowStatus.OPEN },
+            where: { status: AcademicYearStatus.OPEN }, //FlowStatus.OPEN
         });
 
         if (!academicYear) throw new AppError('No open academic year found', 409)
